@@ -39,6 +39,8 @@ This repo now includes a public launch package suitable for `Helios-launch` with
 - [docs/GITHUB_HANDOFF_CHECKLIST.md](docs/GITHUB_HANDOFF_CHECKLIST.md) — exact GitHub About values, protections, and default route choice for the takeover team
 - [docs/TAKEOVER_START_HERE.md](docs/TAKEOVER_START_HERE.md) — first-read document for the incoming build and launch team
 - [docs/OPERATOR_HANDOFF_CHECKLIST.md](docs/OPERATOR_HANDOFF_CHECKLIST.md) — exact operator setup and launch checklist
+- [docs/PAGE_ALIGNMENT_MEMO.md](docs/PAGE_ALIGNMENT_MEMO.md) — what to keep, soften, or remove from the original Helios institutional page
+- [docs/TAKEOVER_PROMPT_PACK.md](docs/TAKEOVER_PROMPT_PACK.md) — recommended prompts for the incoming team to use during setup and launch
 - [docs/REPOSITORY_PROTECTIONS.md](docs/REPOSITORY_PROTECTIONS.md) — recommended GitHub protections
 - [docs/PUSH_TO_HELIOS_LAUNCH.md](docs/PUSH_TO_HELIOS_LAUNCH.md) — exact push steps for the new GitHub repository
 - [SECURITY.md](SECURITY.md) — security reporting policy
