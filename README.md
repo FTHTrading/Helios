@@ -36,6 +36,7 @@ This repo now includes a public launch package suitable for `Helios-launch` with
 - [docs/HELIOS_EXECUTIVE_ONE_PAGER.md](docs/HELIOS_EXECUTIVE_ONE_PAGER.md) — short non-technical summary for stakeholders and operators
 - [docs/BUILD_ROUTE_OPTIONS.md](docs/BUILD_ROUTE_OPTIONS.md) — layered route options for the takeover team to choose from
 - [docs/REPOSITORY_ABOUT_SETTINGS.md](docs/REPOSITORY_ABOUT_SETTINGS.md) — recommended GitHub description, website, topics, and professional repo settings
+- [docs/GITHUB_HANDOFF_CHECKLIST.md](docs/GITHUB_HANDOFF_CHECKLIST.md) — exact GitHub About values, protections, and default route choice for the takeover team
 - [docs/REPOSITORY_PROTECTIONS.md](docs/REPOSITORY_PROTECTIONS.md) — recommended GitHub protections
 - [docs/PUSH_TO_HELIOS_LAUNCH.md](docs/PUSH_TO_HELIOS_LAUNCH.md) — exact push steps for the new GitHub repository
 - [SECURITY.md](SECURITY.md) — security reporting policy
