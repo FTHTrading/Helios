@@ -58,7 +58,10 @@ def create_app():
             "helios_build_fingerprint": manifest["fingerprint"],
             "helios_deployment_route": manifest["route"],
             "helios_build_owner": manifest["owner"],
+            "helios_watermark_mode": manifest["mode"],
             "helios_watermark_enabled": manifest["watermark_enabled"],
+            "helios_show_simple_watermark": manifest["show_simple_watermark"],
+            "helios_show_visible_watermark": manifest["show_visible_watermark"],
             "helios_version": "3.0.0",
             "helios_year": datetime.now(timezone.utc).year,
         }
@@ -71,12 +74,12 @@ def create_app():
         response.headers['X-Frame-Options'] = 'DENY'
         response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
         response.headers['X-XSS-Protection'] = '1; mode=block'
-        response.headers['X-Helios-Build-Fingerprint'] = manifest['fingerprint']
-        response.headers['X-Helios-Deployment-Route'] = manifest['route']
+        response.headers['X-Build-Fingerprint'] = manifest['fingerprint']
+        response.headers['X-Deployment-Route'] = manifest['route']
         if manifest['build_id']:
-            response.headers['X-Helios-Build-Id'] = manifest['build_id']
+            response.headers['X-Build-Id'] = manifest['build_id']
         if manifest['watermark']:
-            response.headers['X-Helios-Build-Watermark'] = manifest['watermark']
+            response.headers['X-Build-Watermark'] = manifest['watermark']
         if not HeliosConfig.DEBUG:
             response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
         return response

@@ -35,6 +35,7 @@ class HeliosConfig:
     LAUNCH_KEY = os.getenv("HELIOS_LAUNCH_KEY", "")
     DEPLOYMENT_ROUTE = os.getenv("HELIOS_DEPLOYMENT_ROUTE", "full")
     BUILD_OWNER = os.getenv("HELIOS_BUILD_OWNER", "FTHTrading")
+    WATERMARK_MODE = os.getenv("HELIOS_WATERMARK_MODE", "hidden")
 
     # ——— Database —————————————————————————————————————————
     DATABASE_URL = os.getenv(

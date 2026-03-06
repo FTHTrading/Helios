@@ -41,3 +41,5 @@ The GitHub repository should not be left with an empty About section.
 ## Ownership posture
 
 Use the build watermark and launch key settings to distinguish official launches from derivative or future launch packages.
+
+If public branding should stay quiet, use hidden watermark mode so protection remains embedded without visible front-end labels.

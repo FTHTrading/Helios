@@ -13,6 +13,9 @@ def get_build_manifest() -> dict:
     route = (HeliosConfig.DEPLOYMENT_ROUTE or "full").strip().lower()
     owner = (HeliosConfig.BUILD_OWNER or "FTHTrading").strip()
     build_id = (HeliosConfig.BUILD_ID or "").strip()
+    mode = (HeliosConfig.WATERMARK_MODE or "hidden").strip().lower()
+    if mode not in {"hidden", "simple", "visible"}:
+        mode = "hidden"
 
     signature_source = "|".join([
         owner,
@@ -30,5 +33,8 @@ def get_build_manifest() -> dict:
         "build_id": build_id,
         "watermark": watermark,
         "fingerprint": fingerprint,
+        "mode": mode,
         "watermark_enabled": bool(watermark or launch_key or build_id),
+        "show_simple_watermark": bool(watermark or launch_key or build_id) and mode in {"simple", "visible"},
+        "show_visible_watermark": bool(watermark or launch_key or build_id) and mode == "visible",
     }

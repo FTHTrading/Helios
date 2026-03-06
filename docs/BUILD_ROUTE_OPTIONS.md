@@ -7,6 +7,7 @@ This document gives the takeover team clear route options without forcing one ar
 Use when the team only wants to validate market demand and onboarding motion.
 
 Stack:
+
 - Flask
 - Postgres
 - Stripe
@@ -14,6 +15,7 @@ Stack:
 - XRPL testnet first
 
 Includes:
+
 - identity creation
 - activation selection
 - checkout
@@ -22,6 +24,7 @@ Includes:
 - status page
 
 Defers:
+
 - Redis/Celery
 - Pinata/IPFS
 - expanded operator tooling
@@ -32,6 +35,7 @@ Defers:
 Use when the team wants a real launch with low operational complexity.
 
 Stack:
+
 - Flask
 - Postgres
 - Stripe
@@ -41,6 +45,7 @@ Stack:
 - optional Pinata
 
 Includes:
+
 - real activation flow
 - XRPL wallet onboarding
 - readiness checks
@@ -53,6 +58,7 @@ Best default route.
 Use when the team is ready for the broader platform architecture.
 
 Stack:
+
 - Flask
 - Postgres
 - Redis/Celery
@@ -64,6 +70,7 @@ Stack:
 - Sentry
 
 Includes:
+
 - full launch base
 - payment event history
 - provider readiness reporting
@@ -72,14 +79,17 @@ Includes:
 ## Decision guidance
 
 Choose Route A if:
+
 - speed matters most
 - the goal is validation
 
 Choose Route B if:
+
 - the goal is launch
 - the team wants lower complexity
 
 Choose Route C if:
+
 - the team wants the full engineering base from the start
 - the team can support more infrastructure immediately
 
@@ -94,10 +104,23 @@ Use these environment variables for every future launch package:
 - `HELIOS_BUILD_OWNER`
 
 These values surface in:
+
 - HTML meta tags
 - response headers
-- footer watermark
-- on-screen watermark badge
+- optional footer watermark
+- optional on-screen watermark badge
 - build manifest API
 
 This allows every future launch to be attributed, tracked, and differentiated.
+
+## Stealth protection recommendation
+
+If the team does not want the build protection to be publicly visible, set:
+
+- `HELIOS_WATERMARK_MODE=hidden`
+
+Modes:
+
+- `hidden` → metadata, headers, and manifest only
+- `simple` → metadata plus a minimal footer build marker
+- `visible` → metadata plus footer marker and on-screen badge
