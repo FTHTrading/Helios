@@ -37,6 +37,8 @@ This repo now includes a public launch package suitable for `Helios-launch` with
 - [docs/BUILD_ROUTE_OPTIONS.md](docs/BUILD_ROUTE_OPTIONS.md) — layered route options for the takeover team to choose from
 - [docs/REPOSITORY_ABOUT_SETTINGS.md](docs/REPOSITORY_ABOUT_SETTINGS.md) — recommended GitHub description, website, topics, and professional repo settings
 - [docs/GITHUB_HANDOFF_CHECKLIST.md](docs/GITHUB_HANDOFF_CHECKLIST.md) — exact GitHub About values, protections, and default route choice for the takeover team
+- [docs/TAKEOVER_START_HERE.md](docs/TAKEOVER_START_HERE.md) — first-read document for the incoming build and launch team
+- [docs/OPERATOR_HANDOFF_CHECKLIST.md](docs/OPERATOR_HANDOFF_CHECKLIST.md) — exact operator setup and launch checklist
 - [docs/REPOSITORY_PROTECTIONS.md](docs/REPOSITORY_PROTECTIONS.md) — recommended GitHub protections
 - [docs/PUSH_TO_HELIOS_LAUNCH.md](docs/PUSH_TO_HELIOS_LAUNCH.md) — exact push steps for the new GitHub repository
 - [SECURITY.md](SECURITY.md) — security reporting policy
