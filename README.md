@@ -30,6 +30,7 @@ This repo now includes a public launch package suitable for `Helios-launch` with
 
 - [docs/HELIOS_LAUNCH_BLUEPRINT.md](docs/HELIOS_LAUNCH_BLUEPRINT.md) — production architecture and deployment stack
 - [docs/HELIOS_REVIEW_RESPONSE.md](docs/HELIOS_REVIEW_RESPONSE.md) — color-coded response to the March 5 codebase review
+- [docs/HELIOS_CLAIMS_COVERAGE_MATRIX.md](docs/HELIOS_CLAIMS_COVERAGE_MATRIX.md) — claim-by-claim implementation coverage and remaining launch work
 - [docs/REPOSITORY_PROTECTIONS.md](docs/REPOSITORY_PROTECTIONS.md) — recommended GitHub protections
 - [docs/PUSH_TO_HELIOS_LAUNCH.md](docs/PUSH_TO_HELIOS_LAUNCH.md) — exact push steps for the new GitHub repository
 - [SECURITY.md](SECURITY.md) — security reporting policy
