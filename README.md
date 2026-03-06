@@ -28,6 +28,8 @@
 
 This repo now includes a public launch package suitable for `Helios-launch` with MIT licensing, community files, CI, and launch documentation.
 
+**Incoming team:** start with [START.md](START.md).
+
 - [docs/HELIOS_LAUNCH_BLUEPRINT.md](docs/HELIOS_LAUNCH_BLUEPRINT.md) — production architecture and deployment stack
 - [docs/HELIOS_REVIEW_RESPONSE.md](docs/HELIOS_REVIEW_RESPONSE.md) — color-coded response to the March 5 codebase review
 - [docs/HELIOS_CLAIMS_COVERAGE_MATRIX.md](docs/HELIOS_CLAIMS_COVERAGE_MATRIX.md) — claim-by-claim implementation coverage and remaining launch work
