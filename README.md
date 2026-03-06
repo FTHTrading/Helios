@@ -41,6 +41,8 @@ This repo now includes a public launch package suitable for `Helios-launch` with
 - [docs/OPERATOR_HANDOFF_CHECKLIST.md](docs/OPERATOR_HANDOFF_CHECKLIST.md) — exact operator setup and launch checklist
 - [docs/PAGE_ALIGNMENT_MEMO.md](docs/PAGE_ALIGNMENT_MEMO.md) — what to keep, soften, or remove from the original Helios institutional page
 - [docs/TAKEOVER_PROMPT_PACK.md](docs/TAKEOVER_PROMPT_PACK.md) — recommended prompts for the incoming team to use during setup and launch
+- [docs/FINAL_RECOMMENDATION.md](docs/FINAL_RECOMMENDATION.md) — single authoritative recommendation for route, stack, messaging, and first actions
+- [docs/MOVE_FORWARD_RUNBOOK.md](docs/MOVE_FORWARD_RUNBOOK.md) — full execution runbook for taking the repo from handoff to launch readiness
 - [docs/REPOSITORY_PROTECTIONS.md](docs/REPOSITORY_PROTECTIONS.md) — recommended GitHub protections
 - [docs/PUSH_TO_HELIOS_LAUNCH.md](docs/PUSH_TO_HELIOS_LAUNCH.md) — exact push steps for the new GitHub repository
 - [SECURITY.md](SECURITY.md) — security reporting policy
