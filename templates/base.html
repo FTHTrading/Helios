@@ -5,8 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Helios — Private Membership Protocol{% endblock %}</title>
     <!-- HELIOS_BUILD_ID: {{ helios_build_id }} -->
+    <!-- HELIOS_BUILD_FINGERPRINT: {{ helios_build_fingerprint }} -->
     <meta name="description" content="{% block og_description %}Helios — A smart-contract-governed allocation protocol. Fiat to stablecoins to physical gold. Gold-backed digital certificates on XRPL/Stellar.{% endblock %}">
     <meta name="theme-color" content="#000000">
+    <meta name="helios-build-id" content="{{ helios_build_id }}">
+    <meta name="helios-build-watermark" content="{{ helios_build_watermark }}">
+    <meta name="helios-build-fingerprint" content="{{ helios_build_fingerprint }}">
+    <meta name="helios-deployment-route" content="{{ helios_deployment_route }}">
 
     <!-- Open Graph (Facebook, Telegram, WhatsApp, iMessage) -->
     <meta property="og:type" content="website">
@@ -65,9 +70,18 @@
                 <p class="footer-small" style="margin-bottom:.5rem;"><a href="/launch" style="color:var(--gold);">Token Launch</a> &middot; <a href="/tokenomics" style="color:var(--text-muted);">Token Economics</a> &middot; <a href="/opportunity" style="color:var(--text-muted);">How It Works</a> &middot; <a href="/guide" style="color:var(--text-muted);">Helios Guide</a> &middot; <a href="/earnings" style="color:var(--text-muted);">Smart Contracts</a> &middot; <a href="/certificates" style="color:var(--text-muted);">Certificates</a> &middot; <a href="/treasury" style="color:var(--text-muted);">Treasury</a> &middot; <a href="/vault/gold" style="color:var(--text-muted);">Reserve Assets</a> &middot; <a href="/ask" style="color:var(--text-muted);">Advisory</a></p>
                 <p class="footer-small">Smart-contract allocation protocol. Gold-backed certificates. XRPL &amp; Stellar settlement.</p>
                 <p class="footer-small">Helios v{{ helios_version }} &copy; {{ helios_year }}</p>
+                <p class="footer-small footer-watermark">Route: {{ helios_deployment_route|upper }} · Fingerprint: {{ helios_build_fingerprint }}{% if helios_build_watermark %} · Watermark: {{ helios_build_watermark }}{% endif %}</p>
             </div>
         </div>
     </footer>
+
+    {% if helios_watermark_enabled %}
+    <div class="build-watermark-badge" aria-label="Helios build watermark">
+        <span class="build-watermark-label">{{ helios_build_owner }}</span>
+        <span>{{ helios_deployment_route|upper }}</span>
+        <span>{{ helios_build_fingerprint }}</span>
+    </div>
+    {% endif %}
 
     <!-- FLOATING AI AGENT -->
     <div class="helios-fab" id="heliosFab" onclick="window.location.href='/ask'" title="Ask Helios AI Advisor">

@@ -30,6 +30,11 @@ class HeliosConfig:
     HOST = os.getenv("HELIOS_HOST", "0.0.0.0")
     PORT = int(os.getenv("HELIOS_PORT", "5050"))
     DOMAIN = "xxxiii.io"
+    BUILD_ID = os.getenv("HELIOS_BUILD_ID", "")
+    BUILD_WATERMARK = os.getenv("HELIOS_BUILD_WATERMARK", "")
+    LAUNCH_KEY = os.getenv("HELIOS_LAUNCH_KEY", "")
+    DEPLOYMENT_ROUTE = os.getenv("HELIOS_DEPLOYMENT_ROUTE", "full")
+    BUILD_OWNER = os.getenv("HELIOS_BUILD_OWNER", "FTHTrading")
 
     # ——— Database —————————————————————————————————————————
     DATABASE_URL = os.getenv(

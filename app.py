@@ -20,6 +20,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 
 from config import HeliosConfig
+from core.build_manifest import get_build_manifest
 from models.member import Base
 
 # Validate config on startup — fails fast if protocol rules are broken
@@ -50,8 +51,14 @@ def create_app():
 
     @app.context_processor
     def inject_build_id():
+        manifest = get_build_manifest()
         return {
-            "helios_build_id": os.environ.get("HELIOS_BUILD_ID", ""),
+            "helios_build_id": manifest["build_id"],
+            "helios_build_watermark": manifest["watermark"],
+            "helios_build_fingerprint": manifest["fingerprint"],
+            "helios_deployment_route": manifest["route"],
+            "helios_build_owner": manifest["owner"],
+            "helios_watermark_enabled": manifest["watermark_enabled"],
             "helios_version": "3.0.0",
             "helios_year": datetime.now(timezone.utc).year,
         }
@@ -59,10 +66,17 @@ def create_app():
     # ─── Security Headers ─────────────────────────────────────────
     @app.after_request
     def security_headers(response):
+        manifest = get_build_manifest()
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['X-Frame-Options'] = 'DENY'
         response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
         response.headers['X-XSS-Protection'] = '1; mode=block'
+        response.headers['X-Helios-Build-Fingerprint'] = manifest['fingerprint']
+        response.headers['X-Helios-Deployment-Route'] = manifest['route']
+        if manifest['build_id']:
+            response.headers['X-Helios-Build-Id'] = manifest['build_id']
+        if manifest['watermark']:
+            response.headers['X-Helios-Build-Watermark'] = manifest['watermark']
         if not HeliosConfig.DEBUG:
             response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
         return response

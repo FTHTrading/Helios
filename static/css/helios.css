@@ -718,6 +718,7 @@ h3 { font-size: 1.2rem; font-weight: 600; margin-bottom: .5rem; }
 .footer-trust a:hover { color: var(--gold); }
 .footer-info { flex: 1; text-align: right; }
 .footer-small { color: var(--text-muted); font-size: .85rem; }
+.footer-watermark { letter-spacing: .06em; text-transform: uppercase; opacity: .78; }
 
 .footer-domain {
     font-size: 1.1rem;
@@ -732,6 +733,30 @@ h3 { font-size: 1.2rem; font-weight: 600; margin-bottom: .5rem; }
     line-height: 1.6;
     max-width: 300px;
     margin-left: auto;
+}
+
+.build-watermark-badge {
+    position: fixed;
+    left: 1rem;
+    bottom: 1rem;
+    z-index: 9500;
+    display: inline-flex;
+    gap: .5rem;
+    align-items: center;
+    padding: .45rem .7rem;
+    border: 1px solid rgba(251,191,36,0.18);
+    border-radius: 999px;
+    background: rgba(0,0,0,0.76);
+    backdrop-filter: blur(12px);
+    color: var(--text-muted);
+    font-size: .68rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.build-watermark-label {
+    color: var(--gold);
+    font-weight: 700;
 }
 
 /* â”€â”€â”€ Protocol Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
@@ -758,6 +783,7 @@ h3 { font-size: 1.2rem; font-weight: 600; margin-bottom: .5rem; }
 @media (max-width: 768px) {
     .hero-title { font-size: 2.8rem; letter-spacing: .06em; }
     .hero-tagline { font-size: 1rem; }
+    .build-watermark-badge { left: .75rem; bottom: .75rem; font-size: .62rem; gap: .35rem; }
     .helios-coin { width: 120px; height: 120px; }
     .principle-grid { grid-template-columns: 1fr; }
     .phase-grid { grid-template-columns: 1fr; }

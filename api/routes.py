@@ -565,6 +565,15 @@ def readiness():
     return api_response(IntegrationReadiness.snapshot())
 
 
+@infra_bp.route("/build", methods=["GET"])
+@handle_errors
+def build_manifest():
+    """Build ownership, route, and watermark manifest."""
+    from core.build_manifest import get_build_manifest
+
+    return api_response(get_build_manifest())
+
+
 @infra_bp.route("/dns", methods=["GET"])
 @handle_errors
 def list_dns():
