@@ -9,6 +9,15 @@
             <p class="dash-subtitle" id="dash-since"></p>
         </div>
 
+        <div id="onboarding-banner" class="dash-card" style="display:none;margin-bottom:1.5rem;">
+            <h3>Finish Activation</h3>
+            <p id="onboarding-copy" style="color:var(--text-muted);margin-bottom:1rem;">Complete payment and wallet setup to unlock live XRPL issuance.</p>
+            <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+                <a href="/activate" id="onboarding-activate-link" class="btn btn-primary">Resume Activation</a>
+                <a href="/web3" id="onboarding-web3-link" class="btn btn-secondary">Connect Wallet</a>
+            </div>
+        </div>
+
         <div class="dash-grid">
             <!-- Balance Card -->
             <div class="dash-card dash-card-balance">
@@ -104,8 +113,37 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = '/join';
         return;
     }
+    renderOnboardingBanner();
     loadDashboard();
 });
+
+function renderOnboardingBanner() {
+    const offerCode = localStorage.getItem('helios_activation_offer');
+    const xrplAccount = localStorage.getItem('helios_xrpl_account');
+    const checkout = JSON.parse(localStorage.getItem('helios_activation_checkout') || '{}');
+    if (!offerCode && xrplAccount) {
+        return;
+    }
+
+    const banner = document.getElementById('onboarding-banner');
+    const copy = document.getElementById('onboarding-copy');
+    const activateLink = document.getElementById('onboarding-activate-link');
+    const web3Link = document.getElementById('onboarding-web3-link');
+    banner.style.display = 'block';
+
+    if (offerCode) {
+        activateLink.href = '/activate?offer=' + encodeURIComponent(offerCode);
+        web3Link.href = '/web3?offer=' + encodeURIComponent(offerCode);
+    }
+
+    if (!checkout.status) {
+        copy.textContent = 'Your identity is live. Choose an activation tier and complete payment to fund onboarding.';
+    } else if (!xrplAccount) {
+        copy.textContent = 'Checkout is staged. Connect Xaman and open your HLS trustline to complete wallet onboarding.';
+    } else {
+        copy.textContent = 'Wallet connected. You can return to Web3 settings any time to review trustline and issuance status.';
+    }
+}
 
 async function loadDashboard() {
     // Load balance

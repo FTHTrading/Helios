@@ -14,6 +14,10 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent
 
 
+def _env_bool(name: str, default: str = "false") -> bool:
+    return os.getenv(name, default).lower() == "true"
+
+
 class HeliosConfig:
     """
     Immutable protocol parameters.
@@ -22,7 +26,7 @@ class HeliosConfig:
 
     # ——— App ——————————————————————————————————————————————
     SECRET_KEY = os.getenv("HELIOS_SECRET_KEY", os.urandom(32).hex())
-    DEBUG = os.getenv("HELIOS_DEBUG", "false").lower() == "true"
+    DEBUG = _env_bool("HELIOS_DEBUG")
     HOST = os.getenv("HELIOS_HOST", "0.0.0.0")
     PORT = int(os.getenv("HELIOS_PORT", "5050"))
     DOMAIN = "xxxiii.io"
@@ -242,14 +246,43 @@ class HeliosConfig:
     CHAIN_ID = int(os.getenv("HELIOS_CHAIN_ID", "1"))
     CHAIN_CONTRACT_ADDRESS = os.getenv("HELIOS_CONTRACT", "")
 
-    # XRPL for on-chain anchoring of MVR receipts
-    XRPL_NODE_URL = os.getenv("HELIOS_XRPL_NODE", "https://s1.ripple.com:51234")
+    # XRPL is the recommended production chain for this codebase.
+    XRPL_NETWORK = os.getenv("HELIOS_XRPL_NETWORK", "testnet")
+    XRPL_NODE_URL = os.getenv(
+        "HELIOS_XRPL_NODE",
+        "https://s.altnet.rippletest.net:51234" if XRPL_NETWORK == "testnet" else "https://s1.ripple.com:51234"
+    )
+    XRPL_ENABLE_SUBMIT = _env_bool("HELIOS_XRPL_ENABLE_SUBMIT")
     XRPL_WALLET_ADDRESS = os.getenv("HELIOS_XRPL_WALLET", "")
     XRPL_WALLET_SECRET = os.getenv("HELIOS_XRPL_SECRET", "")
+    XRPL_ISSUER_ADDRESS = os.getenv("HELIOS_XRPL_ISSUER_WALLET", XRPL_WALLET_ADDRESS)
+    XRPL_ISSUER_SECRET = os.getenv("HELIOS_XRPL_ISSUER_SECRET", XRPL_WALLET_SECRET)
+    XRPL_TREASURY_ADDRESS = os.getenv("HELIOS_XRPL_TREASURY_WALLET", XRPL_ISSUER_ADDRESS)
+    XRPL_TREASURY_SECRET = os.getenv("HELIOS_XRPL_TREASURY_SECRET", XRPL_ISSUER_SECRET)
 
     # ——— IPFS — Evidence Bundle Storage ————————————————————————————
     IPFS_GATEWAY = os.getenv("HELIOS_IPFS_GATEWAY", "https://ipfs.io/ipfs/")
     IPFS_API_URL = os.getenv("HELIOS_IPFS_API", "")
+    PINATA_JWT = os.getenv("HELIOS_PINATA_JWT", "")
+    PINATA_API_KEY = os.getenv("HELIOS_PINATA_API_KEY", "")
+    PINATA_SECRET_API_KEY = os.getenv("HELIOS_PINATA_SECRET_API_KEY", "")
+
+    # ——— Payments / Funding ———————————————————————————————————————
+    STRIPE_SECRET_KEY = os.getenv("HELIOS_STRIPE_SECRET_KEY", "")
+    STRIPE_PUBLISHABLE_KEY = os.getenv("HELIOS_STRIPE_PUBLISHABLE_KEY", "")
+    STRIPE_WEBHOOK_SECRET = os.getenv("HELIOS_STRIPE_WEBHOOK_SECRET", "")
+    PAYMENTS_SUCCESS_URL = os.getenv("HELIOS_PAYMENTS_SUCCESS_URL", f"https://{DOMAIN}/activate")
+    PAYMENTS_CANCEL_URL = os.getenv("HELIOS_PAYMENTS_CANCEL_URL", f"https://{DOMAIN}/join")
+
+    # ——— Wallet Provider / Xaman ———————————————————————————————————
+    XAMAN_API_KEY = os.getenv("HELIOS_XAMAN_API_KEY", "")
+    XAMAN_API_SECRET = os.getenv("HELIOS_XAMAN_API_SECRET", "")
+
+    # ——— Operations / Background Processing —————————————————————————
+    REDIS_URL = os.getenv("HELIOS_REDIS_URL", "")
+    SENTRY_DSN = os.getenv("HELIOS_SENTRY_DSN", "")
+    RATE_LIMIT_STORAGE_URI = REDIS_URL or "memory://"
+    RATE_LIMIT_DEFAULT = os.getenv("HELIOS_RATE_LIMIT_DEFAULT", "200 per hour;50 per minute")
 
     # ——— Cloudflare / DNS — xxxiii.io ——————————————————————————————
     CF_API_TOKEN = os.getenv("HELIOS_CF_TOKEN", "")

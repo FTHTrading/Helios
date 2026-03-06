@@ -19,9 +19,10 @@ import json
 import os
 import time
 from datetime import datetime, timezone
+from core.xrpl_bridge import XRPLBridge
 
 # ── Constants ──────────────────────────────────────────────────────────
-XRPL_ISSUER = "rHELIOSxxxxxxxxxxxxxxxxxxxxxxxxxx"
+XRPL_ISSUER = HeliosConfig.XRPL_ISSUER_ADDRESS or "rHELIOSxxxxxxxxxxxxxxxxxxxxxxxxxx"
 STELLAR_ISSUER = "GHELIOSXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 HLS_CURRENCY_CODE = "HLS"
 XRPL_RESERVE_XRP = 10          # base reserve for wallet activation
@@ -64,10 +65,10 @@ class AtomicWallet:
             digestmod=hashlib.sha512
         ).digest()
 
-        # XRPL keypair derivation (Ed25519)
-        xrpl_seed = seed[:32]
-        self.xrpl_address = self._derive_xrpl_address(xrpl_seed)
-        self.xrpl_secret = xrpl_seed.hex()
+        # XRPL wallet generation via bridge when configured
+        xrpl_wallet = XRPLBridge().create_member_wallet(self.member_id)
+        self.xrpl_address = xrpl_wallet["classic_address"]
+        self.xrpl_secret = xrpl_wallet["seed"]
 
         # Stellar keypair derivation (Ed25519)
         stellar_seed = seed[32:]
@@ -78,7 +79,8 @@ class AtomicWallet:
             "xrpl_address": self.xrpl_address,
             "stellar_address": self.stellar_public,
             "chains": ["XRPL", "Stellar"],
-            "status": "keypairs_generated"
+            "status": "keypairs_generated",
+            "xrpl_simulation": xrpl_wallet.get("simulation", True),
         }
 
     def _derive_xrpl_address(self, seed: bytes) -> str:
@@ -104,28 +106,22 @@ class AtomicWallet:
           - Limit: 1,000,000,000 HLS
           - Reserve: 2 XRP (stays in wallet)
         """
-        tx = {
-            "TransactionType": "TrustSet",
-            "Account": self.xrpl_address,
-            "LimitAmount": {
-                "currency": HLS_CURRENCY_CODE,
-                "issuer": XRPL_ISSUER,
-                "value": "1000000000"
-            },
-            "Flags": 0,
-            "Fee": "12",  # drops
-        }
+        tx = XRPLBridge().submit_trustset(
+            account_address=self.xrpl_address,
+            account_secret=self.xrpl_secret,
+            limit_value="1000000000"
+        )
 
-        # In production: sign and submit via xrpl-py
         self.trustlines_set["xrpl"] = True
         return {
             "chain": "XRPL",
             "tx_type": "TrustSet",
             "currency": HLS_CURRENCY_CODE,
             "issuer": XRPL_ISSUER,
-            "status": "submitted",
+            "status": "submitted" if tx.get("submitted") else "simulated",
             "reserve_cost": f"{TRUSTLINE_RESERVE_XRP} XRP",
-            "tx_hash": hashlib.sha256(json.dumps(tx).encode()).hexdigest()
+            "tx_hash": tx.get("tx_hash"),
+            "simulation": tx.get("simulation", True),
         }
 
     def set_stellar_trustline(self) -> dict:

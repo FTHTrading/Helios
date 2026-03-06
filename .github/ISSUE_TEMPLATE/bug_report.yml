@@ -1,0 +1,24 @@
+name: Bug report
+description: Report a defect in onboarding, funding, XRPL, or infrastructure
+labels: [bug]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+  - type: textarea
+    id: validation
+    attributes:
+      label: Logs, responses, or screenshots

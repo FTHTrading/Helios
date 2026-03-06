@@ -1,0 +1,27 @@
+name: Feature request
+description: Propose a product, onboarding, wallet, or infrastructure enhancement
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - onboarding
+        - payments
+        - xrpl
+        - infrastructure
+        - docs
+        - security

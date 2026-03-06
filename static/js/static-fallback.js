@@ -90,7 +90,25 @@
             return { success: true, data: { message: 'Demo mode — live transfers require the running protocol.' } };
 
         if (url.match(/\/api\/wallet\/receive-qr\//))
-            return { success: true, data: { message: 'QR code available on the live protocol.', qr_code: '' } };
+            return { success: true, data: { helios_id: 'founder.helios', qr_code: 'data:image/png;base64,DEMO' } };
+
+        if (url === '/api/wallet/xaman/payload') {
+            const request = parseBody(opts);
+            return {
+                success: true,
+                data: {
+                    created: false,
+                    simulation: true,
+                    action: request.action || 'signin',
+                    txjson: buildXamanTx(request),
+                    message: 'Add Xaman credentials to enable wallet signing.',
+                    payload_uuid: 'demo-xaman-payload'
+                }
+            };
+        }
+
+        if (url.match(/\/api\/wallet\/xaman\/payload\//))
+            return { success: true, data: { resolved: false, signed: false, expired: false, simulation: true, payload_uuid: 'demo-xaman-payload' } };
 
         // ── Identity ──
         if (url.match(/\/api\/identity\/verify\//))
@@ -165,11 +183,38 @@
 
         // ── Infrastructure / Status ──
         if (url === '/api/infra/status')
-            return { success: true, data: { status: 'operational', zone: { name: 'xxxiii.io' }, services: { xrpl: 'active', ipfs: 'active', cloudflare: 'active', apmex: 'active', stripe: 'active' } } };
+            return { success: true, data: { status: 'hybrid', zone: { name: 'xxxiii.io' }, services: { xrpl: 'simulated', ipfs: 'not_configured', cloudflare: 'active', apmex: 'manual', stripe: 'not_configured' } } };
+
+        if (url === '/api/infra/readiness')
+            return { success: true, data: { mode: 'hybrid', production_ready: false, recommended_chain: 'XRPL', recommended_certificate_standard: 'XLS-20', recommended_token_model: 'XRPL issued fungible token' } };
+
+        if (url === '/api/funding/catalog')
+            return { success: true, data: demoFundingCatalog() };
 
         if (url === '/api/voice/status')
             return { success: true, data: { status: 'active', tier: 'Professional', remaining: '287,400 chars', voice: 'Drew' } };
 
+        if (url === '/api/funding/checkout') {
+            const request = parseBody(opts);
+            const catalog = demoFundingCatalog();
+            const offer = (catalog.offers || []).find(item => item.code === request.offer_code) || catalog.featured_offer;
+            return {
+                success: true,
+                data: {
+                    status: 'not_configured',
+                    offer,
+                    member_id: request.member_id || 'founder.helios',
+                    amount_total_usd: offer ? offer.amount_usd : 500,
+                    message: 'Stripe is not configured in static mode.',
+                }
+            };
+        }
+
+        if (url === '/api/funding/webhook/stripe')
+            return { success: true, data: { received: true, fulfilled: false, event_type: 'checkout.session.completed' } };
+
+        if (url.match(/\/api\/funding\/events\//))
+            return { success: true, data: { external_id: 'demo_event', provider: 'stripe', status: 'received', offer_code: 'protocol' } };
         if (url === '/api/sms/status')
             return { success: true, data: { status: 'active', from_number: '+1 (833) XXX-XXXX', balance: '24.50', currency: 'USD' } };
 
@@ -321,5 +366,48 @@
         ];
 
         return { total_members: 23, total_connections: edges.length, nodes: nodes, edges: edges };
+    }
+
+    function parseBody(opts) {
+        if (!opts || !opts.body) return {};
+        if (typeof opts.body === 'string') {
+            try { return JSON.parse(opts.body); } catch (_) { return {}; }
+        }
+        return opts.body || {};
+    }
+
+    function buildXamanTx(request) {
+        if (request.action === 'trustline') {
+            return {
+                TransactionType: 'TrustSet',
+                Account: request.account || 'rDemoAccount',
+                LimitAmount: {
+                    currency: 'HLS',
+                    issuer: 'rHeliosIssuerDemo',
+                    value: '1000000000'
+                }
+            };
+        }
+        return { TransactionType: 'SignIn' };
+    }
+
+    function demoFundingCatalog() {
+        const offers = [
+            { code: 'entry', name: 'Atomic Entry', amount_usd: 100, mode: 'payment', category: 'activation', token_amount: 2000, token_price_usd: 0.05 },
+            { code: 'builder', name: 'Builder Activation', amount_usd: 250, mode: 'payment', category: 'activation', token_amount: 5000, token_price_usd: 0.05 },
+            { code: 'protocol', name: 'Protocol Contract', amount_usd: 500, mode: 'payment', category: 'activation', token_amount: 10000, token_price_usd: 0.05, featured: true },
+            { code: 'accelerator', name: 'Accelerator Activation', amount_usd: 1000, mode: 'payment', category: 'activation', token_amount: 20000, token_price_usd: 0.05 },
+            { code: 'architect', name: 'Protocol Architect Activation', amount_usd: 5000, mode: 'payment', category: 'activation', token_amount: 100000, token_price_usd: 0.05 },
+            { code: 'plus', name: 'Plus Membership', amount_usd: 20, mode: 'subscription', category: 'subscription' },
+            { code: 'pro', name: 'Pro Membership', amount_usd: 99, mode: 'subscription', category: 'subscription' },
+            { code: 'operator', name: 'Operator Membership', amount_usd: 499, mode: 'subscription', category: 'subscription' }
+        ];
+        return {
+            recommended_stack: { chain: 'XRPL', wallet: 'Xaman / XUMM', payments: 'Stripe', evidence: 'Pinata + IPFS' },
+            featured_offer: offers[2],
+            offers,
+            activation_tiers: offers.filter(item => item.category === 'activation'),
+            best_funding_mix: ['Atomic entry conversions', 'Recurring Plus/Pro/Operator subscriptions', 'Annual operator/vendor/host credentials', 'Paid spaces and events after launch']
+        };
     }
 })();

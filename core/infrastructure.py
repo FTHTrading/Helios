@@ -8,6 +8,7 @@ Production-grade infrastructure from day one.
 import os
 from datetime import datetime, timezone
 from config import HeliosConfig
+from core.integrations import IntegrationReadiness
 
 
 class HeliosInfra:
@@ -38,6 +39,7 @@ class HeliosInfra:
             return {
                 "status": "not_configured",
                 "message": "Add HELIOS_CF_TOKEN to .env",
+                "readiness": IntegrationReadiness.snapshot(),
                 "services": {
                     "dns": "not_configured",
                     "ssl": "not_configured",
@@ -49,6 +51,7 @@ class HeliosInfra:
         status = {
             "status": "checking",
             "timestamp": datetime.now(timezone.utc).isoformat(),
+            "readiness": IntegrationReadiness.snapshot(),
             "services": {}
         }
 

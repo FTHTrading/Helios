@@ -12,6 +12,10 @@ import time
 import logging
 from datetime import datetime, timezone
 from flask import Flask, render_template, request, g, jsonify
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 
@@ -28,6 +32,21 @@ def create_app():
     """Application factory."""
     app = Flask(__name__)
     app.config.from_object(HeliosConfig)
+
+    limiter = Limiter(
+        key_func=get_remote_address,
+        app=app,
+        default_limits=[limit.strip() for limit in HeliosConfig.RATE_LIMIT_DEFAULT.split(';') if limit.strip()],
+        storage_uri=HeliosConfig.RATE_LIMIT_STORAGE_URI,
+    )
+
+    if HeliosConfig.SENTRY_DSN:
+        sentry_sdk.init(
+            dsn=HeliosConfig.SENTRY_DSN,
+            integrations=[FlaskIntegration()],
+            traces_sample_rate=0.1,
+            environment="development" if HeliosConfig.DEBUG else "production",
+        )
 
     @app.context_processor
     def inject_build_id():
@@ -120,6 +139,7 @@ def create_app():
     from models.credential import Credential  # noqa: F401
     from models.space import Space, SpaceEvent  # noqa: F401
     from models.subscription import Subscription  # noqa: F401
+    from models.payment_event import PaymentEvent  # noqa: F401
     Base.metadata.create_all(engine)
 
     SessionFactory = sessionmaker(bind=engine)
@@ -143,6 +163,7 @@ def create_app():
         wallet_bp, token_bp, chat_bp,
         voice_bp, sms_bp, infra_bp,
         treasury_bp, certificates_bp,
+        funding_bp,
         spaces_bp, metrics_bp, rewards_bp
     )
     app.register_blueprint(identity_bp)
@@ -157,6 +178,7 @@ def create_app():
     app.register_blueprint(infra_bp)
     app.register_blueprint(treasury_bp)
     app.register_blueprint(certificates_bp)
+    app.register_blueprint(funding_bp)
     app.register_blueprint(spaces_bp)
     app.register_blueprint(metrics_bp)
     app.register_blueprint(rewards_bp)

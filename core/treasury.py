@@ -16,6 +16,8 @@ import hashlib
 from datetime import datetime, timezone
 from decimal import Decimal
 from config import HeliosConfig
+from core.ipfs import IpfsBundleService
+from core.xrpl_bridge import XRPLBridge
 from models.vault_receipt import VaultReceipt
 from models.energy_event import EnergyEvent
 
@@ -44,6 +46,26 @@ class TreasuryEngine:
 
         total_cost = unit_cost_usd * quantity
         mvr_id = f"MVR-{uuid.uuid4().hex[:12].upper()}"
+        ipfs = IpfsBundleService()
+        manifest = ipfs.build_receipt_manifest(
+            mvr_id=mvr_id,
+            dealer=dealer,
+            invoice_id=invoice_id,
+            purchase_date=purchase_date,
+            metal=metal,
+            form=form,
+            purity=purity,
+            weight_oz=weight_oz,
+            quantity=quantity,
+            unit_cost_usd=unit_cost_usd,
+            serials=serials or [],
+        )
+        derived_sha256 = evidence_sha256 or ipfs.hash_bundle(manifest)
+
+        if not evidence_cid and ipfs.is_ready():
+            pin_result = ipfs.pin_json(manifest, name=f"{mvr_id}.json")
+            evidence_cid = pin_result.get("cid") or evidence_cid
+            derived_sha256 = pin_result.get("sha256") or derived_sha256
 
         mvr = VaultReceipt(
             mvr_id=mvr_id,
@@ -61,7 +83,7 @@ class TreasuryEngine:
             serials=serials or [],
             custody_status=HeliosConfig.CUSTODY_IN_TREASURY,
             evidence_bundle_cid=evidence_cid,
-            sha256_evidence_bundle=evidence_sha256,
+            sha256_evidence_bundle=derived_sha256,
         )
 
         self.db.add(mvr)
@@ -90,13 +112,22 @@ class TreasuryEngine:
             "updated_at": datetime.now(timezone.utc).isoformat()
         }
 
-    def anchor_to_xrpl(self, mvr_id: str, tx_hash: str,
+    def anchor_to_xrpl(self, mvr_id: str, tx_hash: str = None,
                         issuer_wallet: str = None,
                         attestation_wallet: str = None) -> dict:
         """Record XRPL anchoring transaction for an MVR."""
         mvr = self.db.query(VaultReceipt).filter_by(mvr_id=mvr_id).first()
         if not mvr:
             raise ValueError(f"MVR {mvr_id} not found")
+
+        anchor_result = None
+        if not tx_hash:
+            anchor_result = XRPLBridge().anchor_receipt(
+                mvr_id=mvr.mvr_id,
+                evidence_hash=mvr.sha256_evidence_bundle or hashlib.sha256(mvr.mvr_id.encode()).hexdigest(),
+                cid=mvr.evidence_bundle_cid,
+            )
+            tx_hash = anchor_result.get("tx_hash")
 
         mvr.xrpl_tx_hash = tx_hash
         mvr.issuer_wallet = issuer_wallet or HeliosConfig.XRPL_WALLET_ADDRESS
@@ -106,7 +137,9 @@ class TreasuryEngine:
         return {
             "mvr_id": mvr_id,
             "xrpl_tx_hash": tx_hash,
-            "anchored": True
+            "anchored": True,
+            "simulation": anchor_result.get("simulation", False) if anchor_result else False,
+            "memo": anchor_result.get("memo") if anchor_result else None,
         }
 
     # ═══ Metal Allocation ═════════════════════════════════════════

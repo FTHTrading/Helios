@@ -107,7 +107,10 @@
                 </div>
                 <div id="qr-container" class="qr-container"></div>
                 <p class="qr-label">Share this QR code to connect people</p>
+                <div id="activation-next" class="referrer-badge" style="display:none;text-align:left;margin-bottom:1rem;"></div>
                 <div class="welcome-actions">
+                    <a href="/activate" id="continue-activation" class="btn btn-secondary btn-lg" style="display:none;">Continue Activation</a>
+                    <a href="/web3" class="btn btn-secondary btn-lg">Connect Wallet</a>
                     <a href="/dashboard" class="btn btn-primary btn-lg">Go to Dashboard</a>
                     <a href="/ask" class="btn btn-secondary btn-lg">Ask Helios Anything</a>
                 </div>
@@ -128,6 +131,8 @@ const phraseSaved = document.getElementById('phrase-saved');
 let registrationData = null;
 let verificationId = null;
 let phoneVerified = false;
+const joinQuery = new URLSearchParams(window.location.search);
+const selectedOffer = joinQuery.get('offer') || localStorage.getItem('helios_activation_offer') || '';
 const referrer = "{{ referrer or '' }}" || (function() {
     // Client-side referrer detection for static hosting (Netlify)
     // URL: /enter/kenny or /join/kenny → referrer = "kenny"
@@ -206,6 +211,15 @@ btnStep1.addEventListener('click', function() {
             localStorage.setItem('helios_key', data.data._key);
             localStorage.setItem('helios_id', data.data.helios_id);
         }
+        if (selectedOffer) {
+            localStorage.setItem('helios_activation_offer', selectedOffer);
+        }
+        localStorage.setItem('helios_onboarding', JSON.stringify({
+            member_id: data.data.helios_id,
+            created_at: data.data.created_at,
+            offer_code: selectedOffer || null,
+            phone_verified: false
+        }));
 
         document.getElementById('step-1').classList.remove('active');
         document.getElementById('step-2').classList.add('active');
@@ -309,6 +323,7 @@ document.getElementById('btn-verify-code').addEventListener('click', function() 
 
         if (data.success && data.data.verified) {
             phoneVerified = true;
+            persistOnboarding({ phone_verified: true });
             codeStatus.textContent = '\u2705 Phone verified!';
             codeStatus.className = 'input-status success';
             btn.textContent = 'Verified!';
@@ -367,8 +382,35 @@ btnStep3.addEventListener('click', function() {
         document.getElementById('verified-badge').style.display = 'block';
     }
 
+    showActivationNextSteps();
+    persistOnboarding({ completed_join: true, phone_verified: phoneVerified });
+
     document.getElementById('step-3').classList.remove('active');
     document.getElementById('step-4').classList.add('active');
 });
+
+function persistOnboarding(updates) {
+    const current = JSON.parse(localStorage.getItem('helios_onboarding') || '{}');
+    localStorage.setItem('helios_onboarding', JSON.stringify(Object.assign({}, current, updates)));
+}
+
+function showActivationNextSteps() {
+    const offerCode = selectedOffer || localStorage.getItem('helios_activation_offer');
+    if (!offerCode) return;
+
+    const next = document.getElementById('activation-next');
+    const link = document.getElementById('continue-activation');
+    const labelMap = {
+        entry: '$100 Atomic Entry',
+        builder: '$250 Builder Activation',
+        protocol: '$500 Protocol Contract',
+        accelerator: '$1,000 Accelerator Activation',
+        architect: '$5,000 Protocol Architect Activation'
+    };
+    next.innerHTML = 'Next step: <strong>' + (labelMap[offerCode] || offerCode) + '</strong><br><small>Finish activation, then connect Xaman to open your XRPL trustline and receive HLS.</small>';
+    next.style.display = 'block';
+    link.href = '/activate?offer=' + encodeURIComponent(offerCode);
+    link.style.display = 'inline-flex';
+}
 </script>
 {% endblock %}

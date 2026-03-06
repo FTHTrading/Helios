@@ -8,6 +8,8 @@ Network, not MLM. Bonds, not downlines.
 from flask import Blueprint, request, jsonify, g
 from functools import wraps
 
+from core.validation import validate_payload
+
 # ─── Blueprints ───────────────────────────────────────────────────────
 
 identity_bp = Blueprint("identity", __name__, url_prefix="/api/identity")
@@ -22,6 +24,7 @@ certificates_bp = Blueprint("certificates", __name__, url_prefix="/api/certifica
 spaces_bp = Blueprint("spaces", __name__, url_prefix="/api/spaces")
 metrics_bp = Blueprint("metrics", __name__, url_prefix="/api/metrics")
 rewards_bp = Blueprint("rewards", __name__, url_prefix="/api/rewards")
+funding_bp = Blueprint("funding", __name__, url_prefix="/api/funding")
 
 
 def get_db():
@@ -59,7 +62,7 @@ def create_helios_id():
     """Register a new Helios ID — instantiate a node in the field."""
     from core.identity import HeliosIdentity
 
-    data = request.get_json()
+    data = validate_payload("identity_create", request.get_json())
     name = data.get("name", "").strip()
     referrer = data.get("referrer")
 
@@ -280,7 +283,7 @@ def send_tokens():
     """Send HLS to another member."""
     from core.wallet import HeliosWallet
 
-    data = request.get_json()
+    data = validate_payload("wallet_send", request.get_json())
     wallet = HeliosWallet(get_db())
     result = wallet.send(
         from_id=data["from_id"],
@@ -312,6 +315,34 @@ def get_receive_qr(helios_id):
     wallet = HeliosWallet(get_db())
     result = wallet.get_receive_qr(helios_id)
     return api_response(result)
+
+
+@wallet_bp.route("/xaman/payload", methods=["POST"])
+@handle_errors
+def create_xaman_payload():
+    """Create a Xaman payload for XRPL sign-in or signing."""
+    from core.xaman import XamanService
+
+    data = validate_payload("xaman_payload", request.get_json())
+    service = XamanService()
+    result = service.create_payload(
+        action=data["action"],
+        member_id=data.get("member_id"),
+        account=data.get("account"),
+        destination=data.get("destination"),
+        amount=data.get("amount"),
+    )
+    return api_response(result, status=201)
+
+
+@wallet_bp.route("/xaman/payload/<payload_uuid>", methods=["GET"])
+@handle_errors
+def get_xaman_payload(payload_uuid):
+    """Get Xaman payload resolution state."""
+    from core.xaman import XamanService
+
+    service = XamanService()
+    return api_response(service.get_payload(payload_uuid))
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -525,6 +556,15 @@ def infra_status():
     return api_response(result)
 
 
+@infra_bp.route("/readiness", methods=["GET"])
+@handle_errors
+def readiness():
+    """Production readiness snapshot for blockchain, payments, IPFS, and infrastructure."""
+    from core.integrations import IntegrationReadiness
+
+    return api_response(IntegrationReadiness.snapshot())
+
+
 @infra_bp.route("/dns", methods=["GET"])
 @handle_errors
 def list_dns():
@@ -613,7 +653,7 @@ def create_receipt():
     """Create a new Metal Vault Receipt (admin/operator)."""
     from core.treasury import TreasuryEngine
 
-    data = request.get_json()
+    data = validate_payload("treasury_receipt", request.get_json())
     engine = TreasuryEngine(get_db())
     result = engine.create_vault_receipt(
         dealer=data["dealer"],
@@ -674,11 +714,11 @@ def anchor_receipt():
     """Record XRPL anchoring for a vault receipt."""
     from core.treasury import TreasuryEngine
 
-    data = request.get_json()
+    data = validate_payload("treasury_anchor", request.get_json())
     engine = TreasuryEngine(get_db())
     result = engine.anchor_to_xrpl(
         mvr_id=data["mvr_id"],
-        tx_hash=data["tx_hash"],
+        tx_hash=data.get("tx_hash"),
         issuer_wallet=data.get("issuer_wallet"),
         attestation_wallet=data.get("attestation_wallet")
     )
@@ -817,6 +857,61 @@ def get_portfolio(helios_id):
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# FUNDING ROUTES (Activation + recurring revenue)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+@funding_bp.route("/catalog", methods=["GET"])
+@handle_errors
+def funding_catalog():
+    """Return the recommended monetization catalog for Helios."""
+    from core.funding import FundingEngine
+
+    engine = FundingEngine(get_db())
+    return api_response(engine.get_catalog())
+
+
+@funding_bp.route("/checkout", methods=["POST"])
+@handle_errors
+def funding_checkout():
+    """Create a hosted checkout session for entry, memberships, or credentials."""
+    from core.funding import FundingEngine
+
+    data = validate_payload("funding_checkout", request.get_json())
+    engine = FundingEngine(get_db())
+    result = engine.create_checkout(
+        offer_code=data["offer_code"],
+        quantity=int(data.get("quantity", 1)),
+        customer_email=data.get("customer_email"),
+        member_id=data.get("member_id"),
+        metadata=data.get("metadata") or {},
+    )
+    return api_response(result, status=201 if result.get("status") == "created" else 200)
+
+
+@funding_bp.route("/webhook/stripe", methods=["POST"])
+@handle_errors
+def stripe_webhook():
+    """Receive Stripe webhook events and fulfill offers."""
+    from core.funding import FundingEngine
+
+    signature = request.headers.get("Stripe-Signature")
+    payload = request.get_data()
+    engine = FundingEngine(get_db())
+    result = engine.process_stripe_webhook(payload, signature=signature)
+    return api_response(result, status=200)
+
+
+@funding_bp.route("/events/<external_id>", methods=["GET"])
+@handle_errors
+def funding_event(external_id):
+    """Get a recorded checkout or webhook event."""
+    from core.funding import FundingEngine
+
+    engine = FundingEngine(get_db())
+    return api_response(engine.get_payment_event(external_id))
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # ENERGY EXCHANGE ROUTES (Conservation-Law Engine)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -826,7 +921,7 @@ def inject_energy():
     """Inject energy from entry fee. Atomic $100 split."""
     from core.energy_exchange import EnergyExchange
 
-    data = request.get_json()
+    data = validate_payload("energy_inject", request.get_json())
     engine = EnergyExchange(get_db())
     result = engine.inject_entry_energy(
         member_id=data["member_id"],

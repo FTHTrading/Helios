@@ -16,10 +16,12 @@ import hashlib
 import json
 import time
 from datetime import datetime, timezone
+from config import HeliosConfig
+from core.xrpl_bridge import XRPLBridge
 
 
 # ── Constants ──────────────────────────────────────────────────────────
-XRPL_ISSUER = "rHELIOSxxxxxxxxxxxxxxxxxxxxxxxxxx"
+XRPL_ISSUER = HeliosConfig.XRPL_ISSUER_ADDRESS or "rHELIOSxxxxxxxxxxxxxxxxxxxxxxxxxx"
 STELLAR_ISSUER = "GHELIOSXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 HLS_CURRENCY_CODE = "HLS"
 TOKEN_PRICE_PHASE1 = 0.05   # $0.05 per HLS — founding price
@@ -61,24 +63,11 @@ class TokenIssuance:
         """
         calc = TokenIssuance.calculate_tokens(amount, phase)
 
-        tx = {
-            "TransactionType": "Payment",
-            "Account": XRPL_ISSUER,
-            "Destination": xrpl_address,
-            "Amount": {
-                "currency": HLS_CURRENCY_CODE,
-                "issuer": XRPL_ISSUER,
-                "value": str(calc["tokens_issued"])
-            },
-            "Memos": [{
-                "Memo": {
-                    "MemoType": "746578742F706C61696E",  # text/plain
-                    "MemoData": f"HLS issuance: {calc['formatted']} at ${calc['price_per_hls']}/HLS"
-                }
-            }]
-        }
-
-        tx_hash = hashlib.sha256(json.dumps(tx).encode()).hexdigest()
+        tx = XRPLBridge().issue_token_payment(
+            destination=xrpl_address,
+            value=calc["tokens_issued"],
+            memo_text=f"HLS issuance: {calc['formatted']} at ${calc['price_per_hls']}/HLS"
+        )
 
         return {
             "type": "token_issuance",
@@ -89,8 +78,9 @@ class TokenIssuance:
             "price": calc["price_per_hls"],
             "phase": phase,
             "chain": "XRPL",
-            "tx_hash": tx_hash,
-            "status": "issued",
+            "tx_hash": tx.get("tx_hash"),
+            "status": "issued" if tx.get("submitted") else "simulated",
+            "simulation": tx.get("simulation", True),
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
@@ -127,16 +117,11 @@ class NFTCertificate:
 
         metadata_uri = f"{CERT_METADATA_BASE}{hashlib.sha256(json.dumps(metadata).encode()).hexdigest()[:24]}"
 
-        nft_tx = {
-            "TransactionType": "NFTokenMint",
-            "Account": XRPL_ISSUER,
-            "NFTokenTaxon": 1,  # Gold certificate class
-            "URI": metadata_uri.encode().hex(),
-            "Flags": 8,  # tfTransferable
-            "TransferFee": 0,  # no royalty on certificates
-        }
-
-        tx_hash = hashlib.sha256(json.dumps(nft_tx).encode()).hexdigest()
+        nft_tx = XRPLBridge().mint_nft(
+            metadata_uri=metadata_uri,
+            taxon=1,
+            transferable=True,
+        )
 
         return {
             "type": "nft_certificate",
@@ -146,8 +131,9 @@ class NFTCertificate:
             "contract_tier": contract_tier,
             "gold_backing_oz": gold_weight_oz,
             "metadata_uri": metadata_uri,
-            "tx_hash": tx_hash,
-            "status": "minted",
+            "tx_hash": nft_tx.get("tx_hash"),
+            "status": "minted" if nft_tx.get("submitted") else "simulated",
+            "simulation": nft_tx.get("simulation", True),
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
@@ -209,16 +195,11 @@ class CeremonialNFT:
 
         metadata_uri = f"{CEREMONIAL_METADATA_BASE}{hashlib.sha256(json.dumps(metadata).encode()).hexdigest()[:24]}"
 
-        nft_tx = {
-            "TransactionType": "NFTokenMint",
-            "Account": XRPL_ISSUER,
-            "NFTokenTaxon": 100,  # Ceremonial class
-            "URI": metadata_uri.encode().hex(),
-            "Flags": 0,  # NOT transferable (soulbound)
-            "TransferFee": 0,
-        }
-
-        tx_hash = hashlib.sha256(json.dumps(nft_tx).encode()).hexdigest()
+        nft_tx = XRPLBridge().mint_nft(
+            metadata_uri=metadata_uri,
+            taxon=100,
+            transferable=False,
+        )
 
         return {
             "type": "ceremonial_nft",
@@ -229,8 +210,9 @@ class CeremonialNFT:
             "destination": xrpl_address,
             "soulbound": True,
             "metadata_uri": metadata_uri,
-            "tx_hash": tx_hash,
-            "status": "minted",
+            "tx_hash": nft_tx.get("tx_hash"),
+            "status": "minted" if nft_tx.get("submitted") else "simulated",
+            "simulation": nft_tx.get("simulation", True),
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 

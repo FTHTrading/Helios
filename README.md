@@ -8,7 +8,7 @@
 
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![Flask](https://img.shields.io/badge/Flask-3.0-000000?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com)
-[![License](https://img.shields.io/badge/License-Proprietary-f59e0b?style=for-the-badge)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge)](LICENSE)
 [![Deploy](https://img.shields.io/badge/Netlify-Deployed-00C7B7?style=for-the-badge&logo=netlify&logoColor=white)](https://xxxiii.io)
 [![Status](https://img.shields.io/badge/Status-Production-22c55e?style=for-the-badge)]()
 
@@ -21,6 +21,19 @@
 **`xxxiii.io`** — $100 atomic entry · Pentagonal bounded field · Metal-backed treasury · Cryptographic certificates · Conservation law
 
 </div>
+
+---
+
+## 🟩 Launch Repository Pack
+
+This repo now includes a public launch package suitable for `Helios-launch` with MIT licensing, community files, CI, and launch documentation.
+
+- [docs/HELIOS_LAUNCH_BLUEPRINT.md](docs/HELIOS_LAUNCH_BLUEPRINT.md) — production architecture and deployment stack
+- [docs/HELIOS_REVIEW_RESPONSE.md](docs/HELIOS_REVIEW_RESPONSE.md) — color-coded response to the March 5 codebase review
+- [docs/REPOSITORY_PROTECTIONS.md](docs/REPOSITORY_PROTECTIONS.md) — recommended GitHub protections
+- [docs/PUSH_TO_HELIOS_LAUNCH.md](docs/PUSH_TO_HELIOS_LAUNCH.md) — exact push steps for the new GitHub repository
+- [SECURITY.md](SECURITY.md) — security reporting policy
+- [CONTRIBUTING.md](CONTRIBUTING.md) — contribution rules
 
 ---
 
@@ -953,6 +966,45 @@ python freeze.py       # Build for Netlify
 python audit.py        # Full system audit
 python verify_launch.py # Launch verification
 ```
+
+### Production Upgrade Path
+
+The repo now includes an XRPL-first production scaffold that can run in two modes:
+
+- **Hybrid mode:** safe dry-run behavior when provider credentials are missing
+- **Production mode:** real XRPL, Stripe, Pinata, and Cloudflare integrations when configured
+
+Key additions:
+
+- `GET /api/infra/readiness` → reports whether XRPL, Stripe, IPFS, and Postgres are ready
+- `GET /api/funding/catalog` → returns the recommended monetization stack and offers
+- `POST /api/funding/checkout` → creates hosted Stripe checkout sessions
+- `POST /api/funding/webhook/stripe` → fulfills entry payments and subscriptions
+- `POST /api/wallet/xaman/payload` → creates Xaman/XUMM sign-in and signing payloads
+
+Recommended production stack:
+
+- **Chain:** XRPL
+- **Wallet:** Xaman / XUMM
+- **Fungible token:** XRPL-issued HLS
+- **Certificates:** XRPL XLS-20 NFTs
+- **Evidence:** Pinata + IPFS
+- **Funding:** Stripe for atomic entry + recurring subscriptions
+
+Best revenue mix:
+
+- $100 atomic entry conversion
+- Plus / Pro / Operator recurring subscriptions
+- operator / vendor / host credentials
+- paid spaces and hosted events after activation
+
+Member activation flow:
+
+1. Open `/activate` and choose an activation tier (`entry`, `builder`, `protocol`, `accelerator`, or `architect`)
+2. Create the hosted checkout session from the activation page or from `/web3`
+3. Complete payment, or stage it in hybrid mode while credentials are being connected
+4. Open `/web3`, connect Xaman, and sign the XRPL trustline payload
+5. Use `/status` to confirm readiness and provider configuration before going live
 
 ---
 

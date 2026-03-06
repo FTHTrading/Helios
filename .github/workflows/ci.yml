@@ -1,0 +1,40 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Compile Python
+        run: python -m compileall app.py api core models config.py
+      - name: Smoke test routes
+        run: |
+          python - <<'PY'
+          from app import create_app
+          app = create_app()
+          client = app.test_client()
+          checks = [
+              ('/health', 200),
+              ('/api/funding/catalog', 200),
+              ('/api/infra/readiness', 200),
+              ('/activate', 200),
+              ('/web3?offer=protocol', 200),
+          ]
+          for path, expected in checks:
+              response = client.get(path)
+              assert response.status_code == expected, (path, response.status_code)
+          print('smoke checks passed')
+          PY

@@ -73,6 +73,37 @@
     50% { opacity: .4; }
 }
 
+.wallet-actions {
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    gap:1.25rem; margin-bottom:2rem;
+}
+.action-card {
+    background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius);
+    padding:1.4rem;
+}
+.action-card h3 { margin-bottom:.45rem; font-size:1rem; }
+.action-card p { color:var(--text-muted); font-size:.84rem; line-height:1.6; margin-bottom:1rem; }
+.action-row { display:flex; gap:.75rem; flex-wrap:wrap; }
+.status-pill {
+    display:inline-flex; align-items:center; gap:.35rem; padding:.3rem .7rem; border-radius:999px;
+    font-size:.72rem; font-weight:700; letter-spacing:.04em; font-family:'Inter', sans-serif;
+    border:1px solid rgba(41,151,255,.2); background:rgba(41,151,255,.08); color:var(--gold);
+}
+.onboarding-summary {
+    display:flex; gap:1rem; align-items:flex-start; justify-content:space-between; flex-wrap:wrap;
+    background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius);
+    padding:1rem 1.2rem; margin-bottom:1.5rem;
+}
+.wallet-qr {
+    width:100%; min-height:120px; border:1px dashed rgba(41,151,255,.25); border-radius:10px;
+    display:flex; align-items:center; justify-content:center; padding:1rem; background:rgba(41,151,255,.03);
+}
+.wallet-qr img { max-width:160px; border-radius:8px; }
+.wallet-code {
+    background:rgba(41,151,255,.04); border:1px solid rgba(41,151,255,.12); border-radius:8px;
+    padding:.75rem; color:var(--text-muted); font-size:.78rem; overflow:auto;
+}
+
 /* ——— Issuance Summary ————————————————————————————————————— */
 .issuance-grid {
     display: grid; grid-template-columns: repeat(3, 1fr);
@@ -223,6 +254,43 @@
         <p style="color:var(--gold);font-weight:600;font-size:.8rem;letter-spacing:.12em;opacity:.7;font-family:'Inter',sans-serif;">
             XRPL &middot; STELLAR &middot; SELF-SETTLING &middot; YOUR KEYS
         </p>
+    </section>
+
+    <section class="w3-section">
+        <div class="onboarding-summary">
+            <div>
+                <h2 style="margin-bottom:.2rem;">Activation & Wallet Onboarding</h2>
+                <p class="section-desc" style="margin-bottom:0;max-width:560px;">Complete payment, connect Xaman, then open your XRPL trustline. Once live credentials are added, the same flow settles directly on XRPL.</p>
+            </div>
+            <div>
+                <div class="status-pill" id="readinessMode">HYBRID</div>
+                <div style="margin-top:.75rem;font-size:.84rem;color:var(--text-muted);" id="selectedOfferSummary">Loading activation tier...</div>
+            </div>
+        </div>
+
+        <div class="wallet-actions">
+            <div class="action-card">
+                <h3>1. Confirm Activation</h3>
+                <p id="activationFlowMessage">Select your activation tier and create a checkout session.</p>
+                <div class="action-row">
+                    <a href="/activate" class="btn btn-secondary" id="activationCta">Open Activation</a>
+                    <button class="btn btn-primary" id="stagedCheckoutBtn">Stage Checkout</button>
+                </div>
+            </div>
+            <div class="action-card">
+                <h3>2. Connect Xaman</h3>
+                <p id="xamanStatus">Sign in with Xaman to attach your XRPL account to this member profile.</p>
+                <div class="action-row">
+                    <button class="btn btn-primary" id="connectWalletBtn">Connect Wallet</button>
+                    <button class="btn btn-secondary" id="openTrustlineBtn" disabled>Open Trustline</button>
+                </div>
+            </div>
+            <div class="action-card">
+                <h3>3. Review Payload</h3>
+                <div class="wallet-qr" id="xamanQr">Wallet QR or signing link will appear here.</div>
+                <div class="wallet-code" id="xamanPayloadPreview" style="margin-top:1rem;display:none;"></div>
+            </div>
+        </div>
     </section>
 
     <!-- ═══ WALLET OVERVIEW ═══ -->
@@ -379,7 +447,7 @@
                 <h4>Chain & Settlement</h4>
                 <div class="pref-row">
                     <span class="pref-label">Primary Chain</span>
-                    <select class="pref-select" id="prefChain">
+                    <select class="pref-select" id="prefChain" title="Primary chain preference">
                         <option value="XRPL" selected>XRPL</option>
                         <option value="Stellar">Stellar</option>
                     </select>
@@ -390,7 +458,7 @@
                 </div>
                 <div class="pref-row">
                     <span class="pref-label">Preferred Stablecoin</span>
-                    <select class="pref-select" id="prefStable">
+                    <select class="pref-select" id="prefStable" title="Preferred stablecoin">
                         <option value="USDC" selected>USDC</option>
                         <option value="USDT">USDT</option>
                     </select>
@@ -405,7 +473,7 @@
                 </div>
                 <div class="pref-row">
                     <span class="pref-label">Default Lock Duration</span>
-                    <select class="pref-select" id="prefStakeDuration">
+                    <select class="pref-select" id="prefStakeDuration" title="Default staking duration">
                         <option value="30">30 days (+5%)</option>
                         <option value="90" selected>90 days (+12%)</option>
                         <option value="180">180 days (+20%)</option>
@@ -422,7 +490,7 @@
                 <h4>Certificates</h4>
                 <div class="pref-row">
                     <span class="pref-label">Certificate Format</span>
-                    <select class="pref-select" id="prefCertFormat">
+                    <select class="pref-select" id="prefCertFormat" title="Certificate format preference">
                         <option value="nft" selected>NFT (on-chain)</option>
                         <option value="json">JSON (off-chain)</option>
                         <option value="both">Both</option>
@@ -522,6 +590,13 @@
 
 {% block scripts %}
 <script>
+let fundingCatalog = { offers: [] };
+let xamanPollTimer = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    initializeWeb3();
+});
+
 function togglePref(el) {
     el.classList.toggle('on');
 }
@@ -556,5 +631,183 @@ function savePreferences() {
         } catch(e) {}
     }
 })();
+
+async function initializeWeb3() {
+    bindWalletActions();
+    hydrateStoredWallet();
+
+    try {
+        const [catalogResponse, readinessResponse] = await Promise.all([
+            fetch('/api/funding/catalog').then(function(r) { return r.json(); }),
+            fetch('/api/infra/readiness').then(function(r) { return r.json(); })
+        ]);
+
+        if (catalogResponse.success) {
+            fundingCatalog = catalogResponse.data || { offers: [] };
+        }
+
+        if (readinessResponse.success) {
+            updateReadiness(readinessResponse.data || {});
+        }
+    } catch (error) {
+        document.getElementById('selectedOfferSummary').textContent = 'Select an activation tier, then connect your wallet.';
+    }
+
+    refreshSelectedOffer();
+}
+
+function bindWalletActions() {
+    document.getElementById('connectWalletBtn').addEventListener('click', function() {
+        createXamanPayload('signin');
+    });
+    document.getElementById('openTrustlineBtn').addEventListener('click', function() {
+        createXamanPayload('trustline');
+    });
+    document.getElementById('stagedCheckoutBtn').addEventListener('click', async function() {
+        const offerCode = getSelectedOfferCode();
+        localStorage.setItem('helios_activation_offer', offerCode);
+        const memberId = localStorage.getItem('helios_id');
+        if (!memberId) {
+            window.location.href = '/join?offer=' + encodeURIComponent(offerCode);
+            return;
+        }
+
+        const response = await fetch('/api/funding/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                offer_code: offerCode,
+                member_id: memberId,
+                metadata: { source: 'web3_page' }
+            })
+        }).then(function(r) { return r.json(); });
+
+        if (response.success) {
+            localStorage.setItem('helios_activation_checkout', JSON.stringify(response.data || {}));
+            document.getElementById('activationFlowMessage').textContent = response.data.message || 'Checkout staged. Continue with Xaman while payment credentials are configured.';
+            refreshSelectedOffer();
+        } else {
+            document.getElementById('activationFlowMessage').textContent = response.error || 'Unable to stage checkout.';
+        }
+    });
+}
+
+function updateReadiness(readiness) {
+    const mode = (readiness.mode || 'hybrid').toUpperCase();
+    document.getElementById('readinessMode').textContent = mode;
+}
+
+function getSelectedOfferCode() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('offer') || localStorage.getItem('helios_activation_offer') || 'protocol';
+}
+
+function findOffer(code) {
+    return (fundingCatalog.offers || []).find(function(offer) { return offer.code === code; });
+}
+
+function refreshSelectedOffer() {
+    const offerCode = getSelectedOfferCode();
+    const offer = findOffer(offerCode);
+    const checkout = JSON.parse(localStorage.getItem('helios_activation_checkout') || '{}');
+
+    if (offer) {
+        document.getElementById('selectedOfferSummary').textContent = offer.name + ' · $' + offer.amount_usd + (offer.token_amount ? ' · ' + offer.token_amount.toLocaleString() + ' HLS' : '');
+        document.getElementById('activationCta').href = '/activate?offer=' + encodeURIComponent(offerCode);
+        document.getElementById('tokenAmount').textContent = offer.token_amount ? offer.token_amount.toLocaleString() + ' HLS' : '—';
+    } else {
+        document.getElementById('selectedOfferSummary').textContent = 'Choose an activation tier to see your HLS allocation.';
+    }
+
+    if (checkout && checkout.status) {
+        document.getElementById('activationFlowMessage').textContent = checkout.message || ('Checkout status: ' + checkout.status.replace('_', ' '));
+    }
+}
+
+function hydrateStoredWallet() {
+    const account = localStorage.getItem('helios_xrpl_account');
+    if (account) {
+        setWalletConnected(account);
+    }
+}
+
+async function createXamanPayload(action) {
+    const account = localStorage.getItem('helios_xrpl_account');
+    const memberId = localStorage.getItem('helios_id');
+    if (action === 'trustline' && !account) {
+        document.getElementById('xamanStatus').textContent = 'Connect Xaman first, then open the HLS trustline.';
+        return;
+    }
+
+    const payload = {
+        action: action,
+        member_id: memberId,
+        account: account
+    };
+
+    const response = await fetch('/api/wallet/xaman/payload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    }).then(function(r) { return r.json(); });
+
+    if (!response.success) {
+        document.getElementById('xamanStatus').textContent = response.error || 'Unable to create Xaman payload.';
+        return;
+    }
+
+    const data = response.data || {};
+    renderPayload(data);
+
+    if (data.payload_uuid) {
+        localStorage.setItem('helios_xaman_payload_uuid', data.payload_uuid);
+        startPayloadPolling(data.payload_uuid);
+    }
+}
+
+function renderPayload(data) {
+    const qr = document.getElementById('xamanQr');
+    const preview = document.getElementById('xamanPayloadPreview');
+    document.getElementById('xamanStatus').textContent = data.message || (data.simulation ? 'Simulation mode active. Add Xaman credentials for live signing.' : 'Scan the QR with Xaman to continue.');
+
+    if (data.qr_png) {
+        qr.innerHTML = '<img src="' + data.qr_png + '" alt="Xaman QR">';
+    } else if (data.always) {
+        qr.innerHTML = '<a class="btn btn-primary" href="' + data.always + '" target="_blank" rel="noopener">Open Xaman</a>';
+    } else {
+        qr.textContent = data.simulation ? 'Simulation payload created. Review the transaction preview below.' : 'Payload created. Open Xaman to continue.';
+    }
+
+    preview.style.display = 'block';
+    preview.textContent = JSON.stringify(data.txjson || data, null, 2);
+}
+
+function startPayloadPolling(payloadUuid) {
+    if (xamanPollTimer) {
+        clearInterval(xamanPollTimer);
+    }
+
+    xamanPollTimer = setInterval(async function() {
+        const response = await fetch('/api/wallet/xaman/payload/' + encodeURIComponent(payloadUuid)).then(function(r) { return r.json(); });
+        if (!response.success) {
+            return;
+        }
+
+        const data = response.data || {};
+        if (data.resolved && data.signed) {
+            clearInterval(xamanPollTimer);
+            setWalletConnected(data.account);
+            document.getElementById('xamanStatus').textContent = 'Wallet connected. Open the HLS trustline next.';
+        }
+    }, 4000);
+}
+
+function setWalletConnected(account) {
+    if (!account) return;
+    localStorage.setItem('helios_xrpl_account', account);
+    document.getElementById('xrplAddress').textContent = account;
+    document.getElementById('openTrustlineBtn').disabled = false;
+    document.getElementById('xamanStatus').textContent = 'Connected XRPL account: ' + account;
+}
 </script>
 {% endblock %}

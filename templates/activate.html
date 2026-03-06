@@ -164,6 +164,20 @@
 }
 .urgency-footer .uf-cta:hover { opacity:.9; transform:translateY(-1px); }
 
+.activation-status {
+    max-width: 760px; margin: 0 auto 2rem; padding: 1rem 1.2rem;
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+}
+.activation-status strong { color: var(--gold); }
+.activation-status small { color: var(--text-muted); display:block; margin-top:.4rem; line-height:1.5; }
+.activation-banner {
+    display:flex; gap:1rem; align-items:center; justify-content:space-between; flex-wrap:wrap;
+}
+.activation-banner .badge {
+    display:inline-flex; align-items:center; gap:.35rem; padding:.3rem .75rem; border-radius:999px;
+    border:1px solid rgba(251,191,36,.2); background:rgba(251,191,36,.08); color:var(--gold); font-size:.75rem; font-weight:700;
+}
+
 /* ─── Transparency ────────────────────────────────────────────────── */
 .transparency-block { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1.5rem; text-align:center; margin-bottom:2rem; }
 .transparency-block h3 { font-size:1rem; font-weight:600; margin-bottom:.3rem; }
@@ -207,6 +221,15 @@
 
     <!-- ═══ FOUNDING WINDOW URGENCY ═══ -->
     <section class="act-section" style="padding-bottom:1rem;">
+        <div class="activation-status" id="activationStatus">
+            <div class="activation-banner">
+                <div>
+                    <strong id="activationHeadline">Loading activation path...</strong>
+                    <small id="activationMessage">Checking funding and wallet readiness.</small>
+                </div>
+                <span class="badge" id="activationBadge">START</span>
+            </div>
+        </div>
         <div class="founding-strip">
             <div class="fs-title">&#9200; Founding Window — Limited Time</div>
             <div class="fs-desc">
@@ -240,7 +263,7 @@
                 <strong>73% of founding members</strong> choose the $500 contract &mdash;
                 it&rsquo;s the optimal balance of allocation power and entry point.
             </div>
-            <a href="/join" class="sweet-cta">Activate $500 Contract &rarr;</a>
+            <a href="#" class="sweet-cta activation-link" data-offer-code="protocol">Activate $500 Contract &rarr;</a>
             <div class="sweet-savings">You save $0.45/token vs Phase 3 pricing &middot; Founding bonus expires soon</div>
         </div>
     </section>
@@ -265,7 +288,7 @@
                     <li>BTC/ETH/stablecoin access</li>
                     <li>.helios identity</li>
                 </ul>
-                <a href="/join" class="at-cta">Activate &mdash; $100</a>
+                <a href="#" class="at-cta activation-link" data-offer-code="entry">Activate &mdash; $100</a>
                 <div class="compare-tip">Good start &mdash; <strong>$500 unlocks 5&times; more</strong></div>
             </div>
 
@@ -284,7 +307,7 @@
                     <li>Full crypto access</li>
                     <li>Higher staking reward</li>
                 </ul>
-                <a href="/join" class="at-cta">Activate &mdash; $250</a>
+                <a href="#" class="at-cta activation-link" data-offer-code="builder">Activate &mdash; $250</a>
                 <div class="compare-tip">Strong &mdash; <strong>$500 doubles your allocation</strong></div>
             </div>
 
@@ -303,7 +326,7 @@
                     <li>Maximum staking reward</li>
                     <li>Premium NFT drops</li>
                 </ul>
-                <a href="/join" class="at-cta">Activate &mdash; $1,000</a>
+                <a href="#" class="at-cta activation-link" data-offer-code="accelerator">Activate &mdash; $1,000</a>
             </div>
 
             <!-- $5,000 -->
@@ -321,7 +344,7 @@
                     <li>Exclusive NFT collection</li>
                     <li>Highest staking tier</li>
                 </ul>
-                <a href="/join" class="at-cta">Activate &mdash; $5,000</a>
+                <a href="#" class="at-cta activation-link" data-offer-code="architect">Activate &mdash; $5,000</a>
             </div>
 
         </div>
@@ -400,8 +423,118 @@
             Every day you wait is value left on the table.
             Lock in $0.05/HLS and the 10&times; multiplier before it&rsquo;s gone.
         </p>
-        <a href="/join" class="uf-cta">Activate the $500 Sweet Spot &rarr;</a>
+        <a href="#" class="uf-cta activation-link" data-offer-code="protocol">Activate the $500 Sweet Spot &rarr;</a>
     </section>
 
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const activationCatalog = { offers: [] };
+const activationQuery = new URLSearchParams(window.location.search);
+const pendingOfferCode = activationQuery.get('offer') || localStorage.getItem('helios_activation_offer') || 'protocol';
+
+document.addEventListener('DOMContentLoaded', function () {
+    bindActivationButtons();
+    loadActivationCatalog();
+});
+
+function bindActivationButtons() {
+    document.querySelectorAll('.activation-link').forEach(function (link) {
+        link.addEventListener('click', function (event) {
+            event.preventDefault();
+            beginActivation(link.dataset.offerCode || 'protocol');
+        });
+    });
+}
+
+async function loadActivationCatalog() {
+    try {
+        const [catalogRes, readinessRes] = await Promise.all([
+            fetch('/api/funding/catalog').then(r => r.json()),
+            fetch('/api/infra/readiness').then(r => r.json())
+        ]);
+
+        if (catalogRes.success) {
+            activationCatalog.offers = catalogRes.data.offers || [];
+        }
+
+        const offer = getOffer(pendingOfferCode) || getOffer('protocol') || activationCatalog.offers[0];
+        const mode = readinessRes.success && readinessRes.data ? readinessRes.data.mode : 'hybrid';
+        setActivationStatus(
+            offer ? `${offer.name} selected${offer.token_amount ? ` · ${offer.token_amount.toLocaleString()} HLS` : ''}` : 'Choose your activation tier',
+            mode === 'production'
+                ? 'Checkout and wallet flows are live. Complete payment, then connect Xaman to open your XRPL trustline.'
+                : 'Hybrid mode is active. You can stage the activation flow now, then connect Stripe and Xaman credentials for live settlement.',
+            mode.toUpperCase()
+        );
+    } catch (error) {
+        setActivationStatus('Activation flow ready', 'Join, select your tier, and continue through payment and wallet connection.', 'READY');
+    }
+}
+
+function getOffer(code) {
+    return (activationCatalog.offers || []).find(function (offer) { return offer.code === code; });
+}
+
+function setActivationStatus(headline, message, badge) {
+    document.getElementById('activationHeadline').textContent = headline;
+    document.getElementById('activationMessage').textContent = message;
+    document.getElementById('activationBadge').textContent = badge;
+}
+
+async function beginActivation(offerCode) {
+    localStorage.setItem('helios_activation_offer', offerCode);
+    const memberId = localStorage.getItem('helios_id');
+    const offer = getOffer(offerCode);
+
+    if (!memberId) {
+        window.location.href = '/join?offer=' + encodeURIComponent(offerCode);
+        return;
+    }
+
+    setActivationStatus(
+        `Starting ${offer ? offer.name : offerCode}`,
+        'Creating checkout session and saving your onboarding state.',
+        'CHECKOUT'
+    );
+
+    try {
+        const response = await fetch('/api/funding/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                offer_code: offerCode,
+                member_id: memberId,
+                metadata: {
+                    source: 'activate_page',
+                    selected_offer: offerCode
+                }
+            })
+        }).then(function (r) { return r.json(); });
+
+        if (!response.success) {
+            throw new Error(response.error || 'Checkout failed');
+        }
+
+        const data = response.data || {};
+        localStorage.setItem('helios_activation_checkout', JSON.stringify(data));
+
+        if (data.checkout_url) {
+            window.location.href = data.checkout_url;
+            return;
+        }
+
+        setActivationStatus(
+            `${offer ? offer.name : offerCode} staged`,
+            data.message || 'Checkout is staged. Continue to wallet setup while payment credentials are being connected.',
+            'STAGED'
+        );
+        window.location.href = '/web3?offer=' + encodeURIComponent(offerCode);
+    } catch (error) {
+        setActivationStatus('Activation needs attention', error.message || 'Unable to start checkout.', 'ERROR');
+    }
+}
+</script>
 {% endblock %}
