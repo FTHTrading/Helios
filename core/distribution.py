@@ -2,6 +2,7 @@
 Helios Distribution Engine
 ───────────────────────────
 5-channel distribution system for member cards and invitations.
+Aligned to heliosdigital.xyz — the live gold platform.
 
 Channels:
   1. Link    — copy shareable URL
@@ -10,13 +11,29 @@ Channels:
   4. Text    — SMS/iMessage share
   5. Invite  — native share API or clipboard fallback
 
-The Forward Doctrine: "Even when the backend is complex,
-the product must feel simple, clear, premium, and easy to trust."
+Language and CTAs match the live site:
+  - "Join the Helios Club — $99.95"
+  - "Modern digital gold platform"
+  - .helios namespace, Gold Desk, reserve-aware infrastructure
 """
 
 from dataclasses import dataclass
 from typing import Optional
 from config import HeliosConfig
+
+
+# ─── Member Tier System (matches live site /founder and /premium) ──
+TIER_LABELS = {
+    "founder":        "Founding Member",
+    "silver":         "Silver Member",
+    "gold":           "Gold Member",
+    "platinum":       "Platinum Member",
+    "diamond":        "Diamond Member",
+    "gold_desk":      "Gold Desk Member",
+    "strategic":      "Strategic Member",
+    "premier":        "Premier Member",
+    "institutional":  "Institutional Member",
+}
 
 
 @dataclass
@@ -37,7 +54,7 @@ class ShareObject:
             "og:url": self.url,
             "og:image": self.image_url or f"https://{HeliosConfig.DOMAIN}/static/img/og-helios.svg",
             "og:type": "website",
-            "og:site_name": "Helios Protocol",
+            "og:site_name": "Helios",
         }
 
     def to_twitter_dict(self) -> dict:
@@ -61,7 +78,7 @@ class DistributionEngine:
         "link": {
             "label": "Copy Link",
             "icon": "🔗",
-            "description": "Copy your personal join link",
+            "description": "Copy your personal invite link",
             "requires_js": True,
         },
         "qr": {
@@ -91,9 +108,14 @@ class DistributionEngine:
     }
 
     @classmethod
-    def build_join_url(cls, display_name: str) -> str:
-        """Build the canonical join URL for a member."""
-        return f"https://{cls.DOMAIN}/join/{display_name}"
+    def build_club_url(cls) -> str:
+        """Build the canonical Helios Club join URL."""
+        return f"https://{cls.DOMAIN}/club"
+
+    @classmethod
+    def build_invite_url(cls, display_name: str) -> str:
+        """Build the personalized invite URL for a member."""
+        return f"https://{cls.DOMAIN}/club?ref={display_name}"
 
     @classmethod
     def build_card_url(cls, display_name: str) -> str:
@@ -118,13 +140,19 @@ class DistributionEngine:
     @classmethod
     def build_text_url(cls, display_name: str, is_founder: bool = False) -> str:
         """Build an SMS share URL with pre-filled message."""
-        join_url = cls.build_join_url(display_name)
-        tier_word = "founder" if is_founder else "member"
-        message = (
-            f"I'm inviting you to Helios — a gold-backed smart contract protocol. "
-            f"Join through my personal link as a {tier_word} connection: {join_url}"
-        )
-        # sms: URI scheme works on iOS and Android
+        invite_url = cls.build_invite_url(display_name)
+        if is_founder:
+            message = (
+                f"I'd like to invite you to Helios — a modern digital gold platform. "
+                f"Founding membership, your own .helios namespace, Gold Desk access, "
+                f"and guided onboarding. Join through my personal link: {invite_url}"
+            )
+        else:
+            message = (
+                f"I joined Helios — a modern digital gold platform with gold certificates, "
+                f"sovereign .helios identity, and reserve-aware infrastructure. "
+                f"Join with founding access: {invite_url}"
+            )
         return f"sms:?&body={_url_encode(message)}"
 
     @classmethod
@@ -133,24 +161,29 @@ class DistributionEngine:
         display_name = member_data.get("display_name", "member")
         helios_id = member_data.get("helios_id", "member.helios")
         is_founder = member_data.get("is_founder", False)
-        node_state = member_data.get("node_state", "instantiated")
 
-        tier = "Founding Member" if is_founder else {
-            "stable": "Verified Node",
-            "propagating": "Network Propagator",
-            "connected": "Connected Member",
-        }.get(node_state, "Helios Member")
+        tier = "founder" if is_founder else member_data.get("tier", "founder")
+        tier_label = TIER_LABELS.get(tier, "Helios Member")
+
+        if is_founder:
+            description = (
+                f"Join Helios through {display_name.title()}'s founding invitation. "
+                "Modern digital gold platform with founding membership, "
+                ".helios namespace, Gold Desk access, and reserve-aware infrastructure."
+            )
+        else:
+            description = (
+                f"Join Helios through {display_name.title()}. "
+                "Founding membership, .helios namespace, gold certificates, "
+                "and guided onboarding — $99.95 one-time."
+            )
 
         return ShareObject(
-            title=f"{display_name.title()} — {tier} | Helios Protocol",
-            description=(
-                f"Join Helios through {display_name.title()}. "
-                "Gold-backed smart contract protocol. One payment. "
-                "Fully autonomous. XRPL & Stellar settlement."
-            ),
-            url=cls.build_join_url(display_name),
+            title=f"{display_name.title()} — {tier_label} | Helios",
+            description=description,
+            url=cls.build_invite_url(display_name),
             member_name=display_name,
-            tier=tier,
+            tier=tier_label,
         )
 
     @classmethod
@@ -164,7 +197,7 @@ class DistributionEngine:
                 "key": "link",
                 "label": "Copy Link",
                 "icon": "🔗",
-                "url": cls.build_join_url(display_name),
+                "url": cls.build_invite_url(display_name),
                 "action": "copy",
                 "description": "Copy your personal invitation link",
             },
@@ -196,7 +229,7 @@ class DistributionEngine:
                 "key": "invite",
                 "label": "Share",
                 "icon": "📤",
-                "url": cls.build_join_url(display_name),
+                "url": cls.build_invite_url(display_name),
                 "action": "share",
                 "description": "Share via device share sheet",
             },
@@ -205,24 +238,16 @@ class DistributionEngine:
     @classmethod
     def get_drop_context(cls, member_data: dict) -> dict:
         """
-        Build full template context for the drop landing page.
-        This is what someone sees when they scan a QR code.
+        Build full template context for card and drop pages.
+        This is what someone sees when they scan a QR code or visit a member's card.
         """
         display_name = member_data.get("display_name", "member")
         helios_id = member_data.get("helios_id", "member.helios")
         is_founder = member_data.get("is_founder", False)
-        node_state = member_data.get("node_state", "instantiated")
-        bond_count = member_data.get("bond_count", 0)
         created_at = member_data.get("member_since", "")
 
-        tier = "founder" if is_founder else node_state
-        tier_label = "Founding Member" if is_founder else {
-            "stable": "Verified Node",
-            "propagating": "Network Propagator",
-            "connected": "Connected Member",
-            "acknowledged": "Registered Member",
-            "instantiated": "New Member",
-        }.get(node_state, "Helios Member")
+        tier = "founder" if is_founder else member_data.get("tier", "founder")
+        tier_label = TIER_LABELS.get(tier, "Helios Member")
 
         share_obj = cls.build_share_object(member_data)
 
@@ -232,9 +257,9 @@ class DistributionEngine:
             "tier": tier,
             "tier_label": tier_label,
             "is_founder": is_founder,
-            "bond_count": bond_count,
             "created_at": created_at,
-            "join_url": cls.build_join_url(display_name),
+            "club_url": cls.build_club_url(),
+            "invite_url": cls.build_invite_url(display_name),
             "card_url": cls.build_card_url(display_name),
             "qr_url": cls.build_qr_url(display_name),
             "vcard_url": cls.build_vcard_url(display_name),

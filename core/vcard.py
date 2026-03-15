@@ -6,6 +6,8 @@ When a founder hands you their card, it should feel like receiving
 an invitation to something exclusive — not a business card from a filing cabinet.
 
 vCard 3.0 spec — maximum device compatibility (iOS, Android, Outlook, macOS).
+
+Aligned to heliosdigital.xyz — the live gold platform.
 """
 
 from datetime import datetime, timezone
@@ -17,26 +19,37 @@ class HeliosVCard:
 
     DOMAIN = HeliosConfig.DOMAIN
 
-    # ─── Tier Titles ──────────────────────────────────────────────
+    # ─── Member Tier Titles (matches live site tier system) ───────
     TIER_TITLES = {
-        "founder":      "Founding Member",
-        "genesis":      "Genesis Member",
-        "propagating":  "Network Propagator",
-        "stable":       "Verified Node",
-        "connected":    "Connected Member",
-        "acknowledged": "Registered Member",
-        "instantiated": "New Member",
+        "founder":        "Founding Member",
+        "silver":         "Silver Member",
+        "gold":           "Gold Member",
+        "platinum":       "Platinum Member",
+        "diamond":        "Diamond Member",
+        "gold_desk":      "Gold Desk Member",
+        "strategic":      "Strategic Member",
+        "premier":        "Premier Member",
+        "institutional":  "Institutional Member",
     }
 
     TIER_ORG = {
-        "founder":      "Helios Protocol — Founding Council",
-        "genesis":      "Helios Protocol — Genesis Circle",
-        "propagating":  "Helios Protocol — Network",
-        "stable":       "Helios Protocol — Network",
-        "connected":    "Helios Protocol",
-        "acknowledged": "Helios Protocol",
-        "instantiated": "Helios Protocol",
+        "founder":        "Helios — Founding Member",
+        "silver":         "Helios — Silver",
+        "gold":           "Helios — Gold",
+        "platinum":       "Helios — Platinum",
+        "diamond":        "Helios — Diamond",
+        "gold_desk":      "Helios — Gold Desk",
+        "strategic":      "Helios — Strategic Access",
+        "premier":        "Helios — Premier Reserve",
+        "institutional":  "Helios — Institutional",
     }
+
+    @classmethod
+    def _resolve_tier(cls, member_data: dict) -> str:
+        """Resolve the display tier from member data."""
+        if member_data.get("is_founder", False):
+            return "founder"
+        return member_data.get("tier", "founder")
 
     @classmethod
     def generate(cls, member_data: dict) -> str:
@@ -45,12 +58,11 @@ class HeliosVCard:
 
         Args:
             member_data: dict with keys:
-                - helios_id: str (e.g. "kenny.helios")
-                - display_name: str (e.g. "kenny")
-                - node_state: str (e.g. "propagating")
+                - helios_id: str (e.g. "kevan.helios")
+                - display_name: str (e.g. "kevan")
+                - tier: str (e.g. "founder", "gold", "platinum")
                 - is_founder: bool
                 - created_at: str (ISO datetime)
-                - bond_count: int (optional)
                 - email: str (optional)
                 - phone: str (optional)
 
@@ -59,15 +71,16 @@ class HeliosVCard:
         """
         helios_id = member_data.get("helios_id", "member.helios")
         display_name = member_data.get("display_name", "Member")
-        node_state = member_data.get("node_state", "instantiated")
         is_founder = member_data.get("is_founder", False)
         created_at = member_data.get("created_at", "")
-        bond_count = member_data.get("bond_count", 0)
 
-        # Determine tier
-        tier = "founder" if is_founder else node_state
+        tier = cls._resolve_tier(member_data)
         title = cls.TIER_TITLES.get(tier, "Helios Member")
-        org = cls.TIER_ORG.get(tier, "Helios Protocol")
+        org = cls.TIER_ORG.get(tier, "Helios")
+
+        # Club join URL — the canonical CTA
+        club_url = f"https://{cls.DOMAIN}/club"
+        card_url = f"https://{cls.DOMAIN}/card/{display_name}"
 
         # Build vCard lines
         lines = [
@@ -77,13 +90,13 @@ class HeliosVCard:
             f"N:{display_name.title()};;;;",
             f"ORG:{org}",
             f"TITLE:{title}",
-            f"URL:https://{cls.DOMAIN}/join/{display_name}",
-            f"NOTE:Helios Network — {helios_id}\\n"
-            f"Tier: {title}\\n"
-            f"Bonds: {bond_count}\\n"
-            f"Join: https://{cls.DOMAIN}/join/{display_name}\\n"
-            f"Card: https://{cls.DOMAIN}/card/{display_name}\\n"
-            f"Protocol: Smart-contract governed. Gold-backed certificates. XRPL settlement.",
+            f"URL:{card_url}",
+            f"NOTE:{helios_id}\\n"
+            f"{title}\\n"
+            f"Helios — Modern digital gold platform\\n"
+            f"Founding membership · .helios namespace · Gold Desk access\\n"
+            f"Join: {club_url}\\n"
+            f"Card: {card_url}",
         ]
 
         # Optional fields
@@ -97,7 +110,7 @@ class HeliosVCard:
 
         # Categories based on tier
         if is_founder:
-            lines.append("CATEGORIES:Helios,Founder,Protocol Council")
+            lines.append("CATEGORIES:Helios,Founding Member,Gold Platform")
         else:
             lines.append(f"CATEGORIES:Helios,{title}")
 
@@ -105,11 +118,11 @@ class HeliosVCard:
         rev = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
         lines.append(f"REV:{rev}")
 
-        # Custom fields (X-properties for rich clients)
+        # Custom X-properties for rich clients
         lines.append(f"X-HELIOS-ID:{helios_id}")
         lines.append(f"X-HELIOS-TIER:{tier}")
-        lines.append(f"X-HELIOS-BONDS:{bond_count}")
-        lines.append(f"X-HELIOS-JOIN:https://{cls.DOMAIN}/join/{display_name}")
+        lines.append(f"X-HELIOS-NAMESPACE:{helios_id}")
+        lines.append(f"X-HELIOS-CLUB:{club_url}")
 
         lines.append("END:VCARD")
 

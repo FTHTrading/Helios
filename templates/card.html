@@ -1,13 +1,14 @@
 {% extends "base.html" %}
-{% block title %}{{ display_name|title }} — Helios {% if is_founder %}Founder{% else %}Member{% endif %} Card{% endblock %}
-{% block og_title %}{{ display_name|title }} — {{ tier_label }} | Helios Protocol{% endblock %}
-{% block og_description %}{{ display_name|title }} is a {{ tier_label }} on Helios Protocol. Gold-backed smart contract allocation. Join through their personal invitation.{% endblock %}
+{% block title %}{{ display_name|title }} — Helios {% if is_founder %}Founding{% endif %} Member Card{% endblock %}
+{% block og_title %}{{ display_name|title }} — {{ tier_label }} | Helios{% endblock %}
+{% block og_description %}{{ display_name|title }} is a {{ tier_label }} on Helios. Modern digital gold platform with founding membership, .helios namespace, Gold Desk access, and reserve-aware infrastructure.{% endblock %}
 {% block og_url %}/card/{{ display_name }}{% endblock %}
 
 {% block head %}
 <style>
 /* ═══════════════════════════════════════════════════════════════════
-   HELIOS PREMIUM MEMBER CARD — NFT-GRADE ASSET SURFACE
+   HELIOS PREMIUM MEMBER CARD
+   Aligned to heliosdigital.xyz — gold platform, not crypto protocol.
    When a founder hands you this, it's a ceremony, not a transaction.
    ═══════════════════════════════════════════════════════════════════ */
 
@@ -41,7 +42,7 @@
     50% { opacity: .7; transform: translate(-50%, -50%) scale(1.15); }
 }
 
-/* ── Founder card gets a richer ambient ── */
+/* ── Founder card: richer ambient glow ── */
 .card-page.is-founder::before {
     background: radial-gradient(circle, rgba(251,191,36,.1) 0%, rgba(191,90,242,.04) 40%, transparent 70%);
     width: 700px;
@@ -116,15 +117,15 @@
     50% { opacity: 1; }
 }
 
-/* ═══ CARD HEADER — Identity + Sun Mark ═══ */
+/* ═══ CARD HEADER — Identity + Helios Mark ═══ */
 .card-header {
     text-align: center;
     padding: 2.5rem 2rem 1.5rem;
     position: relative;
 }
 
-/* Sun mark — the protocol sigil */
-.card-sun-mark {
+/* Helios mark — the platform sigil */
+.card-helios-mark {
     width: 64px;
     height: 64px;
     border-radius: 50%;
@@ -137,36 +138,36 @@
     border: 2px solid rgba(41,151,255,.25);
     transition: all .4s ease;
 }
-.card-sun-mark svg { width: 28px; height: 28px; }
+.card-helios-mark svg { width: 28px; height: 28px; }
 
-/* Founder sun mark — gold orbit + pulse */
-.is-founder .card-sun-mark {
+/* Founder mark — gold orbit + pulse */
+.is-founder .card-helios-mark {
     background: rgba(251,191,36,.08);
     border-color: rgba(251,191,36,.35);
     box-shadow: 0 0 30px rgba(251,191,36,.12);
 }
-.is-founder .card-sun-mark::before {
+.is-founder .card-helios-mark::before {
     content: '';
     position: absolute;
     inset: -6px;
     border-radius: 50%;
     border: 1px solid rgba(251,191,36,.15);
-    animation: sun-orbit 30s linear infinite;
+    animation: helios-orbit 30s linear infinite;
 }
-.is-founder .card-sun-mark::after {
+.is-founder .card-helios-mark::after {
     content: '';
     position: absolute;
     inset: -12px;
     border-radius: 50%;
     border: 1px solid rgba(191,90,242,.08);
-    animation: sun-orbit 45s linear infinite reverse;
+    animation: helios-orbit 45s linear infinite reverse;
 }
-@keyframes sun-orbit {
+@keyframes helios-orbit {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
 }
 
-/* Identity name — editorial weight */
+/* Identity — .helios namespace */
 .card-identity {
     font-family: 'EB Garamond', serif;
     font-size: 2.2rem;
@@ -202,20 +203,25 @@
     border: 1px solid rgba(251,191,36,.25);
     color: var(--sv-accent-1, #fbbf24);
 }
-.card-tier-badge.tier-genesis {
-    background: rgba(191,90,242,.1);
-    border: 1px solid rgba(191,90,242,.2);
-    color: #bf5af2;
+.card-tier-badge.tier-silver {
+    background: rgba(174,174,178,.1);
+    border: 1px solid rgba(174,174,178,.2);
+    color: #aeaeb2;
 }
-.card-tier-badge.tier-propagating {
-    background: rgba(41,151,255,.08);
-    border: 1px solid rgba(41,151,255,.2);
-    color: #2997ff;
+.card-tier-badge.tier-gold {
+    background: rgba(251,191,36,.1);
+    border: 1px solid rgba(251,191,36,.2);
+    color: #fbbf24;
 }
-.card-tier-badge.tier-stable {
-    background: rgba(48,209,88,.08);
-    border: 1px solid rgba(48,209,88,.2);
-    color: #30d158;
+.card-tier-badge.tier-platinum {
+    background: rgba(162,132,94,.1);
+    border: 1px solid rgba(162,132,94,.2);
+    color: #c4a265;
+}
+.card-tier-badge.tier-diamond {
+    background: rgba(88,176,255,.08);
+    border: 1px solid rgba(88,176,255,.2);
+    color: #58b0ff;
 }
 .card-tier-badge.tier-default {
     background: rgba(134,134,139,.08);
@@ -230,26 +236,27 @@
     display: inline-block;
 }
 .tier-founder .card-tier-dot { background: var(--sv-accent-1, #fbbf24); box-shadow: 0 0 8px rgba(251,191,36,.5); }
-.tier-genesis .card-tier-dot { background: #bf5af2; box-shadow: 0 0 8px rgba(191,90,242,.5); }
-.tier-propagating .card-tier-dot { background: #2997ff; box-shadow: 0 0 8px rgba(41,151,255,.5); }
-.tier-stable .card-tier-dot { background: #30d158; box-shadow: 0 0 8px rgba(48,209,88,.5); }
+.tier-silver .card-tier-dot { background: #aeaeb2; box-shadow: 0 0 6px rgba(174,174,178,.4); }
+.tier-gold .card-tier-dot { background: #fbbf24; box-shadow: 0 0 8px rgba(251,191,36,.4); }
+.tier-platinum .card-tier-dot { background: #c4a265; box-shadow: 0 0 8px rgba(162,132,94,.4); }
+.tier-diamond .card-tier-dot { background: #58b0ff; box-shadow: 0 0 8px rgba(88,176,255,.4); }
 .tier-default .card-tier-dot { background: #86868b; }
 
-/* ═══ ASSET STRIP — NFT-like data cells ═══ */
-.card-asset-strip {
+/* ═══ MEMBERSHIP STRIP — Gold platform data cells ═══ */
+.card-membership-strip {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     border-top: 1px solid rgba(255,255,255,.06);
     border-bottom: 1px solid rgba(255,255,255,.06);
 }
-.card-asset-cell {
+.card-data-cell {
     text-align: center;
     padding: 1rem .5rem;
     border-right: 1px solid rgba(255,255,255,.04);
     position: relative;
 }
-.card-asset-cell:last-child { border-right: none; }
-.card-asset-value {
+.card-data-cell:last-child { border-right: none; }
+.card-data-value {
     font-family: 'Inter', sans-serif;
     font-size: 1rem;
     font-weight: 700;
@@ -257,7 +264,7 @@
     display: block;
     font-variant-numeric: tabular-nums;
 }
-.card-asset-label {
+.card-data-label {
     font-family: 'Inter', sans-serif;
     font-size: .58rem;
     text-transform: uppercase;
@@ -267,18 +274,18 @@
     display: block;
 }
 
-/* Founder asset cells get subtle gold tint */
-.is-founder .card-asset-value { color: var(--sv-accent-1, #fbbf24); }
+/* Founder data cells get subtle gold tint */
+.is-founder .card-data-value { color: var(--sv-accent-1, #fbbf24); }
 
-/* ═══ PROOF SURFACE — On-chain verification ═══ */
-.card-proof-surface {
+/* ═══ TRUST ARCHITECTURE — Platform verification ═══ */
+.card-trust-surface {
     margin: 1rem 1.5rem;
     padding: 1rem;
     background: rgba(255,255,255,.015);
     border: 1px solid rgba(255,255,255,.05);
     border-radius: 12px;
 }
-.card-proof-header {
+.card-trust-header {
     font-family: 'Inter', sans-serif;
     font-size: .6rem;
     text-transform: uppercase;
@@ -290,23 +297,23 @@
     align-items: center;
     gap: .4rem;
 }
-.card-proof-header .proof-dot {
+.card-trust-header .trust-dot {
     width: 5px; height: 5px; border-radius: 50%;
     background: #30d158;
     box-shadow: 0 0 6px rgba(48,209,88,.4);
 }
-.card-proof-grid {
+.card-trust-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: .4rem .75rem;
 }
-.card-proof-label {
+.card-trust-label {
     font-size: .55rem;
     text-transform: uppercase;
     letter-spacing: .08em;
     color: var(--sv-text-muted, #86868b);
 }
-.card-proof-value {
+.card-trust-value {
     font-size: .78rem;
     font-weight: 600;
     color: var(--sv-text, #f5f5f7);
@@ -375,7 +382,7 @@
     background: rgba(251,191,36,.05);
 }
 
-/* ═══ PRIMARY CTA — Join through this member ═══ */
+/* ═══ PRIMARY CTA — Join the Helios Club ═══ */
 .card-cta-section {
     padding: 0 1.5rem 1.5rem;
 }
@@ -413,12 +420,12 @@
     transform: translateY(-1px);
 }
 
-/* ═══ CARD FOOTER — Protocol badge ═══ */
+/* ═══ CARD FOOTER — Platform badge ═══ */
 .card-footer-badge {
     text-align: center;
     padding: 0 1.5rem 1.5rem;
 }
-.card-protocol-badge {
+.card-platform-badge {
     display: inline-block;
     padding: .3rem .8rem;
     border-radius: 980px;
@@ -462,7 +469,7 @@
     margin: 0;
 }
 
-/* ═══ SERIAL NUMBER — NFT provenance ═══ */
+/* ═══ SERIAL NUMBER — Membership provenance ═══ */
 .card-serial {
     text-align: center;
     padding: .6rem 1.5rem;
@@ -518,9 +525,9 @@
             <!-- Accent bar -->
             <div class="card-accent-bar"></div>
 
-            <!-- Header — Sun Mark + Identity -->
+            <!-- Header — Helios Mark + .helios Namespace Identity -->
             <div class="card-header">
-                <div class="card-sun-mark">
+                <div class="card-helios-mark">
                     <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                         {% if is_founder %}
                         <defs>
@@ -541,69 +548,69 @@
 
                 <div class="card-identity">{{ helios_id }}</div>
 
-                {% set tier_css = 'tier-founder' if is_founder else ('tier-propagating' if tier == 'propagating' else ('tier-stable' if tier == 'stable' else ('tier-genesis' if tier == 'genesis' else 'tier-default'))) %}
+                {% set tier_css = 'tier-founder' if is_founder else ('tier-gold' if tier == 'gold' else ('tier-silver' if tier == 'silver' else ('tier-platinum' if tier == 'platinum' else ('tier-diamond' if tier == 'diamond' else 'tier-default')))) %}
                 <div class="card-tier-badge {{ tier_css }}">
                     <span class="card-tier-dot"></span>
                     {{ tier_label }}
                 </div>
             </div>
 
-            <!-- Asset Strip — NFT-like data cells -->
-            <div class="card-asset-strip">
-                <div class="card-asset-cell">
-                    <span class="card-asset-value" id="card-bonds">{{ bond_count }}</span>
-                    <span class="card-asset-label">Bonds</span>
+            <!-- Membership Strip — Platform data -->
+            <div class="card-membership-strip">
+                <div class="card-data-cell">
+                    <span class="card-data-value" id="card-certificates">—</span>
+                    <span class="card-data-label">Gold Certificates</span>
                 </div>
-                <div class="card-asset-cell">
-                    <span class="card-asset-value" id="card-tokens">—</span>
-                    <span class="card-asset-label">HLS Tokens</span>
+                <div class="card-data-cell">
+                    <span class="card-data-value" id="card-namespace">✓</span>
+                    <span class="card-data-label">.helios Namespace</span>
                 </div>
-                <div class="card-asset-cell">
-                    <span class="card-asset-value" id="card-certs">—</span>
-                    <span class="card-asset-label">Certificates</span>
+                <div class="card-data-cell">
+                    <span class="card-data-value" id="card-referrals">—</span>
+                    <span class="card-data-label">Referrals</span>
                 </div>
             </div>
 
             {% if is_founder %}
-            <!-- Founder Credential — exclusive to founders -->
+            <!-- Founder Credential — exclusive section -->
             <div class="card-credential">
                 <div class="card-credential-icon">🏛️</div>
                 <div class="card-credential-text">
-                    <h5>Founding Council Member</h5>
-                    <p>This member holds a founding position in the Helios Protocol. Their invitation carries founding-rate token pricing and genesis-tier certificates.</p>
+                    <h5>Founding Member</h5>
+                    <p>This member holds a founding position in Helios. Their invitation provides founding access, .helios namespace reservation, Gold Desk resources, and priority eligibility for approved launch pathways.</p>
                 </div>
             </div>
             {% endif %}
 
-            <!-- Proof Surface -->
-            <div class="card-proof-surface">
-                <div class="card-proof-header">
-                    <span class="proof-dot"></span>
-                    Protocol Verified
+            <!-- Trust Architecture Surface -->
+            <div class="card-trust-surface">
+                <div class="card-trust-header">
+                    <span class="trust-dot"></span>
+                    Trust Architecture
                 </div>
-                <div class="card-proof-grid">
+                <div class="card-trust-grid">
                     <div>
-                        <div class="card-proof-label">Network</div>
-                        <div class="card-proof-value">XRPL + Stellar</div>
+                        <div class="card-trust-label">Infrastructure</div>
+                        <div class="card-trust-value">Reserve-Aware</div>
                     </div>
                     <div>
-                        <div class="card-proof-label">Reserve</div>
-                        <div class="card-proof-value">Gold + Stablecoin</div>
+                        <div class="card-trust-label">Custody</div>
+                        <div class="card-trust-value">Insured · Segregated</div>
                     </div>
                     <div>
-                        <div class="card-proof-label">Member Since</div>
-                        <div class="card-proof-value" id="card-since">{{ created_at[:10] if created_at else '—' }}</div>
+                        <div class="card-trust-label">Member Since</div>
+                        <div class="card-trust-value" id="card-since">{{ created_at[:10] if created_at else '—' }}</div>
                     </div>
                     <div>
-                        <div class="card-proof-label">Settlement</div>
-                        <div class="card-proof-value">3-Second Finality</div>
+                        <div class="card-trust-label">Identity</div>
+                        <div class="card-trust-value">Sovereign .helios</div>
                     </div>
                 </div>
             </div>
 
             <!-- Distribution Dock — 5 Channels -->
             <div class="card-distribution-dock">
-                <div class="card-dock-label">Share This Card</div>
+                <div class="card-dock-label">Share This Invitation</div>
                 <div class="card-dock-channels">
                     {% for ch in channels %}
                     {% if ch.action == 'copy' %}
@@ -631,29 +638,29 @@
                 </div>
             </div>
 
-            <!-- Primary CTA -->
+            <!-- Primary CTA — Join the Helios Club -->
             <div class="card-cta-section">
-                <a href="{{ join_url }}" class="card-cta-primary {{ 'cta-founder' if is_founder else 'cta-member' }}">
+                <a href="{{ club_url }}" class="card-cta-primary {{ 'cta-founder' if is_founder else 'cta-member' }}">
                     {% if is_founder %}
-                    Accept Founder Invitation →
+                    Join the Helios Club — $99.95 →
                     {% else %}
-                    Join Through {{ display_name|title }} →
+                    Join Through {{ display_name|title }} — $99.95 →
                     {% endif %}
                 </a>
             </div>
 
-            <!-- Protocol badge -->
+            <!-- Platform badge -->
             <div class="card-footer-badge">
-                <div class="card-protocol-badge">
+                <div class="card-platform-badge">
                     {% if is_founder %}
-                    Founding Member · Gold Backed · Smart Contract Governed
+                    Founding Member · Reserve-Aware · Gold Platform
                     {% else %}
-                    One Payment · Gold Backed · Smart Contract Governed
+                    One-Time Membership · .helios Namespace · Gold Desk Access
                     {% endif %}
                 </div>
             </div>
 
-            <!-- Serial number — NFT provenance feel -->
+            <!-- Serial number — Membership provenance -->
             <div class="card-serial">
                 <span class="card-serial-text" id="card-serial">HLS-{{ '%06d' | format(member_id|default(1)) }}-{{ tier[:3]|upper }}-{{ (created_at[:10] if created_at else '2026')|replace('-','') }}</span>
             </div>
@@ -669,7 +676,8 @@
 <script>
 (function() {
     var identity = '{{ display_name }}';
-    var joinUrl = '{{ join_url }}';
+    var inviteUrl = '{{ invite_url }}';
+    var clubUrl = '{{ club_url }}';
 
     // ═══ Fetch live member data ═══
     fetch('/api/identity/' + identity + '/verify')
@@ -677,24 +685,13 @@
         .then(function(resp) {
             if (!resp.success || !resp.data) return;
             var d = resp.data;
-            var bondsEl = document.getElementById('card-bonds');
-            if (bondsEl && d.bond_count !== undefined) bondsEl.textContent = d.bond_count;
-        })
-        .catch(function() {});
-
-    // Fetch token balance
-    fetch('/api/token/balance/' + identity + '.helios')
-        .then(function(r) { return r.json(); })
-        .then(function(resp) {
-            if (resp.success && resp.data) {
-                var el = document.getElementById('card-tokens');
-                if (el) el.textContent = (resp.data.balance || 0).toLocaleString();
+            // Update referral count if available
+            if (d.referral_count !== undefined) {
+                var el = document.getElementById('card-referrals');
+                if (el) el.textContent = d.referral_count;
             }
         })
-        .catch(function() {
-            var el = document.getElementById('card-tokens');
-            if (el) el.textContent = '—';
-        });
+        .catch(function() {});
 
     // ═══ Emit card_view event ═══
     fetch('/api/nodes/' + identity + '/event', {
@@ -730,12 +727,12 @@ function copyLink(url) {
 
 function nativeShare() {
     var identity = '{{ display_name }}';
-    var url = '{{ join_url }}';
+    var url = '{{ invite_url }}';
 
     if (navigator.share) {
         navigator.share({
             title: identity + '.helios — Join Helios',
-            text: 'Join Helios through ' + identity + '. Gold-backed allocation protocol. One payment. Fully autonomous.',
+            text: 'Join Helios through ' + identity + '. Modern digital gold platform. Founding membership, .helios namespace, and Gold Desk access.',
             url: url
         }).then(function() {
             emitEvent('native_share');

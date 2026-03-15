@@ -1,15 +1,15 @@
 {% extends "base.html" %}
-{% block title %}{{ display_name|title }} invited you to Helios{% endblock %}
-{% block og_title %}{{ og['og:title'] }}{% endblock %}
-{% block og_description %}{{ og['og:description'] }}{% endblock %}
+{% block title %}{{ display_name|title }} — Join Helios{% endblock %}
+{% block og_title %}{{ display_name|title }} Invited You to Helios{% endblock %}
+{% block og_description %}{{ display_name|title }} is a {{ tier_label }} on Helios. Join the modern digital gold platform — founding membership, .helios namespace, Gold Desk access, and reserve-aware infrastructure. $99.95 one-time.{% endblock %}
 {% block og_url %}/drop/{{ display_name }}{% endblock %}
 
 {% block head %}
 <style>
 /* ═══════════════════════════════════════════════════════════════════
-   HELIOS DROP PAGE — LIGHTWEIGHT QR-SCAN LANDING
-   Under 3KB CSS. Loads in under 1 second.
-   Purpose: scan → see → trust → act. Nothing else.
+   HELIOS DROP PAGE — QR-scan landing
+   Lightweight invitation surface. Scanned → understood → joined.
+   Aligned to heliosdigital.xyz language and aesthetics.
    ═══════════════════════════════════════════════════════════════════ */
 
 .drop-page {
@@ -19,230 +19,258 @@
     justify-content: center;
     padding: 2rem 1.5rem;
     position: relative;
+    overflow: hidden;
 }
-
-/* Ambient glow */
 .drop-page::before {
     content: '';
     position: absolute;
-    top: 40%;
+    top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 400px;
-    height: 400px;
+    width: 500px;
+    height: 500px;
     border-radius: 50%;
+    background: radial-gradient(circle, rgba(251,191,36,.05) 0%, transparent 70%);
     pointer-events: none;
-    opacity: .35;
-}
-.drop-page.is-founder::before {
-    background: radial-gradient(circle, rgba(251,191,36,.1) 0%, transparent 70%);
-}
-.drop-page:not(.is-founder)::before {
-    background: radial-gradient(circle, rgba(41,151,255,.08) 0%, transparent 70%);
 }
 
 .drop-container {
     width: 100%;
     max-width: 400px;
-    text-align: center;
     position: relative;
     z-index: 1;
 }
+.drop-body {
+    background: linear-gradient(165deg, rgba(28,28,30,.95) 0%, rgba(12,15,20,.98) 100%);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow:
+        0 0 0 1px rgba(255,255,255,.04),
+        0 4px 24px rgba(0,0,0,.5),
+        0 0 60px rgba(251,191,36,.03);
+}
 
-/* ── Sun mark ── */
-.drop-sun-mark {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1.5rem;
-    background: rgba(41,151,255,.06);
-    border: 2px solid rgba(41,151,255,.2);
+/* Founder drop — gold border */
+.drop-page.is-founder .drop-body {
+    border-color: rgba(251,191,36,.2);
+    box-shadow:
+        0 0 0 1px rgba(251,191,36,.06),
+        0 4px 24px rgba(0,0,0,.5),
+        0 0 80px rgba(251,191,36,.06);
 }
-.drop-page.is-founder .drop-sun-mark {
-    background: rgba(251,191,36,.06);
-    border-color: rgba(251,191,36,.25);
-    box-shadow: 0 0 24px rgba(251,191,36,.08);
-}
-.drop-sun-mark svg { width: 24px; height: 24px; }
 
-/* ── Invitation text ── */
-.drop-from {
-    font-family: 'Inter', sans-serif;
-    font-size: .72rem;
-    text-transform: uppercase;
-    letter-spacing: .14em;
-    color: var(--sv-text-muted, #86868b);
-    font-weight: 600;
-    margin-bottom: .3rem;
+/* Accent bar */
+.drop-accent {
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--sv-accent-2, #2997ff), transparent);
+    opacity: .5;
 }
-.drop-name {
+.is-founder .drop-accent {
+    background: linear-gradient(90deg, transparent, var(--sv-accent-1, #fbbf24), var(--sv-accent-3, #bf5af2), var(--sv-accent-1, #fbbf24), transparent);
+    opacity: .7;
+}
+
+/* ═══ DROP HEADER ═══ */
+.drop-header {
+    text-align: center;
+    padding: 2.5rem 2rem 1.5rem;
+}
+
+.drop-member-identity {
     font-family: 'EB Garamond', serif;
-    font-size: 2rem;
+    font-size: 1.8rem;
     font-weight: 600;
     color: var(--sv-text, #f5f5f7);
-    margin-bottom: .4rem;
-    line-height: 1.1;
+    margin-bottom: .15rem;
 }
-.drop-page.is-founder .drop-name {
-    background: linear-gradient(135deg, var(--sv-accent-1, #fbbf24), #fff8e1, var(--sv-accent-1, #fbbf24));
+.is-founder .drop-member-identity {
+    background: linear-gradient(135deg, #fbbf24, #fff8e1, #fbbf24);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
 }
-.drop-tier {
+
+.drop-invitation-label {
+    font-family: 'Inter', sans-serif;
+    font-size: .68rem;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: var(--sv-text-muted, #86868b);
+    margin-top: .3rem;
+}
+
+.drop-tier-badge {
     display: inline-flex;
     align-items: center;
     gap: .35rem;
+    margin-top: .6rem;
     padding: .25rem .7rem;
     border-radius: 980px;
     font-family: 'Inter', sans-serif;
-    font-size: .6rem;
+    font-size: .58rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: .12em;
-    margin-bottom: 1.5rem;
 }
-.drop-tier.tier-founder {
-    background: rgba(251,191,36,.12);
+.drop-tier-badge.tier-founder {
+    background: linear-gradient(135deg, rgba(251,191,36,.12), rgba(191,90,242,.06));
     border: 1px solid rgba(251,191,36,.2);
-    color: #fbbf24;
+    color: var(--sv-accent-1, #fbbf24);
 }
-.drop-tier.tier-member {
-    background: rgba(41,151,255,.08);
-    border: 1px solid rgba(41,151,255,.15);
-    color: #2997ff;
+.drop-tier-badge.tier-member {
+    background: rgba(134,134,139,.06);
+    border: 1px solid rgba(134,134,139,.12);
+    color: #86868b;
 }
 .drop-tier-dot {
     width: 5px; height: 5px; border-radius: 50%; display: inline-block;
 }
-.tier-founder .drop-tier-dot { background: #fbbf24; box-shadow: 0 0 6px rgba(251,191,36,.5); }
-.tier-member .drop-tier-dot { background: #2997ff; box-shadow: 0 0 6px rgba(41,151,255,.5); }
+.tier-founder .drop-tier-dot { background: #fbbf24; box-shadow: 0 0 6px rgba(251,191,36,.4); }
+.tier-member .drop-tier-dot { background: #86868b; }
 
-/* ── Pitch line ── */
+/* ═══ VALUE PROPOSITION ═══ */
 .drop-pitch {
-    font-family: 'Inter', sans-serif;
+    padding: 0 2rem;
+    margin-bottom: 1.2rem;
+}
+.drop-pitch-text {
     font-size: .88rem;
     color: var(--sv-text-muted, #86868b);
-    line-height: 1.6;
-    margin-bottom: 2rem;
-    max-width: 340px;
-    margin-left: auto;
-    margin-right: auto;
+    line-height: 1.55;
+    text-align: center;
 }
-.drop-pitch strong { color: var(--sv-text, #f5f5f7); }
+.drop-pitch-text strong {
+    color: var(--sv-text, #f5f5f7);
+    font-weight: 600;
+}
 
-/* ── Primary CTA ── */
+/* ═══ TRUST STRIP ═══ */
+.drop-trust-strip {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: .5rem .75rem;
+    padding: .8rem 1.5rem 1rem;
+    border-top: 1px solid rgba(255,255,255,.04);
+    border-bottom: 1px solid rgba(255,255,255,.04);
+}
+.drop-trust-item {
+    display: flex;
+    align-items: center;
+    gap: .3rem;
+    font-family: 'Inter', sans-serif;
+    font-size: .58rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--sv-text-muted, #86868b);
+}
+.drop-trust-dot {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: #30d158;
+    box-shadow: 0 0 4px rgba(48,209,88,.3);
+    flex-shrink: 0;
+}
+
+/* ═══ WHAT YOU GET ═══ */
+.drop-features {
+    padding: 1.2rem 2rem;
+}
+.drop-features-header {
+    font-family: 'Inter', sans-serif;
+    font-size: .58rem;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: var(--sv-text-muted, #86868b);
+    font-weight: 700;
+    margin-bottom: .6rem;
+    text-align: center;
+}
+.drop-features-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .35rem .5rem;
+}
+.drop-feature-item {
+    display: flex;
+    align-items: center;
+    gap: .3rem;
+    font-size: .72rem;
+    color: var(--sv-text, #f5f5f7);
+}
+.drop-check {
+    color: var(--sv-accent-1, #fbbf24);
+    font-size: .7rem;
+    flex-shrink: 0;
+}
+
+/* ═══ CTA ═══ */
+.drop-cta-section {
+    padding: 1rem 2rem 1.2rem;
+}
 .drop-cta {
     display: block;
     width: 100%;
-    padding: 1rem;
+    padding: .85rem;
     border: none;
-    border-radius: 14px;
+    border-radius: 12px;
     font-family: 'Inter', sans-serif;
-    font-size: 1rem;
+    font-size: .9rem;
     font-weight: 700;
     text-align: center;
     cursor: pointer;
-    transition: all .25s ease;
+    transition: all .2s ease;
     text-decoration: none;
-    margin-bottom: 1rem;
+    letter-spacing: .01em;
 }
 .drop-cta.cta-founder {
     background: linear-gradient(135deg, #fbbf24, #e8a800);
     color: #000;
-    box-shadow: 0 4px 24px rgba(251,191,36,.25);
+    box-shadow: 0 4px 20px rgba(251,191,36,.2);
 }
 .drop-cta.cta-founder:hover {
-    box-shadow: 0 6px 32px rgba(251,191,36,.35);
-    transform: translateY(-2px);
+    box-shadow: 0 6px 30px rgba(251,191,36,.3);
+    transform: translateY(-1px);
 }
 .drop-cta.cta-member {
     background: linear-gradient(135deg, #2997ff, #0077ed);
     color: #fff;
-    box-shadow: 0 4px 24px rgba(41,151,255,.2);
+    box-shadow: 0 4px 20px rgba(41,151,255,.15);
 }
 .drop-cta.cta-member:hover {
-    box-shadow: 0 6px 32px rgba(41,151,255,.3);
-    transform: translateY(-2px);
+    box-shadow: 0 6px 30px rgba(41,151,255,.25);
+    transform: translateY(-1px);
 }
-
-/* ── Trust strip — fast proof ── */
-.drop-trust-strip {
-    display: flex;
-    justify-content: center;
-    gap: 1.5rem;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
-}
-.drop-trust-item {
+.drop-cta-subtext {
     text-align: center;
-}
-.drop-trust-icon {
-    font-size: 1.2rem;
-    margin-bottom: .2rem;
-}
-.drop-trust-text {
-    font-family: 'Inter', sans-serif;
-    font-size: .6rem;
-    text-transform: uppercase;
-    letter-spacing: .1em;
+    margin-top: .4rem;
+    font-size: .62rem;
     color: var(--sv-text-muted, #86868b);
-    font-weight: 600;
-}
-
-/* ── Distribution strip (secondary actions) ── */
-.drop-channels {
-    display: flex;
-    justify-content: center;
-    gap: .6rem;
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid rgba(255,255,255,.05);
-}
-.drop-channel-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: .2rem;
-    padding: .5rem .4rem;
-    min-width: 50px;
-    background: rgba(255,255,255,.02);
-    border: 1px solid rgba(255,255,255,.05);
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all .2s ease;
-    text-decoration: none;
-    color: inherit;
-    font-size: .55rem;
-    font-family: 'Inter', sans-serif;
-    color: var(--sv-text-muted, #86868b);
-    font-weight: 600;
-    text-transform: uppercase;
     letter-spacing: .05em;
 }
-.drop-channel-btn:hover {
-    background: rgba(255,255,255,.05);
-    border-color: rgba(255,255,255,.1);
-}
-.drop-channel-icon { font-size: 1.1rem; }
 
-/* ── Protocol badge ── */
-.drop-protocol-badge {
-    margin-top: 1.5rem;
+/* ═══ DROP FOOTER ═══ */
+.drop-footer {
+    text-align: center;
+    padding: .6rem 1.5rem 1.5rem;
+    border-top: 1px solid rgba(255,255,255,.03);
+}
+.drop-platform-mark {
     font-family: 'Inter', sans-serif;
     font-size: .52rem;
     text-transform: uppercase;
     letter-spacing: .14em;
-    color: rgba(134,134,139,.5);
+    color: rgba(134,134,139,.4);
 }
 
+/* ═══ RESPONSIVE ═══ */
 @media (max-width: 480px) {
-    .drop-name { font-size: 1.6rem; }
-    .drop-cta { font-size: .92rem; }
-    .drop-trust-strip { gap: 1rem; }
+    .drop-body { border-radius: 16px; }
+    .drop-member-identity { font-size: 1.5rem; }
+    .drop-header { padding: 2rem 1.5rem 1.2rem; }
+    .drop-pitch, .drop-features, .drop-cta-section { padding-left: 1.5rem; padding-right: 1.5rem; }
 }
 </style>
 {% endblock %}
@@ -250,101 +278,76 @@
 {% block content %}
 <div class="drop-page {{ 'is-founder' if is_founder else '' }}">
     <div class="drop-container">
+        <div class="drop-body">
+            <div class="drop-accent"></div>
 
-        <!-- Sun mark -->
-        <div class="drop-sun-mark">
-            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <!-- Header — Who invited you -->
+            <div class="drop-header">
+                <div class="drop-member-identity">{{ helios_id }}</div>
+                <div class="drop-invitation-label">invited you to Helios</div>
+
                 {% if is_founder %}
-                <defs>
-                    <linearGradient id="dg" x1="0" y1="0" x2="1" y2="1">
-                        <stop offset="0%" stop-color="#fbbf24"/>
-                        <stop offset="100%" stop-color="#bf5af2"/>
-                    </linearGradient>
-                </defs>
-                <circle cx="50" cy="50" r="38" fill="none" stroke="url(#dg)" stroke-width="5"/>
-                <circle cx="50" cy="50" r="8" fill="#fbbf24"/>
+                <div class="drop-tier-badge tier-founder">
+                    <span class="drop-tier-dot"></span>
+                    Founding Member
+                </div>
                 {% else %}
-                <circle cx="50" cy="50" r="38" fill="none" stroke="#2997ff" stroke-width="5"/>
-                <circle cx="50" cy="50" r="8" fill="#2997ff"/>
+                <div class="drop-tier-badge tier-member">
+                    <span class="drop-tier-dot"></span>
+                    {{ tier_label }}
+                </div>
                 {% endif %}
-            </svg>
-        </div>
-
-        <!-- Invitation -->
-        <div class="drop-from">{% if is_founder %}Founding invitation from{% else %}Invitation from{% endif %}</div>
-        <div class="drop-name">{{ display_name|title }}</div>
-        <div class="drop-tier {{ 'tier-founder' if is_founder else 'tier-member' }}">
-            <span class="drop-tier-dot"></span>
-            {{ tier_label }}
-        </div>
-
-        <!-- Pitch — one paragraph, maximum clarity -->
-        <div class="drop-pitch">
-            {% if is_founder %}
-            You've received a <strong>founding invitation</strong> to Helios Protocol.
-            Gold-backed certificates. Smart contract settlement. <strong>Founding-rate token pricing</strong>.
-            {% else %}
-            You've been invited to join <strong>Helios Protocol</strong>.
-            Gold-backed certificates. Smart contracts. One payment. <strong>No monthly fees</strong>.
-            {% endif %}
-        </div>
-
-        <!-- Trust strip — instant proof -->
-        <div class="drop-trust-strip">
-            <div class="drop-trust-item">
-                <div class="drop-trust-icon">🔐</div>
-                <div class="drop-trust-text">Smart Contract</div>
             </div>
-            <div class="drop-trust-item">
-                <div class="drop-trust-icon">🥇</div>
-                <div class="drop-trust-text">Gold Backed</div>
+
+            <!-- Pitch — What Helios is -->
+            <div class="drop-pitch">
+                <div class="drop-pitch-text">
+                    <strong>Helios</strong> is a modern digital gold platform.
+                    {% if is_founder %}
+                    As a founding member's invitation, this gives you access to founding membership, a reserved <strong>.helios namespace</strong>, gold certificates, and direct Gold Desk access.
+                    {% else %}
+                    Join with {{ display_name|title }}'s invitation and receive your own <strong>.helios namespace</strong>, gold certificates, and platform access.
+                    {% endif %}
+                </div>
             </div>
-            <div class="drop-trust-item">
-                <div class="drop-trust-icon">⚡</div>
-                <div class="drop-trust-text">3s Settlement</div>
+
+            <!-- Trust strip — 4 proof points -->
+            <div class="drop-trust-strip">
+                <div class="drop-trust-item"><span class="drop-trust-dot"></span> Reserve-Aware</div>
+                <div class="drop-trust-item"><span class="drop-trust-dot"></span> Insured Custody</div>
+                <div class="drop-trust-item"><span class="drop-trust-dot"></span> Sovereign Identity</div>
+                <div class="drop-trust-item"><span class="drop-trust-dot"></span> Full Transparency</div>
             </div>
-            <div class="drop-trust-item">
-                <div class="drop-trust-icon">🏦</div>
-                <div class="drop-trust-text">XRPL Ledger</div>
+
+            <!-- What you get -->
+            <div class="drop-features">
+                <div class="drop-features-header">Founding Membership Includes</div>
+                <div class="drop-features-list">
+                    <div class="drop-feature-item"><span class="drop-check">✓</span> .helios Namespace</div>
+                    <div class="drop-feature-item"><span class="drop-check">✓</span> Gold Certificates</div>
+                    <div class="drop-feature-item"><span class="drop-check">✓</span> Gold Desk Access</div>
+                    <div class="drop-feature-item"><span class="drop-check">✓</span> Member Dashboard</div>
+                    <div class="drop-feature-item"><span class="drop-check">✓</span> AI Concierge</div>
+                    <div class="drop-feature-item"><span class="drop-check">✓</span> Invite Network</div>
+                </div>
             </div>
-        </div>
 
-        <!-- Primary CTA -->
-        <a href="{{ join_url }}" class="drop-cta {{ 'cta-founder' if is_founder else 'cta-member' }}">
-            {% if is_founder %}
-            Accept Founding Invitation →
-            {% else %}
-            Join Helios →
-            {% endif %}
-        </a>
+            <!-- CTA -->
+            <div class="drop-cta-section">
+                <a href="{{ club_url }}" class="drop-cta {{ 'cta-founder' if is_founder else 'cta-member' }}">
+                    Join the Helios Club — $99.95 →
+                </a>
+                <div class="drop-cta-subtext">One-time founding membership · No recurring fees</div>
+            </div>
 
-        <!-- Secondary: view full card -->
-        <a href="{{ card_url }}" style="font-size:.78rem;color:var(--sv-text-muted);text-decoration:none;font-family:'Inter',sans-serif;font-weight:500;">
-            View {{ display_name|title }}'s full member card →
-        </a>
-
-        <!-- Distribution strip -->
-        <div class="drop-channels">
-            <a class="drop-channel-btn" href="{{ vcard_url }}" title="Save as contact">
-                <span class="drop-channel-icon">👤</span>
-                Contact
-            </a>
-            <a class="drop-channel-btn" href="{{ qr_url }}" title="View QR code">
-                <span class="drop-channel-icon">📱</span>
-                QR
-            </a>
-            <button class="drop-channel-btn" onclick="dropShare()" title="Share this invitation">
-                <span class="drop-channel-icon">📤</span>
-                Share
-            </button>
-        </div>
-
-        <!-- Protocol badge -->
-        <div class="drop-protocol-badge">
-            Helios Protocol · heliosdigital.xyz
+            <!-- Footer -->
+            <div class="drop-footer">
+                <span class="drop-platform-mark">Helios · Modern Digital Gold Platform</span>
+            </div>
         </div>
     </div>
 </div>
+
 {% endblock %}
 
 {% block scripts %}
@@ -364,20 +367,5 @@
         })
     }).catch(function() {});
 })();
-
-function dropShare() {
-    var url = '{{ join_url }}';
-    var name = '{{ display_name }}';
-
-    if (navigator.share) {
-        navigator.share({
-            title: name + ' invited you to Helios',
-            text: 'Join Helios through ' + name + '. Gold-backed smart contract protocol.',
-            url: url
-        }).catch(function() {});
-    } else {
-        navigator.clipboard.writeText(url).catch(function() {});
-    }
-}
 </script>
 {% endblock %}

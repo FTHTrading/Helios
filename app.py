@@ -345,7 +345,7 @@ def create_app():
     # ─── Card & Drop Routes (Premium Member Card System) ─────────
     @app.route("/card/<display_name>")
     def member_card(display_name):
-        """NFT-grade premium member asset card."""
+        """Premium member asset card — the showpiece."""
         from core.distribution import DistributionEngine
         from core.identity import HeliosIdentity
 
@@ -353,15 +353,13 @@ def create_app():
         helios_id = f"{display_name}{HeliosConfig.IDENTITY_SUFFIX}"
         member_info = identity.verify_id(helios_id)
 
-        # Determine founder status
         is_founder = display_name.lower() in getattr(HeliosConfig, 'FOUNDERS', [])
 
         member_data = {
             "helios_id": helios_id,
             "display_name": display_name,
-            "node_state": member_info.get("node_state", "instantiated") if member_info.get("exists") else "instantiated",
+            "tier": "founder" if is_founder else member_info.get("tier", "founder"),
             "is_founder": is_founder,
-            "bond_count": member_info.get("bond_count", 0) if member_info.get("exists") else 0,
             "member_since": member_info.get("member_since", "") if member_info.get("exists") else "",
         }
 
@@ -384,9 +382,8 @@ def create_app():
         member_data = {
             "helios_id": helios_id,
             "display_name": display_name,
-            "node_state": member_info.get("node_state", "instantiated") if member_info.get("exists") else "instantiated",
+            "tier": "founder" if is_founder else member_info.get("tier", "founder"),
             "is_founder": is_founder,
-            "bond_count": member_info.get("bond_count", 0) if member_info.get("exists") else 0,
             "member_since": member_info.get("member_since", "") if member_info.get("exists") else "",
         }
 
@@ -408,9 +405,8 @@ def create_app():
         member_data = {
             "helios_id": helios_id,
             "display_name": display_name,
-            "node_state": member_info.get("node_state", "instantiated") if member_info.get("exists") else "instantiated",
+            "tier": "founder" if is_founder else member_info.get("tier", "founder"),
             "is_founder": is_founder,
-            "bond_count": member_info.get("bond_count", 0) if member_info.get("exists") else 0,
             "created_at": member_info.get("member_since", "") if member_info.get("exists") else "",
         }
 
