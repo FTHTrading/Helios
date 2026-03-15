@@ -118,6 +118,14 @@ class HeliosConfig:
         "protocol", "field", "energy", "bond"
     ]
 
+    # ═══ FOUNDERS — FOUNDING COUNCIL ════════════════════════════════
+    # Display names of founding members. Their cards receive founder-grade
+    # treatment: gold accents, founding credential surface, NFT provenance.
+    FOUNDERS = [s.strip().lower() for s in os.getenv(
+        "HELIOS_FOUNDERS",
+        "kevan"
+    ).split(",")]
+
     # ——— AI Assistant (Ask Helios — The Voice) ————————————————————
     AI_MODEL = os.getenv("HELIOS_AI_MODEL", "gpt-4")
     AI_API_KEY = os.getenv("HELIOS_AI_API_KEY", "")

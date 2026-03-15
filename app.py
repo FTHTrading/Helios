@@ -342,6 +342,85 @@ def create_app():
     def web3():
         return render_template("web3.html")
 
+    # ─── Card & Drop Routes (Premium Member Card System) ─────────
+    @app.route("/card/<display_name>")
+    def member_card(display_name):
+        """NFT-grade premium member asset card."""
+        from core.distribution import DistributionEngine
+        from core.identity import HeliosIdentity
+
+        identity = HeliosIdentity(g.db_session)
+        helios_id = f"{display_name}{HeliosConfig.IDENTITY_SUFFIX}"
+        member_info = identity.verify_id(helios_id)
+
+        # Determine founder status
+        is_founder = display_name.lower() in getattr(HeliosConfig, 'FOUNDERS', [])
+
+        member_data = {
+            "helios_id": helios_id,
+            "display_name": display_name,
+            "node_state": member_info.get("node_state", "instantiated") if member_info.get("exists") else "instantiated",
+            "is_founder": is_founder,
+            "bond_count": member_info.get("bond_count", 0) if member_info.get("exists") else 0,
+            "member_since": member_info.get("member_since", "") if member_info.get("exists") else "",
+        }
+
+        ctx = DistributionEngine.get_drop_context(member_data)
+        ctx["member_id"] = member_info.get("member_id", 1) if member_info.get("exists") else 1
+        return render_template("card.html", **ctx)
+
+    @app.route("/drop/<display_name>")
+    def drop_page(display_name):
+        """Lightweight QR-scan landing — fast, clear, one CTA."""
+        from core.distribution import DistributionEngine
+        from core.identity import HeliosIdentity
+
+        identity = HeliosIdentity(g.db_session)
+        helios_id = f"{display_name}{HeliosConfig.IDENTITY_SUFFIX}"
+        member_info = identity.verify_id(helios_id)
+
+        is_founder = display_name.lower() in getattr(HeliosConfig, 'FOUNDERS', [])
+
+        member_data = {
+            "helios_id": helios_id,
+            "display_name": display_name,
+            "node_state": member_info.get("node_state", "instantiated") if member_info.get("exists") else "instantiated",
+            "is_founder": is_founder,
+            "bond_count": member_info.get("bond_count", 0) if member_info.get("exists") else 0,
+            "member_since": member_info.get("member_since", "") if member_info.get("exists") else "",
+        }
+
+        ctx = DistributionEngine.get_drop_context(member_data)
+        return render_template("drop.html", **ctx)
+
+    @app.route("/api/identity/<display_name>/vcard")
+    def download_vcard(display_name):
+        """Download a premium vCard (.vcf) for a Helios member."""
+        from core.vcard import HeliosVCard
+        from core.identity import HeliosIdentity
+
+        identity = HeliosIdentity(g.db_session)
+        helios_id = f"{display_name}{HeliosConfig.IDENTITY_SUFFIX}"
+        member_info = identity.verify_id(helios_id)
+
+        is_founder = display_name.lower() in getattr(HeliosConfig, 'FOUNDERS', [])
+
+        member_data = {
+            "helios_id": helios_id,
+            "display_name": display_name,
+            "node_state": member_info.get("node_state", "instantiated") if member_info.get("exists") else "instantiated",
+            "is_founder": is_founder,
+            "bond_count": member_info.get("bond_count", 0) if member_info.get("exists") else 0,
+            "created_at": member_info.get("member_since", "") if member_info.get("exists") else "",
+        }
+
+        vcf_content = HeliosVCard.generate(member_data)
+        filename = HeliosVCard.generate_filename(display_name, is_founder)
+
+        response = Response(vcf_content, mimetype=HeliosVCard.content_type())
+        response.headers["Content-Disposition"] = HeliosVCard.content_disposition(filename)
+        return response
+
     # ─── Health Check ─────────────────────────────────────────────
     @app.route("/health")
     @app.route("/api/health")

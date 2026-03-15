@@ -1,0 +1,763 @@
+{% extends "base.html" %}
+{% block title %}{{ display_name|title }} — Helios {% if is_founder %}Founder{% else %}Member{% endif %} Card{% endblock %}
+{% block og_title %}{{ display_name|title }} — {{ tier_label }} | Helios Protocol{% endblock %}
+{% block og_description %}{{ display_name|title }} is a {{ tier_label }} on Helios Protocol. Gold-backed smart contract allocation. Join through their personal invitation.{% endblock %}
+{% block og_url %}/card/{{ display_name }}{% endblock %}
+
+{% block head %}
+<style>
+/* ═══════════════════════════════════════════════════════════════════
+   HELIOS PREMIUM MEMBER CARD — NFT-GRADE ASSET SURFACE
+   When a founder hands you this, it's a ceremony, not a transaction.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.card-page {
+    min-height: calc(100vh - 80px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+/* ── Ambient light field behind the card ── */
+.card-page::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(251,191,36,.06) 0%, transparent 70%);
+    pointer-events: none;
+    animation: card-ambient 8s ease-in-out infinite;
+}
+
+@keyframes card-ambient {
+    0%, 100% { opacity: .4; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: .7; transform: translate(-50%, -50%) scale(1.15); }
+}
+
+/* ── Founder card gets a richer ambient ── */
+.card-page.is-founder::before {
+    background: radial-gradient(circle, rgba(251,191,36,.1) 0%, rgba(191,90,242,.04) 40%, transparent 70%);
+    width: 700px;
+    height: 700px;
+}
+
+/* ═══ THE CARD ═══ */
+.member-asset-card {
+    width: 100%;
+    max-width: 440px;
+    position: relative;
+    z-index: 1;
+}
+
+/* Card body — glass + metal */
+.card-body {
+    background: linear-gradient(165deg, rgba(28,28,30,.95) 0%, rgba(12,15,20,.98) 100%);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+        0 0 0 1px rgba(255,255,255,.04),
+        0 4px 24px rgba(0,0,0,.5),
+        0 0 80px rgba(251,191,36,.04);
+    transition: box-shadow .4s ease, transform .4s ease;
+}
+.card-body:hover {
+    box-shadow:
+        0 0 0 1px rgba(255,255,255,.06),
+        0 8px 40px rgba(0,0,0,.6),
+        0 0 120px rgba(251,191,36,.08);
+    transform: translateY(-2px);
+}
+
+/* ── Founder card: gold edge glow ── */
+.is-founder .card-body {
+    border-color: rgba(251,191,36,.2);
+    box-shadow:
+        0 0 0 1px rgba(251,191,36,.08),
+        0 4px 24px rgba(0,0,0,.5),
+        0 0 80px rgba(251,191,36,.08),
+        inset 0 1px 0 rgba(251,191,36,.1);
+}
+.is-founder .card-body:hover {
+    box-shadow:
+        0 0 0 1px rgba(251,191,36,.15),
+        0 8px 40px rgba(0,0,0,.6),
+        0 0 140px rgba(251,191,36,.12),
+        inset 0 1px 0 rgba(251,191,36,.15);
+}
+
+/* ── Top accent bar ── */
+.card-accent-bar {
+    height: 3px;
+    background: linear-gradient(90deg, transparent 5%, var(--sv-accent-2, #2997ff) 30%, var(--sv-accent-2, #2997ff) 70%, transparent 95%);
+    opacity: .6;
+}
+.is-founder .card-accent-bar {
+    height: 4px;
+    background: linear-gradient(90deg,
+        transparent 2%,
+        var(--sv-accent-1, #fbbf24) 15%,
+        var(--sv-accent-3, #bf5af2) 50%,
+        var(--sv-accent-1, #fbbf24) 85%,
+        transparent 98%);
+    opacity: .8;
+    animation: founder-bar-shimmer 4s ease-in-out infinite;
+}
+@keyframes founder-bar-shimmer {
+    0%, 100% { opacity: .6; }
+    50% { opacity: 1; }
+}
+
+/* ═══ CARD HEADER — Identity + Sun Mark ═══ */
+.card-header {
+    text-align: center;
+    padding: 2.5rem 2rem 1.5rem;
+    position: relative;
+}
+
+/* Sun mark — the protocol sigil */
+.card-sun-mark {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.2rem;
+    position: relative;
+    background: rgba(41,151,255,.06);
+    border: 2px solid rgba(41,151,255,.25);
+    transition: all .4s ease;
+}
+.card-sun-mark svg { width: 28px; height: 28px; }
+
+/* Founder sun mark — gold orbit + pulse */
+.is-founder .card-sun-mark {
+    background: rgba(251,191,36,.08);
+    border-color: rgba(251,191,36,.35);
+    box-shadow: 0 0 30px rgba(251,191,36,.12);
+}
+.is-founder .card-sun-mark::before {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 1px solid rgba(251,191,36,.15);
+    animation: sun-orbit 30s linear infinite;
+}
+.is-founder .card-sun-mark::after {
+    content: '';
+    position: absolute;
+    inset: -12px;
+    border-radius: 50%;
+    border: 1px solid rgba(191,90,242,.08);
+    animation: sun-orbit 45s linear infinite reverse;
+}
+@keyframes sun-orbit {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Identity name — editorial weight */
+.card-identity {
+    font-family: 'EB Garamond', serif;
+    font-size: 2.2rem;
+    font-weight: 600;
+    color: var(--sv-text, #f5f5f7);
+    letter-spacing: .01em;
+    margin-bottom: .3rem;
+    line-height: 1.1;
+}
+.is-founder .card-identity {
+    background: linear-gradient(135deg, var(--sv-accent-1, #fbbf24), #fff8e1, var(--sv-accent-1, #fbbf24));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Tier badge */
+.card-tier-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .3rem .9rem;
+    border-radius: 980px;
+    font-family: 'Inter', sans-serif;
+    font-size: .65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    margin-top: .5rem;
+}
+.card-tier-badge.tier-founder {
+    background: linear-gradient(135deg, rgba(251,191,36,.15), rgba(191,90,242,.1));
+    border: 1px solid rgba(251,191,36,.25);
+    color: var(--sv-accent-1, #fbbf24);
+}
+.card-tier-badge.tier-genesis {
+    background: rgba(191,90,242,.1);
+    border: 1px solid rgba(191,90,242,.2);
+    color: #bf5af2;
+}
+.card-tier-badge.tier-propagating {
+    background: rgba(41,151,255,.08);
+    border: 1px solid rgba(41,151,255,.2);
+    color: #2997ff;
+}
+.card-tier-badge.tier-stable {
+    background: rgba(48,209,88,.08);
+    border: 1px solid rgba(48,209,88,.2);
+    color: #30d158;
+}
+.card-tier-badge.tier-default {
+    background: rgba(134,134,139,.08);
+    border: 1px solid rgba(134,134,139,.15);
+    color: #86868b;
+}
+
+.card-tier-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.tier-founder .card-tier-dot { background: var(--sv-accent-1, #fbbf24); box-shadow: 0 0 8px rgba(251,191,36,.5); }
+.tier-genesis .card-tier-dot { background: #bf5af2; box-shadow: 0 0 8px rgba(191,90,242,.5); }
+.tier-propagating .card-tier-dot { background: #2997ff; box-shadow: 0 0 8px rgba(41,151,255,.5); }
+.tier-stable .card-tier-dot { background: #30d158; box-shadow: 0 0 8px rgba(48,209,88,.5); }
+.tier-default .card-tier-dot { background: #86868b; }
+
+/* ═══ ASSET STRIP — NFT-like data cells ═══ */
+.card-asset-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    border-top: 1px solid rgba(255,255,255,.06);
+    border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.card-asset-cell {
+    text-align: center;
+    padding: 1rem .5rem;
+    border-right: 1px solid rgba(255,255,255,.04);
+    position: relative;
+}
+.card-asset-cell:last-child { border-right: none; }
+.card-asset-value {
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--sv-text, #f5f5f7);
+    display: block;
+    font-variant-numeric: tabular-nums;
+}
+.card-asset-label {
+    font-family: 'Inter', sans-serif;
+    font-size: .58rem;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: var(--sv-text-muted, #86868b);
+    margin-top: .15rem;
+    display: block;
+}
+
+/* Founder asset cells get subtle gold tint */
+.is-founder .card-asset-value { color: var(--sv-accent-1, #fbbf24); }
+
+/* ═══ PROOF SURFACE — On-chain verification ═══ */
+.card-proof-surface {
+    margin: 1rem 1.5rem;
+    padding: 1rem;
+    background: rgba(255,255,255,.015);
+    border: 1px solid rgba(255,255,255,.05);
+    border-radius: 12px;
+}
+.card-proof-header {
+    font-family: 'Inter', sans-serif;
+    font-size: .6rem;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: var(--sv-text-muted, #86868b);
+    font-weight: 700;
+    margin-bottom: .6rem;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+}
+.card-proof-header .proof-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: #30d158;
+    box-shadow: 0 0 6px rgba(48,209,88,.4);
+}
+.card-proof-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .4rem .75rem;
+}
+.card-proof-label {
+    font-size: .55rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--sv-text-muted, #86868b);
+}
+.card-proof-value {
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--sv-text, #f5f5f7);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ═══ DISTRIBUTION DOCK — 5-channel action strip ═══ */
+.card-distribution-dock {
+    padding: 1.2rem 1.5rem;
+    border-top: 1px solid rgba(255,255,255,.04);
+}
+.card-dock-label {
+    font-size: .58rem;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: var(--sv-text-muted, #86868b);
+    font-weight: 600;
+    margin-bottom: .6rem;
+    text-align: center;
+}
+.card-dock-channels {
+    display: flex;
+    justify-content: center;
+    gap: .5rem;
+}
+.card-channel-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .25rem;
+    padding: .6rem .5rem;
+    min-width: 60px;
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all .2s ease;
+    text-decoration: none;
+    color: inherit;
+}
+.card-channel-btn:hover {
+    background: rgba(255,255,255,.06);
+    border-color: rgba(255,255,255,.1);
+    transform: translateY(-1px);
+}
+.card-channel-btn:active {
+    transform: translateY(0);
+}
+.card-channel-icon {
+    font-size: 1.3rem;
+    line-height: 1;
+}
+.card-channel-text {
+    font-family: 'Inter', sans-serif;
+    font-size: .55rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--sv-text-muted, #86868b);
+    white-space: nowrap;
+}
+
+/* Founder dock — gold-tinted channel buttons */
+.is-founder .card-channel-btn:hover {
+    border-color: rgba(251,191,36,.2);
+    background: rgba(251,191,36,.05);
+}
+
+/* ═══ PRIMARY CTA — Join through this member ═══ */
+.card-cta-section {
+    padding: 0 1.5rem 1.5rem;
+}
+.card-cta-primary {
+    display: block;
+    width: 100%;
+    padding: .85rem;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: .9rem;
+    font-weight: 700;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s ease;
+    text-decoration: none;
+    letter-spacing: .01em;
+}
+.card-cta-primary.cta-founder {
+    background: linear-gradient(135deg, var(--sv-accent-1, #fbbf24), #e8a800);
+    color: #000;
+    box-shadow: 0 4px 20px rgba(251,191,36,.2);
+}
+.card-cta-primary.cta-founder:hover {
+    box-shadow: 0 6px 30px rgba(251,191,36,.3);
+    transform: translateY(-1px);
+}
+.card-cta-primary.cta-member {
+    background: linear-gradient(135deg, var(--sv-accent-2, #2997ff), #0077ed);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(41,151,255,.15);
+}
+.card-cta-primary.cta-member:hover {
+    box-shadow: 0 6px 30px rgba(41,151,255,.25);
+    transform: translateY(-1px);
+}
+
+/* ═══ CARD FOOTER — Protocol badge ═══ */
+.card-footer-badge {
+    text-align: center;
+    padding: 0 1.5rem 1.5rem;
+}
+.card-protocol-badge {
+    display: inline-block;
+    padding: .3rem .8rem;
+    border-radius: 980px;
+    font-family: 'Inter', sans-serif;
+    font-size: .52rem;
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    color: var(--sv-text-muted, #86868b);
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.06);
+}
+
+/* ═══ FOUNDER CREDENTIAL SURFACE ═══ */
+.card-credential {
+    margin: 1rem 1.5rem;
+    padding: .8rem 1rem;
+    background: linear-gradient(135deg, rgba(251,191,36,.04), rgba(191,90,242,.02));
+    border: 1px solid rgba(251,191,36,.12);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: .8rem;
+}
+.card-credential-icon {
+    font-size: 1.6rem;
+    flex-shrink: 0;
+}
+.card-credential-text h5 {
+    font-family: 'Inter', sans-serif;
+    font-size: .72rem;
+    font-weight: 700;
+    color: var(--sv-accent-1, #fbbf24);
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    margin-bottom: .15rem;
+}
+.card-credential-text p {
+    font-size: .72rem;
+    color: var(--sv-text-muted, #86868b);
+    line-height: 1.4;
+    margin: 0;
+}
+
+/* ═══ SERIAL NUMBER — NFT provenance ═══ */
+.card-serial {
+    text-align: center;
+    padding: .6rem 1.5rem;
+    border-top: 1px solid rgba(255,255,255,.03);
+}
+.card-serial-text {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: .55rem;
+    letter-spacing: .15em;
+    color: rgba(134,134,139,.5);
+}
+
+/* ═══ FEEDBACK TOAST ═══ */
+.card-toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--sv-accent-1, #fbbf24);
+    color: #000;
+    padding: .65rem 1.5rem;
+    border-radius: 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: .82rem;
+    font-weight: 700;
+    opacity: 0;
+    transition: all .3s ease;
+    pointer-events: none;
+    z-index: 999;
+    box-shadow: 0 4px 20px rgba(251,191,36,.3);
+}
+.card-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* ═══ RESPONSIVE ═══ */
+@media (max-width: 480px) {
+    .card-body { border-radius: 16px; }
+    .card-identity { font-size: 1.7rem; }
+    .card-header { padding: 2rem 1.5rem 1.2rem; }
+    .card-dock-channels { gap: .35rem; }
+    .card-channel-btn { min-width: 52px; padding: .5rem .4rem; }
+    .card-cta-section, .card-distribution-dock { padding-left: 1.2rem; padding-right: 1.2rem; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card-page {{ 'is-founder' if is_founder else '' }}">
+    <div class="member-asset-card">
+        <div class="card-body {{ 'is-founder' if is_founder else '' }}">
+            <!-- Accent bar -->
+            <div class="card-accent-bar"></div>
+
+            <!-- Header — Sun Mark + Identity -->
+            <div class="card-header">
+                <div class="card-sun-mark">
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        {% if is_founder %}
+                        <defs>
+                            <linearGradient id="founder-grad" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0%" stop-color="#fbbf24"/>
+                                <stop offset="50%" stop-color="#bf5af2"/>
+                                <stop offset="100%" stop-color="#fbbf24"/>
+                            </linearGradient>
+                        </defs>
+                        <circle cx="50" cy="50" r="38" fill="none" stroke="url(#founder-grad)" stroke-width="5"/>
+                        <circle cx="50" cy="50" r="8" fill="#fbbf24"/>
+                        {% else %}
+                        <circle cx="50" cy="50" r="38" fill="none" stroke="#2997ff" stroke-width="5"/>
+                        <circle cx="50" cy="50" r="8" fill="#2997ff"/>
+                        {% endif %}
+                    </svg>
+                </div>
+
+                <div class="card-identity">{{ helios_id }}</div>
+
+                {% set tier_css = 'tier-founder' if is_founder else ('tier-propagating' if tier == 'propagating' else ('tier-stable' if tier == 'stable' else ('tier-genesis' if tier == 'genesis' else 'tier-default'))) %}
+                <div class="card-tier-badge {{ tier_css }}">
+                    <span class="card-tier-dot"></span>
+                    {{ tier_label }}
+                </div>
+            </div>
+
+            <!-- Asset Strip — NFT-like data cells -->
+            <div class="card-asset-strip">
+                <div class="card-asset-cell">
+                    <span class="card-asset-value" id="card-bonds">{{ bond_count }}</span>
+                    <span class="card-asset-label">Bonds</span>
+                </div>
+                <div class="card-asset-cell">
+                    <span class="card-asset-value" id="card-tokens">—</span>
+                    <span class="card-asset-label">HLS Tokens</span>
+                </div>
+                <div class="card-asset-cell">
+                    <span class="card-asset-value" id="card-certs">—</span>
+                    <span class="card-asset-label">Certificates</span>
+                </div>
+            </div>
+
+            {% if is_founder %}
+            <!-- Founder Credential — exclusive to founders -->
+            <div class="card-credential">
+                <div class="card-credential-icon">🏛️</div>
+                <div class="card-credential-text">
+                    <h5>Founding Council Member</h5>
+                    <p>This member holds a founding position in the Helios Protocol. Their invitation carries founding-rate token pricing and genesis-tier certificates.</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Proof Surface -->
+            <div class="card-proof-surface">
+                <div class="card-proof-header">
+                    <span class="proof-dot"></span>
+                    Protocol Verified
+                </div>
+                <div class="card-proof-grid">
+                    <div>
+                        <div class="card-proof-label">Network</div>
+                        <div class="card-proof-value">XRPL + Stellar</div>
+                    </div>
+                    <div>
+                        <div class="card-proof-label">Reserve</div>
+                        <div class="card-proof-value">Gold + Stablecoin</div>
+                    </div>
+                    <div>
+                        <div class="card-proof-label">Member Since</div>
+                        <div class="card-proof-value" id="card-since">{{ created_at[:10] if created_at else '—' }}</div>
+                    </div>
+                    <div>
+                        <div class="card-proof-label">Settlement</div>
+                        <div class="card-proof-value">3-Second Finality</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Distribution Dock — 5 Channels -->
+            <div class="card-distribution-dock">
+                <div class="card-dock-label">Share This Card</div>
+                <div class="card-dock-channels">
+                    {% for ch in channels %}
+                    {% if ch.action == 'copy' %}
+                    <button class="card-channel-btn" onclick="copyLink('{{ ch.url }}')" title="{{ ch.description }}">
+                        <span class="card-channel-icon">{{ ch.icon }}</span>
+                        <span class="card-channel-text">{{ ch.label }}</span>
+                    </button>
+                    {% elif ch.action == 'share' %}
+                    <button class="card-channel-btn" onclick="nativeShare()" title="{{ ch.description }}">
+                        <span class="card-channel-icon">{{ ch.icon }}</span>
+                        <span class="card-channel-text">{{ ch.label }}</span>
+                    </button>
+                    {% elif ch.action == 'download' %}
+                    <a class="card-channel-btn" href="{{ ch.url }}" title="{{ ch.description }}">
+                        <span class="card-channel-icon">{{ ch.icon }}</span>
+                        <span class="card-channel-text">{{ ch.label }}</span>
+                    </a>
+                    {% else %}
+                    <a class="card-channel-btn" href="{{ ch.url }}" title="{{ ch.description }}">
+                        <span class="card-channel-icon">{{ ch.icon }}</span>
+                        <span class="card-channel-text">{{ ch.label }}</span>
+                    </a>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Primary CTA -->
+            <div class="card-cta-section">
+                <a href="{{ join_url }}" class="card-cta-primary {{ 'cta-founder' if is_founder else 'cta-member' }}">
+                    {% if is_founder %}
+                    Accept Founder Invitation →
+                    {% else %}
+                    Join Through {{ display_name|title }} →
+                    {% endif %}
+                </a>
+            </div>
+
+            <!-- Protocol badge -->
+            <div class="card-footer-badge">
+                <div class="card-protocol-badge">
+                    {% if is_founder %}
+                    Founding Member · Gold Backed · Smart Contract Governed
+                    {% else %}
+                    One Payment · Gold Backed · Smart Contract Governed
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Serial number — NFT provenance feel -->
+            <div class="card-serial">
+                <span class="card-serial-text" id="card-serial">HLS-{{ '%06d' | format(member_id|default(1)) }}-{{ tier[:3]|upper }}-{{ (created_at[:10] if created_at else '2026')|replace('-','') }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card-toast" id="card-toast">Link copied ✓</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    var identity = '{{ display_name }}';
+    var joinUrl = '{{ join_url }}';
+
+    // ═══ Fetch live member data ═══
+    fetch('/api/identity/' + identity + '/verify')
+        .then(function(r) { return r.json(); })
+        .then(function(resp) {
+            if (!resp.success || !resp.data) return;
+            var d = resp.data;
+            var bondsEl = document.getElementById('card-bonds');
+            if (bondsEl && d.bond_count !== undefined) bondsEl.textContent = d.bond_count;
+        })
+        .catch(function() {});
+
+    // Fetch token balance
+    fetch('/api/token/balance/' + identity + '.helios')
+        .then(function(r) { return r.json(); })
+        .then(function(resp) {
+            if (resp.success && resp.data) {
+                var el = document.getElementById('card-tokens');
+                if (el) el.textContent = (resp.data.balance || 0).toLocaleString();
+            }
+        })
+        .catch(function() {
+            var el = document.getElementById('card-tokens');
+            if (el) el.textContent = '—';
+        });
+
+    // ═══ Emit card_view event ═══
+    fetch('/api/nodes/' + identity + '/event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            event_type: 'card_view',
+            session_id: sessionStorage.getItem('helios_session') || (function() {
+                var sid = 'cv_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+                sessionStorage.setItem('helios_session', sid);
+                return sid;
+            })()
+        })
+    }).catch(function() {});
+})();
+
+// ═══ Distribution channel actions ═══
+function copyLink(url) {
+    navigator.clipboard.writeText(url).then(function() {
+        showToast('Link copied ✓');
+        emitEvent('share_link_copied');
+    }).catch(function() {
+        // Fallback
+        var input = document.createElement('input');
+        input.value = url;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        document.body.removeChild(input);
+        showToast('Link copied ✓');
+    });
+}
+
+function nativeShare() {
+    var identity = '{{ display_name }}';
+    var url = '{{ join_url }}';
+
+    if (navigator.share) {
+        navigator.share({
+            title: identity + '.helios — Join Helios',
+            text: 'Join Helios through ' + identity + '. Gold-backed allocation protocol. One payment. Fully autonomous.',
+            url: url
+        }).then(function() {
+            emitEvent('native_share');
+        }).catch(function() {});
+    } else {
+        copyLink(url);
+    }
+}
+
+function emitEvent(type) {
+    fetch('/api/nodes/{{ display_name }}/event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event_type: type })
+    }).catch(function() {});
+}
+
+function showToast(msg) {
+    var toast = document.getElementById('card-toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(function() { toast.classList.remove('show'); }, 2200);
+}
+</script>
+{% endblock %}

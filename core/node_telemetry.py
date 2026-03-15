@@ -95,10 +95,10 @@ class NodeTelemetry:
         """
         slug = issuer_slug.replace(".helios", "")
 
-        # Total QR scans (qr_scan + qr_view)
+        # Total QR scans (qr_scan + qr_view + card_view + drop_view)
         total_scans = self.db.query(func.count(NodeEvent.id)).filter(
             NodeEvent.issuer_slug == slug,
-            NodeEvent.event_type.in_(["qr_scan", "qr_view"])
+            NodeEvent.event_type.in_(["qr_scan", "qr_view", "card_view", "drop_view"])
         ).scalar() or 0
 
         # Total joined through this node
@@ -322,7 +322,7 @@ class NodeTelemetry:
         """Global network stats across all member nodes."""
         total_events = self.db.query(func.count(NodeEvent.id)).scalar() or 0
         total_scans = self.db.query(func.count(NodeEvent.id)).filter(
-            NodeEvent.event_type.in_(["qr_scan", "qr_view"])
+            NodeEvent.event_type.in_(["qr_scan", "qr_view", "card_view", "drop_view"])
         ).scalar() or 0
         total_joins = self.db.query(func.count(NodeEvent.id)).filter(
             NodeEvent.event_type == "member_created"
