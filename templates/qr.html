@@ -135,6 +135,31 @@
         letter-spacing:.12em; color:var(--text-muted); font-weight:500;
     }
 
+    /* Proof Surface */
+    .qr-proof-surface {
+        margin:1rem 2rem 1.5rem; padding:1rem;
+        background:rgba(255,255,255,.02); border:1px solid var(--glass-border);
+        border-radius:var(--radius-sm);
+    }
+    .proof-header {
+        font-size:.65rem; text-transform:uppercase; letter-spacing:.1em;
+        color:var(--text-muted); margin-bottom:.75rem; font-weight:600;
+    }
+    .proof-grid {
+        display:grid; grid-template-columns:1fr 1fr; gap:.5rem .75rem; margin-bottom:.75rem;
+    }
+    .proof-cell { }
+    .proof-label { font-size:.6rem; text-transform:uppercase; letter-spacing:.06em; color:var(--text-muted); }
+    .proof-value { font-size:.8rem; font-weight:600; color:var(--text); margin-top:.1rem; font-variant-numeric:tabular-nums; }
+    .proof-links {
+        display:flex; gap:.75rem; flex-wrap:wrap;
+        border-top:1px solid var(--glass-border); padding-top:.5rem;
+    }
+    .proof-link {
+        font-size:.6rem; text-transform:uppercase; letter-spacing:.06em;
+        color:var(--blue); font-weight:500;
+    }
+
     /* Copy toast */
     .copy-toast {
         position:fixed; bottom:2rem; left:50%; transform:translateX(-50%) translateY(20px);
@@ -246,6 +271,35 @@
 
         <div class="qr-badge-row">
             <div class="qr-protocol-badge">One Payment · Gold Backed · Smart Contract Governed</div>
+        </div>
+
+        <!-- ═══ Protocol Proof Surface ═══ -->
+        <div class="qr-proof-surface" id="proof-surface">
+            <div class="proof-header">⛓ On-Chain Proof</div>
+            <div class="proof-grid">
+                <div class="proof-cell">
+                    <div class="proof-label">Token Supply</div>
+                    <div class="proof-value" id="proof-supply">—</div>
+                </div>
+                <div class="proof-cell">
+                    <div class="proof-label">Issuance Policy</div>
+                    <div class="proof-value" id="proof-policy">Fixed Cap</div>
+                </div>
+                <div class="proof-cell">
+                    <div class="proof-label">Certificates Issued</div>
+                    <div class="proof-value" id="proof-certs">—</div>
+                </div>
+                <div class="proof-cell">
+                    <div class="proof-label">Reserve Backing</div>
+                    <div class="proof-value" id="proof-reserve">Gold + Stablecoin</div>
+                </div>
+            </div>
+            <div class="proof-links">
+                <a id="proof-xrpl-link" href="https://livenet.xrpl.org" target="_blank" rel="noopener" class="proof-link">XRPL Explorer →</a>
+                <a href="/treasury" class="proof-link">Treasury →</a>
+                <a href="/certificates" class="proof-link">Certificates →</a>
+                <a href="/vault/gold" class="proof-link">Gold Reserve →</a>
+            </div>
         </div>
     </div>
 </div>
@@ -1027,5 +1081,28 @@ function shareQR() {
         });
     }
 }
+
+// ═══ Load Protocol Proof Data ═══
+(function loadProofSurface() {
+    fetch('/api/token/info').then(function(r) { return r.json(); }).then(function(json) {
+        if (json.success && json.data) {
+            var d = json.data;
+            var supplyEl = document.getElementById('proof-supply');
+            if (supplyEl) supplyEl.textContent = (d.total_supply || d.max_supply || 0).toLocaleString() + ' HLS';
+            var policyEl = document.getElementById('proof-policy');
+            if (policyEl) policyEl.textContent = d.issuance_policy || 'Fixed Cap · No Inflation';
+        }
+    }).catch(function() {});
+
+    fetch('/api/certificates/count').then(function(r) { return r.json(); }).then(function(json) {
+        if (json.success) {
+            var el = document.getElementById('proof-certs');
+            if (el) el.textContent = (json.data.count || json.data.total || 0).toLocaleString();
+        }
+    }).catch(function() {
+        var el = document.getElementById('proof-certs');
+        if (el) el.textContent = '—';
+    });
+})();
 </script>
 {% endblock %}

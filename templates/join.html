@@ -118,6 +118,43 @@
         </div>
     </div>
 </section>
+
+<!-- ═══ Protocol Proof Strip ═══ -->
+<section class="join-proof-section">
+    <div class="container" style="max-width:560px;">
+        <div class="join-proof-strip">
+            <div class="join-proof-header">⛓ Protocol Verification</div>
+            <div class="join-proof-grid">
+                <div><span class="join-proof-label">Token</span><span class="join-proof-val" id="jp-supply">—</span></div>
+                <div><span class="join-proof-label">Issuance</span><span class="join-proof-val">Fixed Cap</span></div>
+                <div><span class="join-proof-label">Backing</span><span class="join-proof-val">Gold + Stablecoin</span></div>
+                <div><span class="join-proof-label">Settlement</span><span class="join-proof-val">XRPL + Stellar</span></div>
+            </div>
+            <div class="join-proof-links">
+                <a href="/treasury" class="join-proof-link">Treasury</a>
+                <a href="/certificates" class="join-proof-link">Certificates</a>
+                <a href="/vault/gold" class="join-proof-link">Gold Reserve</a>
+                <a href="https://livenet.xrpl.org" target="_blank" rel="noopener" class="join-proof-link">XRPL Explorer</a>
+            </div>
+        </div>
+    </div>
+</section>
+<style>
+.join-proof-section { padding: 0 0 2rem; }
+.join-proof-strip {
+    background: rgba(255,255,255,.02); border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm); padding: 1rem;
+}
+.join-proof-header {
+    font-size: .6rem; text-transform: uppercase; letter-spacing: .1em;
+    color: var(--text-muted); margin-bottom: .6rem; font-weight: 600;
+}
+.join-proof-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem .75rem; margin-bottom: .6rem; }
+.join-proof-label { font-size: .6rem; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin-right: .4rem; }
+.join-proof-val { font-size: .75rem; font-weight: 600; color: var(--text); }
+.join-proof-links { display: flex; gap: .5rem; flex-wrap: wrap; border-top: 1px solid var(--glass-border); padding-top: .5rem; }
+.join-proof-link { font-size: .55rem; text-transform: uppercase; letter-spacing: .06em; color: var(--blue); font-weight: 500; }
+</style>
 {% endblock %}
 
 {% block scripts %}
@@ -456,5 +493,13 @@ function showActivationNextSteps() {
     link.href = '/activate?offer=' + encodeURIComponent(offerCode);
     link.style.display = 'inline-flex';
 }
+
+// ═══ Load Protocol Proof Data ═══
+fetch('/api/token/info').then(function(r) { return r.json(); }).then(function(json) {
+    if (json.success && json.data) {
+        var el = document.getElementById('jp-supply');
+        if (el) el.textContent = (json.data.total_supply || json.data.max_supply || 0).toLocaleString() + ' HLS';
+    }
+}).catch(function() {});
 </script>
 {% endblock %}

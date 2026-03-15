@@ -324,6 +324,10 @@ def create_app():
     def metrics():
         return render_template("metrics.html")
 
+    @app.route("/ops/nodes")
+    def ops_nodes():
+        return render_template("ops_nodes.html")
+
     @app.route("/launch")
     @app.route("/token-offering")
     def launch():

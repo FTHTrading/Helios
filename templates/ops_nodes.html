@@ -1,0 +1,680 @@
+{% extends "base.html" %}
+{% block title %}Ops — Node Telemetry Dashboard{% endblock %}
+
+{% block content %}
+<section class="section ops-dashboard">
+    <div class="container">
+        <div class="ops-header">
+            <h1>☀ Node Operations Dashboard</h1>
+            <p class="ops-subtitle">Real-time telemetry across all Helios member nodes</p>
+            <div class="ops-refresh">
+                <span id="ops-last-update" class="ops-timestamp">—</span>
+                <button class="btn btn-secondary btn-sm" onclick="refreshAll()">↻ Refresh</button>
+            </div>
+        </div>
+
+        <!-- ═══ Network Totals Strip ═══ -->
+        <div class="ops-totals-strip">
+            <div class="ops-total-cell">
+                <div class="ops-total-value" id="ops-total-events">—</div>
+                <div class="ops-total-label">Total Events</div>
+            </div>
+            <div class="ops-total-cell">
+                <div class="ops-total-value" id="ops-total-scans">—</div>
+                <div class="ops-total-label">QR Scans</div>
+            </div>
+            <div class="ops-total-cell">
+                <div class="ops-total-value" id="ops-total-joins">—</div>
+                <div class="ops-total-label">Joins</div>
+            </div>
+            <div class="ops-total-cell">
+                <div class="ops-total-value ops-gold" id="ops-conversion">—</div>
+                <div class="ops-total-label">Conversion</div>
+            </div>
+            <div class="ops-total-cell">
+                <div class="ops-total-value" id="ops-total-revenue">—</div>
+                <div class="ops-total-label">Revenue</div>
+            </div>
+            <div class="ops-total-cell">
+                <div class="ops-total-value" id="ops-total-hls">—</div>
+                <div class="ops-total-label">HLS Issued</div>
+            </div>
+        </div>
+
+        <div class="ops-grid">
+
+            <!-- ═══ Top Nodes by Joins ═══ -->
+            <div class="ops-panel">
+                <h3>Top Nodes — Joins</h3>
+                <div id="ops-top-joins" class="ops-list">
+                    <p class="loading">Loading…</p>
+                </div>
+            </div>
+
+            <!-- ═══ Top Nodes by Scans ═══ -->
+            <div class="ops-panel">
+                <h3>Top Nodes — Scans</h3>
+                <div id="ops-top-scans" class="ops-list">
+                    <p class="loading">Loading…</p>
+                </div>
+            </div>
+
+            <!-- ═══ Conversion Funnel (Network) ═══ -->
+            <div class="ops-panel">
+                <h3>Network Conversion Funnel</h3>
+                <div id="ops-funnel" class="ops-funnel">
+                    <p class="loading">Loading…</p>
+                </div>
+            </div>
+
+            <!-- ═══ Chain Depth Leaderboard ═══ -->
+            <div class="ops-panel">
+                <h3>Chain Depth Leaderboard</h3>
+                <div id="ops-depth-board" class="ops-list">
+                    <p class="loading">Loading…</p>
+                </div>
+            </div>
+
+            <!-- ═══ Node Status Distribution ═══ -->
+            <div class="ops-panel">
+                <h3>Node Status</h3>
+                <div id="ops-status-dist" class="ops-status-grid">
+                    <div class="ops-status-cell">
+                        <div class="ops-status-dot green"></div>
+                        <div class="ops-status-count" id="ops-green-count">—</div>
+                        <div class="ops-status-label">Active (7d)</div>
+                    </div>
+                    <div class="ops-status-cell">
+                        <div class="ops-status-dot yellow"></div>
+                        <div class="ops-status-count" id="ops-yellow-count">—</div>
+                        <div class="ops-status-label">Idle (30d)</div>
+                    </div>
+                    <div class="ops-status-cell">
+                        <div class="ops-status-dot red"></div>
+                        <div class="ops-status-count" id="ops-red-count">—</div>
+                        <div class="ops-status-label">Dormant</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══ Suspicious Spikes ═══ -->
+            <div class="ops-panel ops-panel-alert">
+                <h3>⚠ Suspicious Activity</h3>
+                <div id="ops-suspicious" class="ops-list">
+                    <p class="loading">Scanning…</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ═══ Last 50 Events — Full Width ═══ -->
+        <div class="ops-panel ops-panel-full">
+            <div class="ops-panel-header">
+                <h3>Recent Events</h3>
+                <select id="ops-event-filter" onchange="loadRecentEvents()" class="ops-select">
+                    <option value="">All Types</option>
+                    <option value="qr_view">QR View</option>
+                    <option value="qr_scan">QR Scan</option>
+                    <option value="join_page_open">Join Page Open</option>
+                    <option value="member_created">Member Created</option>
+                    <option value="payment_completed">Payment Completed</option>
+                    <option value="hls_issued">HLS Issued</option>
+                    <option value="share_link_copied">Share Link Copied</option>
+                </select>
+            </div>
+            <div id="ops-events-table" class="ops-events">
+                <p class="loading">Loading…</p>
+            </div>
+        </div>
+
+        <!-- ═══ Node Inspector ═══ -->
+        <div class="ops-panel ops-panel-full">
+            <h3>Node Inspector</h3>
+            <div class="ops-inspector-bar">
+                <input type="text" id="ops-inspect-slug" placeholder="Enter member slug (e.g. kenny)" class="ops-input">
+                <button class="btn btn-primary" onclick="inspectNode()">Inspect</button>
+            </div>
+            <div id="ops-inspect-result" class="ops-inspect-result" style="display:none;">
+                <div class="ops-inspect-grid">
+                    <div class="ops-inspect-card">
+                        <h4>Node Stats</h4>
+                        <div id="ops-inspect-stats"></div>
+                    </div>
+                    <div class="ops-inspect-card">
+                        <h4>Conversion Funnel</h4>
+                        <div id="ops-inspect-funnel"></div>
+                    </div>
+                    <div class="ops-inspect-card">
+                        <h4>Recent Events</h4>
+                        <div id="ops-inspect-events"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<style>
+/* ═══ Ops Dashboard Styles ═══ */
+.ops-dashboard { padding-top: 80px; }
+.ops-header { text-align: center; margin-bottom: 2rem; }
+.ops-header h1 { font-size: 2rem; letter-spacing: -0.03em; }
+.ops-subtitle { color: var(--text-muted); margin-top: .5rem; }
+.ops-refresh { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-top: 1rem; }
+.ops-timestamp { color: var(--text-muted); font-size: .8rem; }
+
+/* ─── Totals Strip ─── */
+.ops-totals-strip {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 1px;
+    background: var(--glass-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+.ops-total-cell {
+    background: var(--bg-card);
+    padding: 1.25rem 1rem;
+    text-align: center;
+}
+.ops-total-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--text);
+}
+.ops-total-value.ops-gold { color: var(--gold); }
+.ops-total-label {
+    font-size: .7rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text-muted);
+    margin-top: .25rem;
+}
+
+/* ─── Grid ─── */
+.ops-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+.ops-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+}
+.ops-panel h3 {
+    font-size: .85rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    padding-bottom: .5rem;
+    border-bottom: 1px solid var(--glass-border);
+}
+.ops-panel-alert { border-color: rgba(255, 69, 58, 0.25); }
+.ops-panel-alert h3 { color: var(--red); }
+.ops-panel-full {
+    background: var(--bg-card);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+.ops-panel-full h3 {
+    font-size: .85rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    padding-bottom: .5rem;
+    border-bottom: 1px solid var(--glass-border);
+}
+.ops-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+.ops-panel-header h3 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
+
+/* ─── List Items ─── */
+.ops-list { }
+.ops-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: .5rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.ops-list-item:last-child { border-bottom: none; }
+.ops-list-node {
+    font-size: .85rem;
+    font-weight: 500;
+    color: var(--text);
+}
+.ops-list-value {
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--gold);
+    font-variant-numeric: tabular-nums;
+}
+.ops-list-bar {
+    height: 3px;
+    background: linear-gradient(90deg, var(--gold), var(--blue));
+    border-radius: 2px;
+    margin-top: .25rem;
+    transition: width .5s ease;
+}
+
+/* ─── Status Dots ─── */
+.ops-status-grid { display: flex; gap: 2rem; justify-content: center; padding: 1rem 0; }
+.ops-status-cell { text-align: center; }
+.ops-status-dot {
+    width: 12px; height: 12px; border-radius: 50%;
+    margin: 0 auto .5rem;
+}
+.ops-status-dot.green { background: var(--green); box-shadow: 0 0 8px rgba(48,209,88,0.4); }
+.ops-status-dot.yellow { background: #fbbf24; box-shadow: 0 0 8px rgba(251,191,36,0.4); }
+.ops-status-dot.red { background: var(--red); box-shadow: 0 0 8px rgba(255,69,58,0.4); }
+.ops-status-count { font-size: 1.4rem; font-weight: 700; }
+.ops-status-label { font-size: .65rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: .06em; }
+
+/* ─── Funnel ─── */
+.ops-funnel-row {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    margin-bottom: .5rem;
+}
+.ops-funnel-label { font-size: .75rem; color: var(--text-muted); width: 140px; text-align: right; }
+.ops-funnel-bar-wrap { flex: 1; height: 18px; background: rgba(255,255,255,0.04); border-radius: 4px; overflow: hidden; }
+.ops-funnel-bar { height: 100%; background: linear-gradient(90deg, var(--blue), var(--gold)); border-radius: 4px; transition: width .6s ease; min-width: 2px; }
+.ops-funnel-count { font-size: .75rem; font-weight: 600; color: var(--text); width: 50px; font-variant-numeric: tabular-nums; }
+
+/* ─── Events Table ─── */
+.ops-events { max-height: 400px; overflow-y: auto; }
+.ops-event-row {
+    display: grid;
+    grid-template-columns: 120px 100px 140px 1fr 80px;
+    gap: .75rem;
+    padding: .4rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: .75rem;
+    align-items: center;
+}
+.ops-event-row:first-child { font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; }
+.ops-event-type {
+    padding: .15rem .4rem;
+    border-radius: 4px;
+    font-size: .7rem;
+    font-weight: 500;
+    background: rgba(41,151,255,0.1);
+    color: var(--blue);
+    display: inline-block;
+}
+.ops-event-type.join { background: rgba(48,209,88,0.1); color: var(--green); }
+.ops-event-type.payment { background: rgba(251,191,36,0.1); color: var(--gold); }
+.ops-event-type.error { background: rgba(255,69,58,0.1); color: var(--red); }
+
+/* ─── Inspector ─── */
+.ops-inspector-bar { display: flex; gap: .75rem; margin-bottom: 1rem; }
+.ops-input {
+    flex: 1;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    padding: .6rem 1rem;
+    color: var(--text);
+    font-size: .9rem;
+    outline: none;
+}
+.ops-input:focus { border-color: var(--blue); }
+.ops-select {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    padding: .4rem .75rem;
+    color: var(--text);
+    font-size: .75rem;
+    outline: none;
+}
+.ops-inspect-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+.ops-inspect-card {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+}
+.ops-inspect-card h4 { font-size: .75rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: .75rem; }
+
+/* ─── Responsive ─── */
+@media(max-width: 900px) {
+    .ops-grid { grid-template-columns: 1fr; }
+    .ops-totals-strip { grid-template-columns: repeat(3, 1fr); }
+    .ops-event-row { grid-template-columns: 1fr 1fr; }
+    .ops-inspect-grid { grid-template-columns: 1fr; }
+}
+@media(max-width: 600px) {
+    .ops-totals-strip { grid-template-columns: repeat(2, 1fr); }
+}
+
+.btn-sm { padding: .35rem .75rem; font-size: .75rem; }
+.loading { color: var(--text-muted); font-size: .8rem; }
+.empty { color: var(--text-muted); font-size: .8rem; text-align: center; padding: 1rem 0; }
+.ops-alert-item {
+    padding: .5rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: .8rem;
+}
+.ops-alert-item .alert-slug { color: var(--red); font-weight: 600; }
+.ops-alert-item .alert-detail { color: var(--text-muted); font-size: .72rem; }
+.ops-clean { color: var(--green); text-align: center; padding: 1.5rem; }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+/* ═══ Ops Dashboard — Client Logic ═══ */
+
+let networkData = null;
+let allNodeStats = [];
+
+async function refreshAll() {
+    document.getElementById('ops-last-update').textContent = 'Updating…';
+    await Promise.all([
+        loadNetworkStats(),
+        loadTopNodes(),
+        loadRecentEvents(),
+        loadSuspiciousActivity(),
+    ]);
+    document.getElementById('ops-last-update').textContent =
+        'Updated ' + new Date().toLocaleTimeString();
+}
+
+/* ─── Network Stats ─── */
+async function loadNetworkStats() {
+    try {
+        const res = await fetch('/api/nodes/network/stats');
+        const json = await res.json();
+        if (!json.success) return;
+        const d = json.data;
+        networkData = d;
+
+        document.getElementById('ops-total-events').textContent = d.total_events.toLocaleString();
+        document.getElementById('ops-total-scans').textContent = d.total_scans.toLocaleString();
+        document.getElementById('ops-total-joins').textContent = d.total_joins.toLocaleString();
+        document.getElementById('ops-conversion').textContent = d.conversion_rate + '%';
+        document.getElementById('ops-total-revenue').textContent = '$' + d.total_revenue.toLocaleString();
+        document.getElementById('ops-total-hls').textContent = d.total_hls_issued.toLocaleString() + ' HLS';
+    } catch (e) {
+        console.error('Network stats error:', e);
+    }
+}
+
+/* ─── Top Nodes ─── */
+async function loadTopNodes() {
+    try {
+        const res = await fetch('/api/nodes/network/stats');
+        const json = await res.json();
+        if (!json.success) return;
+        const d = json.data;
+
+        // Top by joins
+        const joinsEl = document.getElementById('ops-top-joins');
+        if (d.top_nodes && d.top_nodes.length > 0) {
+            const maxJoins = d.top_nodes[0].joins || 1;
+            joinsEl.innerHTML = d.top_nodes.map(n => `
+                <div class="ops-list-item">
+                    <span class="ops-list-node">${n.node}</span>
+                    <span class="ops-list-value">${n.joins}</span>
+                </div>
+                <div class="ops-list-bar" style="width:${(n.joins/maxJoins*100)}%"></div>
+            `).join('');
+        } else {
+            joinsEl.innerHTML = '<p class="empty">No join data yet</p>';
+        }
+
+        // Fetch individual stats for all top nodes to get scan/depth data
+        allNodeStats = [];
+        const slugs = d.top_nodes ? d.top_nodes.map(n => n.node.replace('.helios', '')) : [];
+        const statsPromises = slugs.map(slug =>
+            fetch(`/api/nodes/${slug}/stats`).then(r => r.json()).catch(() => null)
+        );
+        const statsResults = await Promise.all(statsPromises);
+        statsResults.forEach(r => {
+            if (r && r.success) allNodeStats.push(r.data);
+        });
+
+        // Top by scans
+        const scansEl = document.getElementById('ops-top-scans');
+        const sortedByScans = [...allNodeStats].sort((a, b) => b.total_scans - a.total_scans);
+        if (sortedByScans.length > 0) {
+            const maxScans = sortedByScans[0].total_scans || 1;
+            scansEl.innerHTML = sortedByScans.slice(0, 10).map(n => `
+                <div class="ops-list-item">
+                    <span class="ops-list-node">${n.node}</span>
+                    <span class="ops-list-value">${n.total_scans}</span>
+                </div>
+                <div class="ops-list-bar" style="width:${(n.total_scans/maxScans*100)}%"></div>
+            `).join('');
+        } else {
+            scansEl.innerHTML = '<p class="empty">No scan data yet</p>';
+        }
+
+        // Depth leaderboard
+        const depthEl = document.getElementById('ops-depth-board');
+        const sortedByDepth = [...allNodeStats].sort((a, b) => b.chain_depth - a.chain_depth);
+        if (sortedByDepth.length > 0) {
+            depthEl.innerHTML = sortedByDepth.slice(0, 10).map(n => `
+                <div class="ops-list-item">
+                    <span class="ops-list-node">${n.node}</span>
+                    <span class="ops-list-value">Depth ${n.chain_depth}</span>
+                </div>
+            `).join('');
+        } else {
+            depthEl.innerHTML = '<p class="empty">No chain data yet</p>';
+        }
+
+        // Node status distribution
+        let greenCount = 0, yellowCount = 0, redCount = 0;
+        allNodeStats.forEach(n => {
+            if (n.status === 'green') greenCount++;
+            else if (n.status === 'yellow') yellowCount++;
+            else redCount++;
+        });
+        document.getElementById('ops-green-count').textContent = greenCount;
+        document.getElementById('ops-yellow-count').textContent = yellowCount;
+        document.getElementById('ops-red-count').textContent = redCount;
+
+        // Network funnel — aggregate all nodes
+        loadNetworkFunnel();
+
+    } catch (e) {
+        console.error('Top nodes error:', e);
+    }
+}
+
+/* ─── Network Funnel ─── */
+async function loadNetworkFunnel() {
+    try {
+        // Use the network-level event counts
+        const res = await fetch('/api/nodes/network/funnel');
+        const json = await res.json();
+        const funnelEl = document.getElementById('ops-funnel');
+
+        if (json.success && json.data) {
+            const funnel = json.data.funnel || json.data;
+            const stages = [
+                ['qr_scan', 'QR Scan'],
+                ['join_page_open', 'Join Page'],
+                ['member_created', 'Registered'],
+                ['activation_selected', 'Activation'],
+                ['payment_completed', 'Payment'],
+                ['wallet_init_completed', 'Wallet Init'],
+                ['hls_issued', 'HLS Issued']
+            ];
+            const maxVal = Math.max(...stages.map(s => funnel[s[0]] || 0), 1);
+            funnelEl.innerHTML = stages.map(([key, label]) => {
+                const count = funnel[key] || 0;
+                const pct = (count / maxVal * 100).toFixed(0);
+                return `
+                    <div class="ops-funnel-row">
+                        <div class="ops-funnel-label">${label}</div>
+                        <div class="ops-funnel-bar-wrap">
+                            <div class="ops-funnel-bar" style="width:${pct}%"></div>
+                        </div>
+                        <div class="ops-funnel-count">${count}</div>
+                    </div>
+                `;
+            }).join('');
+        } else {
+            funnelEl.innerHTML = '<p class="empty">No funnel data yet</p>';
+        }
+    } catch (e) {
+        // If network funnel endpoint doesn't exist, show empty
+        document.getElementById('ops-funnel').innerHTML = '<p class="empty">Funnel unavailable</p>';
+    }
+}
+
+/* ─── Recent Events ─── */
+async function loadRecentEvents() {
+    try {
+        const filter = document.getElementById('ops-event-filter').value;
+        let url = '/api/nodes/network/events?limit=50';
+        if (filter) url += '&type=' + filter;
+        const res = await fetch(url);
+        const json = await res.json();
+        const el = document.getElementById('ops-events-table');
+
+        if (json.success && json.data && json.data.length > 0) {
+            const header = `
+                <div class="ops-event-row">
+                    <span>Time</span><span>Type</span><span>Node</span><span>Detail</span><span>Status</span>
+                </div>
+            `;
+            const rows = json.data.map(e => {
+                const time = e.timestamp ? new Date(e.timestamp).toLocaleString() : '—';
+                const typeClass = e.event_type.includes('join') || e.event_type.includes('member') ? 'join' :
+                                  e.event_type.includes('payment') ? 'payment' :
+                                  e.status === 'failed' ? 'error' : '';
+                const detail = e.child_member_id || e.offer_code || e.session_id?.slice(0, 8) || '—';
+                return `
+                    <div class="ops-event-row">
+                        <span>${time}</span>
+                        <span><span class="ops-event-type ${typeClass}">${e.event_type}</span></span>
+                        <span>${e.issuer_slug}.helios</span>
+                        <span>${detail}</span>
+                        <span>${e.status || '—'}</span>
+                    </div>
+                `;
+            }).join('');
+            el.innerHTML = header + rows;
+        } else {
+            el.innerHTML = '<p class="empty">No events recorded yet</p>';
+        }
+    } catch (e) {
+        document.getElementById('ops-events-table').innerHTML = '<p class="empty">Events unavailable</p>';
+    }
+}
+
+/* ─── Suspicious Activity Detection ─── */
+async function loadSuspiciousActivity() {
+    try {
+        const res = await fetch('/api/nodes/network/suspicious');
+        const json = await res.json();
+        const el = document.getElementById('ops-suspicious');
+
+        if (json.success && json.data && json.data.length > 0) {
+            el.innerHTML = json.data.map(alert => `
+                <div class="ops-alert-item">
+                    <span class="alert-slug">${alert.node}</span> — ${alert.reason}
+                    <div class="alert-detail">${alert.detail}</div>
+                </div>
+            `).join('');
+        } else {
+            el.innerHTML = '<p class="ops-clean">✓ No suspicious activity detected</p>';
+        }
+    } catch (e) {
+        document.getElementById('ops-suspicious').innerHTML = '<p class="ops-clean">✓ Monitoring active — no alerts</p>';
+    }
+}
+
+/* ─── Node Inspector ─── */
+async function inspectNode() {
+    const slug = document.getElementById('ops-inspect-slug').value.trim().replace('.helios', '');
+    if (!slug) return;
+
+    const resultEl = document.getElementById('ops-inspect-result');
+    resultEl.style.display = 'block';
+
+    try {
+        const [statsRes, funnelRes, eventsRes] = await Promise.all([
+            fetch(`/api/nodes/${slug}/stats`).then(r => r.json()),
+            fetch(`/api/nodes/${slug}/funnel`).then(r => r.json()),
+            fetch(`/api/nodes/${slug}/events?limit=15`).then(r => r.json()),
+        ]);
+
+        // Stats
+        const statsEl = document.getElementById('ops-inspect-stats');
+        if (statsRes.success) {
+            const s = statsRes.data;
+            const statusColor = s.status === 'green' ? 'var(--green)' : s.status === 'yellow' ? '#fbbf24' : 'var(--red)';
+            statsEl.innerHTML = `
+                <div style="margin-bottom:.5rem;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${statusColor};margin-right:.5rem;"></span><b>${s.node}</b></div>
+                <div class="ops-list-item"><span>Scans</span><span class="ops-list-value">${s.total_scans}</span></div>
+                <div class="ops-list-item"><span>Joins</span><span class="ops-list-value">${s.total_joined}</span></div>
+                <div class="ops-list-item"><span>Depth</span><span class="ops-list-value">${s.chain_depth}</span></div>
+                <div class="ops-list-item"><span>Conversion</span><span class="ops-list-value">${s.conversion_rate}%</span></div>
+                <div class="ops-list-item"><span>Rewards</span><span class="ops-list-value">${s.connection_rewards} HLS</span></div>
+                <div class="ops-list-item"><span>Revenue</span><span class="ops-list-value">$${s.total_revenue}</span></div>
+                <div class="ops-list-item"><span>Last Active</span><span style="font-size:.75rem;color:var(--text-muted)">${s.last_activation ? new Date(s.last_activation).toLocaleDateString() : 'Never'}</span></div>
+            `;
+        } else {
+            statsEl.innerHTML = '<p class="empty">Node not found</p>';
+        }
+
+        // Funnel
+        const funnelEl = document.getElementById('ops-inspect-funnel');
+        if (funnelRes.success) {
+            const f = funnelRes.data.funnel;
+            const stages = ['qr_scan', 'join_page_open', 'member_created', 'activation_selected', 'payment_completed', 'wallet_init_completed', 'hls_issued'];
+            const labels = ['Scan', 'Join Page', 'Register', 'Activate', 'Payment', 'Wallet', 'Issuance'];
+            const maxF = Math.max(...stages.map(s => f[s] || 0), 1);
+            funnelEl.innerHTML = stages.map((s, i) => `
+                <div class="ops-funnel-row">
+                    <div class="ops-funnel-label">${labels[i]}</div>
+                    <div class="ops-funnel-bar-wrap"><div class="ops-funnel-bar" style="width:${(f[s]||0)/maxF*100}%"></div></div>
+                    <div class="ops-funnel-count">${f[s] || 0}</div>
+                </div>
+            `).join('');
+        } else {
+            funnelEl.innerHTML = '<p class="empty">—</p>';
+        }
+
+        // Events
+        const eventsEl = document.getElementById('ops-inspect-events');
+        if (eventsRes.success && eventsRes.data.length > 0) {
+            eventsEl.innerHTML = eventsRes.data.map(e => `
+                <div style="display:flex;justify-content:space-between;padding:.3rem 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:.72rem;">
+                    <span class="ops-event-type">${e.event_type}</span>
+                    <span style="color:var(--text-muted)">${new Date(e.timestamp).toLocaleString()}</span>
+                </div>
+            `).join('');
+        } else {
+            eventsEl.innerHTML = '<p class="empty">No events</p>';
+        }
+
+    } catch (e) {
+        document.getElementById('ops-inspect-stats').innerHTML = '<p class="empty">Error loading node</p>';
+    }
+}
+
+/* ─── Init ─── */
+document.addEventListener('DOMContentLoaded', refreshAll);
+</script>
+{% endblock %}

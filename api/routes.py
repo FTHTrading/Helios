@@ -1309,20 +1309,47 @@ def node_stats(slug):
 @nodes_bp.route("/<slug>/event", methods=["POST"])
 @handle_errors
 def node_event(slug):
-    """Emit a telemetry event for a member node."""
+    """Emit a telemetry event for a member node (anti-fraud protected)."""
     from core.node_telemetry import NodeTelemetry
+    from core.antifraud import AntifraudEngine
 
     data = request.get_json() or {}
     event_type = data.get("event_type")
     if not event_type:
         return api_response(error="event_type is required", status=400)
 
+    clean_slug = slug.replace(".helios", "")
+    ip_hash = str(hash(request.remote_addr))[-8:] if request.remote_addr else None
+    user_agent = request.headers.get("User-Agent", "")[:256]
+    session_id = data.get("session_id")
+    device_id = data.get("device_id")
+
+    # ─── Anti-fraud gate ───
+    fraud_check = AntifraudEngine(get_db()).check(
+        event_type=event_type,
+        issuer_slug=clean_slug,
+        ip_hash=ip_hash,
+        session_id=session_id,
+        user_agent=user_agent,
+        device_id=device_id,
+    )
+    if not fraud_check.allowed:
+        return api_response(
+            error=fraud_check.reason,
+            status=429 if "rate" in fraud_check.code.lower() else 409,
+        )
+
+    # Build metadata with fraud flags if applicable
+    event_meta = data.get("metadata") or {}
+    if fraud_check.code == "RAPID_FIRE_FLAG":
+        event_meta["_fraud_flag"] = fraud_check.code
+
     telemetry = NodeTelemetry(get_db())
     event = telemetry.emit(
         event_type=event_type,
-        issuer_slug=slug.replace(".helios", ""),
-        session_id=data.get("session_id"),
-        device_id=data.get("device_id"),
+        issuer_slug=clean_slug,
+        session_id=session_id,
+        device_id=device_id,
         child_member_id=data.get("child_member_id"),
         amount_paid=data.get("amount_paid"),
         hls_amount=data.get("hls_amount"),
@@ -1330,9 +1357,9 @@ def node_event(slug):
         tx_hash=data.get("tx_hash"),
         nft_token_ids=data.get("nft_token_ids"),
         chain_depth=data.get("chain_depth"),
-        ip_hash=str(hash(request.remote_addr))[-8:] if request.remote_addr else None,
-        user_agent=request.headers.get("User-Agent", "")[:256],
-        metadata=data.get("metadata"),
+        ip_hash=ip_hash,
+        user_agent=user_agent,
+        metadata=event_meta if event_meta else None,
     )
     return api_response({"event_id": event.id, "event_type": event.event_type}, status=201)
 
@@ -1393,3 +1420,60 @@ def network_wide_stats():
     telemetry = NodeTelemetry(get_db())
     result = telemetry.get_network_stats()
     return api_response(result)
+
+
+@nodes_bp.route("/network/events", methods=["GET"])
+@handle_errors
+def network_events():
+    """Recent events across all nodes — for ops dashboard."""
+    from models.node_event import NodeEvent
+
+    limit = request.args.get("limit", 50, type=int)
+    event_type = request.args.get("type")
+    query = get_db().query(NodeEvent)
+    if event_type:
+        query = query.filter(NodeEvent.event_type == event_type)
+    events = query.order_by(NodeEvent.timestamp.desc()).limit(min(limit, 200)).all()
+    return api_response([e.to_dict() for e in events])
+
+
+@nodes_bp.route("/network/funnel", methods=["GET"])
+@handle_errors
+def network_funnel():
+    """Network-wide conversion funnel — aggregated across all nodes."""
+    from sqlalchemy import func as sqlfunc
+    from models.node_event import NodeEvent
+
+    stages = [
+        "qr_scan", "join_page_open", "member_created",
+        "activation_selected", "payment_completed",
+        "wallet_init_completed", "hls_issued",
+    ]
+    funnel = {}
+    for stage in stages:
+        count = get_db().query(sqlfunc.count(NodeEvent.id)).filter(
+            NodeEvent.event_type == stage,
+            NodeEvent.status == "completed",
+        ).scalar() or 0
+        funnel[stage] = count
+
+    # Also include qr_view in the scan bucket
+    qr_views = get_db().query(sqlfunc.count(NodeEvent.id)).filter(
+        NodeEvent.event_type == "qr_view",
+        NodeEvent.status == "completed",
+    ).scalar() or 0
+    funnel["qr_scan"] = funnel.get("qr_scan", 0) + qr_views
+
+    return api_response({"funnel": funnel})
+
+
+@nodes_bp.route("/network/suspicious", methods=["GET"])
+@handle_errors
+def network_suspicious():
+    """Suspicious activity alerts for ops dashboard."""
+    from core.antifraud import AntifraudEngine
+
+    hours = request.args.get("hours", 24, type=int)
+    engine = AntifraudEngine(get_db())
+    alerts = engine.get_suspicious_nodes(hours=hours)
+    return api_response(alerts)
