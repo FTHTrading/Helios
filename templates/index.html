@@ -16,55 +16,48 @@
 <!-- ═══ HERO ═══ -->
 <section class="hero">
     <div class="hero-content">
+        <!-- ═══ 3D SPINNING HELIOS TOKEN ═══ -->
         <div class="coin-container">
-            <svg class="helios-coin" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                    <radialGradient id="coinGrad" cx="50%" cy="40%" r="55%">
-                        <stop offset="0%" style="stop-color:#e5e5ea"/>
-                        <stop offset="30%" style="stop-color:#d1d1d6"/>
-                        <stop offset="60%" style="stop-color:#a1a1a6"/>
-                        <stop offset="100%" style="stop-color:#48484a"/>
-                    </radialGradient>
-                    <filter id="coinGlow">
-                        <feGaussianBlur stdDeviation="6" result="blur"/>
-                        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-                    </filter>
-                    <radialGradient id="innerGrad" cx="50%" cy="40%" r="50%">
-                        <stop offset="0%" style="stop-color:#f5f5f7"/>
-                        <stop offset="50%" style="stop-color:#a1a1a6"/>
-                        <stop offset="100%" style="stop-color:#636366"/>
-                    </radialGradient>
-                    <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
-                        <stop offset="0%" style="stop-color:#64d2ff"/>
-                        <stop offset="50%" style="stop-color:#2997ff"/>
-                        <stop offset="100%" style="stop-color:#bf5af2"/>
-                    </linearGradient>
-                </defs>
-                <!-- Outer iridescent ring -->
-                <circle cx="120" cy="120" r="115" fill="none" stroke="url(#ringGrad)" stroke-width="2.5" filter="url(#coinGlow)" opacity="0.6"/>
-                <!-- Main titanium disc -->
-                <circle cx="120" cy="120" r="108" fill="url(#coinGrad)" filter="url(#coinGlow)"/>
-                <!-- Inner ring -->
-                <circle cx="120" cy="120" r="95" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.8"/>
-                <!-- Inner glow -->
-                <circle cx="120" cy="120" r="88" fill="url(#innerGrad)" opacity="0.08"/>
-                <!-- Center core -->
-                <circle cx="120" cy="120" r="32" fill="none" stroke="rgba(41,151,255,0.3)" stroke-width="0.8"/>
-                <circle cx="120" cy="120" r="8" fill="#2997ff" opacity="0.8"/>
-                <!-- Pentagon constellation -->
-                <g opacity="0.3">
-                    <circle cx="120" cy="80" r="3" fill="#64d2ff"/>
-                    <circle cx="158" cy="103" r="3" fill="#2997ff"/>
-                    <circle cx="144" cy="148" r="3" fill="#bf5af2"/>
-                    <circle cx="96" cy="148" r="3" fill="#2997ff"/>
-                    <circle cx="82" cy="103" r="3" fill="#64d2ff"/>
-                    <line x1="120" y1="80" x2="158" y2="103" stroke="url(#ringGrad)" stroke-width="0.5" opacity="0.6"/>
-                    <line x1="158" y1="103" x2="144" y2="148" stroke="url(#ringGrad)" stroke-width="0.5" opacity="0.6"/>
-                    <line x1="144" y1="148" x2="96" y2="148" stroke="url(#ringGrad)" stroke-width="0.5" opacity="0.6"/>
-                    <line x1="96" y1="148" x2="82" y2="103" stroke="url(#ringGrad)" stroke-width="0.5" opacity="0.6"/>
-                    <line x1="82" y1="103" x2="120" y2="80" stroke="url(#ringGrad)" stroke-width="0.5" opacity="0.6"/>
-                </g>
-            </svg>
+            <div class="token-spinner-hero">
+                <!-- Orbital rings -->
+                <div class="hero-orbit hero-orbit-1"></div>
+                <div class="hero-orbit hero-orbit-2"></div>
+                <div class="hero-orbit hero-orbit-3"></div>
+                <!-- Orbiting particles -->
+                <div class="hero-particle hp-1"></div>
+                <div class="hero-particle hp-2"></div>
+                <div class="hero-particle hp-3"></div>
+                <div class="hero-particle hp-4"></div>
+                <div class="hero-particle hp-5"></div>
+                <div class="hero-particle hp-6"></div>
+                <!-- The 3D coin -->
+                <div class="hero-coin">
+                    <div class="hero-coin-face hero-coin-front">
+                        <!-- Sun emblem SVG -->
+                        <svg class="hero-coin-emblem" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="50" cy="50" r="16" fill="none" stroke="rgba(15,15,26,0.45)" stroke-width="2.5"/>
+                            <circle cx="50" cy="50" r="5" fill="rgba(15,15,26,0.5)"/>
+                            <!-- 8 rays -->
+                            <g stroke="rgba(15,15,26,0.4)" stroke-width="2.5" stroke-linecap="round">
+                                <line x1="50" y1="28" x2="50" y2="18"/>
+                                <line x1="50" y1="72" x2="50" y2="82"/>
+                                <line x1="28" y1="50" x2="18" y2="50"/>
+                                <line x1="72" y1="50" x2="82" y2="50"/>
+                                <line x1="34.4" y1="34.4" x2="27.3" y2="27.3"/>
+                                <line x1="65.6" y1="65.6" x2="72.7" y2="72.7"/>
+                                <line x1="34.4" y1="65.6" x2="27.3" y2="72.7"/>
+                                <line x1="65.6" y1="34.4" x2="72.7" y2="27.3"/>
+                            </g>
+                        </svg>
+                    </div>
+                    <div class="hero-coin-face hero-coin-back">
+                        <span class="hero-coin-letter">H</span>
+                    </div>
+                    <div class="hero-coin-rim"></div>
+                    <!-- Edge slices for 3D thickness -->
+                    <div class="hero-coin-edge"></div>
+                </div>
+            </div>
         </div>
 
         <h1 class="hero-title">HELIOS</h1>
