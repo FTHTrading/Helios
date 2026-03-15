@@ -64,6 +64,7 @@ def create_app():
             "helios_show_visible_watermark": manifest["show_visible_watermark"],
             "helios_version": "3.0.0",
             "helios_year": datetime.now(timezone.utc).year,
+            "brand_theme": "helios",
         }
 
     # ─── Security Headers ─────────────────────────────────────────

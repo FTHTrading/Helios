@@ -1,0 +1,33 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Y3K BRAND THEME — Future Systems Intelligence
+   Cybernetic calm. Emerald pulse on black. Future-now aesthetics.
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root {
+    /* ── Surfaces ── */
+    --sv-bg:            #050508;
+    --sv-bg-card:       #0f1014;
+    --sv-bg-hover:      #1a1c22;
+    --sv-bg-elevated:   #0f1014;
+
+    /* ── Typography ── */
+    --sv-text:          #e8f0f0;
+    --sv-text-muted:    #6a7a7a;
+    --sv-text-inverse:  #050508;
+
+    /* ── Brand: Emerald / Ice-Blue / Gold ── */
+    --sv-accent-1:      #10b981;
+    --sv-accent-2:      #64d2ff;
+    --sv-accent-3:      #fbbf24;
+    --sv-accent-1-dark: #059669;
+    --sv-accent-1-light:#6ee7b7;
+
+    /* ── Effects ── */
+    --sv-glow:          rgba(16, 185, 129, 0.12);
+
+    /* ── Metal ── */
+    --sv-metal:         #8a9a9a;
+    --sv-metal-light:   #b0c0c0;
+    --sv-metal-dark:    #5a6a6a;
+    --sv-chrome:        #d0e0e0;
+}

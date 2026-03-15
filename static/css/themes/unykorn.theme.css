@@ -1,0 +1,33 @@
+/* ═══════════════════════════════════════════════════════════════════
+   UNYKORN BRAND THEME — Sovereign Creative Platform
+   Bold creative confidence. Royal blue on black. No compromise.
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root {
+    /* ── Surfaces ── */
+    --sv-bg:            #08080c;
+    --sv-bg-card:       #12121a;
+    --sv-bg-hover:      #1c1c28;
+    --sv-bg-elevated:   #12121a;
+
+    /* ── Typography ── */
+    --sv-text:          #f5f5fa;
+    --sv-text-muted:    #7878a0;
+    --sv-text-inverse:  #08080c;
+
+    /* ── Brand: Royal Electric Blue / White / Purple ── */
+    --sv-accent-1:      #4a6fff;
+    --sv-accent-2:      #f5f5fa;
+    --sv-accent-3:      #bf5af2;
+    --sv-accent-1-dark: #3352cc;
+    --sv-accent-1-light:#8fa5ff;
+
+    /* ── Effects ── */
+    --sv-glow:          rgba(74, 111, 255, 0.15);
+
+    /* ── Metal ── */
+    --sv-metal:         #9090b0;
+    --sv-metal-light:   #c0c0d8;
+    --sv-metal-dark:    #5a5a78;
+    --sv-chrome:        #e0e0f0;
+}

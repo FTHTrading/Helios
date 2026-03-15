@@ -1,0 +1,33 @@
+/* ═══════════════════════════════════════════════════════════════════
+   xxxiii BRAND THEME — Creative Luxury Intelligence
+   Cold precision. Electric minimalism. Every pixel earns its place.
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root {
+    /* ── Surfaces ── */
+    --sv-bg:            #0a0a0c;
+    --sv-bg-card:       #141418;
+    --sv-bg-hover:      #1e1e24;
+    --sv-bg-elevated:   #141418;
+
+    /* ── Typography ── */
+    --sv-text:          #f0f0f5;
+    --sv-text-muted:    #7a7a8e;
+    --sv-text-inverse:  #0a0a0c;
+
+    /* ── Brand: Electric Blue / Gold / Purple ── */
+    --sv-accent-1:      #2997ff;
+    --sv-accent-2:      #fbbf24;
+    --sv-accent-3:      #bf5af2;
+    --sv-accent-1-dark: #1a6fcc;
+    --sv-accent-1-light:#7cbfff;
+
+    /* ── Effects ── */
+    --sv-glow:          rgba(41, 151, 255, 0.15);
+
+    /* ── Metal ── */
+    --sv-metal:         #a1a1b0;
+    --sv-metal-light:   #d1d1de;
+    --sv-metal-dark:    #5a5a68;
+    --sv-chrome:        #e8e8f0;
+}

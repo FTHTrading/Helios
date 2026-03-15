@@ -30,11 +30,16 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Sovereign Design System v1 — token layer + component library -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sovereign.css') }}">
+    <!-- Brand theme (defaults to Helios, override via brand_theme context var) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/themes/' + (brand_theme|default('helios')) + '.theme.css') }}">
+    <!-- Legacy Helios page styles (preserved for incremental migration) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/helios.css') }}">
     <script src="{{ url_for('static', filename='js/static-fallback.js') }}"></script>
     {% block head %}{% endblock %}
 </head>
-<body>
+<body class="sv">
     <nav class="helios-nav">
         <div class="nav-container">
             <a href="/" class="nav-logo">

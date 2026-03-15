@@ -1,0 +1,33 @@
+/* ═══════════════════════════════════════════════════════════════════
+   HELIOS BRAND THEME — Settlement Infrastructure
+   Liquid metal authority. Gold is the signal color.
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root {
+    /* ── Surfaces ── */
+    --sv-bg:            #000000;
+    --sv-bg-card:       #1c1c1e;
+    --sv-bg-hover:      #2c2c2e;
+    --sv-bg-elevated:   #1c1c1e;
+
+    /* ── Typography ── */
+    --sv-text:          #f5f5f7;
+    --sv-text-muted:    #86868b;
+    --sv-text-inverse:  #000000;
+
+    /* ── Brand: Gold / Blue / Purple ── */
+    --sv-accent-1:      #fbbf24;
+    --sv-accent-2:      #2997ff;
+    --sv-accent-3:      #bf5af2;
+    --sv-accent-1-dark: #d97706;
+    --sv-accent-1-light:#fde68a;
+
+    /* ── Effects ── */
+    --sv-glow:          rgba(251, 191, 36, 0.12);
+
+    /* ── Metal ── */
+    --sv-metal:         #a1a1a6;
+    --sv-metal-light:   #d1d1d6;
+    --sv-metal-dark:    #636366;
+    --sv-chrome:        #e5e5ea;
+}

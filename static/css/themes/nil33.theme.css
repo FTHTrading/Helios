@@ -1,0 +1,33 @@
+/* ═══════════════════════════════════════════════════════════════════
+   NIL33 BRAND THEME — Athletic Capital Intelligence
+   Precision athletic. Silver dominance with strategic color pops.
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root {
+    /* ── Surfaces ── */
+    --sv-bg:            #101014;
+    --sv-bg-card:       #1a1a20;
+    --sv-bg-hover:      #252530;
+    --sv-bg-elevated:   #1a1a20;
+
+    /* ── Typography ── */
+    --sv-text:          #f2f2f5;
+    --sv-text-muted:    #8a8a96;
+    --sv-text-inverse:  #101014;
+
+    /* ── Brand: Silver-White / Athletic Green / Competition Orange ── */
+    --sv-accent-1:      #e5e5ea;
+    --sv-accent-2:      #30d158;
+    --sv-accent-3:      #ff6b35;
+    --sv-accent-1-dark: #b0b0ba;
+    --sv-accent-1-light:#f5f5fa;
+
+    /* ── Effects ── */
+    --sv-glow:          rgba(229, 229, 234, 0.10);
+
+    /* ── Metal ── */
+    --sv-metal:         #b0b0ba;
+    --sv-metal-light:   #d8d8e0;
+    --sv-metal-dark:    #6a6a78;
+    --sv-chrome:        #ededf2;
+}
