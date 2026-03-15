@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Helios — {{ doc.title }}{% endblock %}
+{% block og_title %}Helios — {{ doc.title }}{% endblock %}
+{% block og_description %}{{ doc.summary }}{% endblock %}
+{% block og_url %}/handoff/docs/{{ doc.slug }}{% endblock %}
+
+{% block head %}
+<style>
+.handoff-doc-shell { max-width: 980px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+.handoff-doc-card { background: linear-gradient(180deg, rgba(10,10,12,.96), rgba(16,18,23,.94)); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.4rem; box-shadow: 0 22px 50px rgba(0,0,0,.28); }
+.handoff-doc-meta { display:flex; flex-wrap:wrap; gap:.65rem; margin:.9rem 0 1.2rem; }
+.handoff-pill { border-radius:999px; border:1px solid var(--border); padding:.4rem .75rem; font:600 .76rem 'Inter', sans-serif; color:var(--text-muted); }
+.handoff-doc-summary { color:var(--text-muted); line-height:1.75; margin-bottom:1.2rem; }
+.handoff-doc-actions { display:flex; flex-wrap:wrap; gap:.6rem; margin-bottom:1.2rem; }
+.handoff-doc-btn { text-decoration:none; border-radius:999px; padding:.55rem .9rem; font:600 .78rem 'Inter', sans-serif; border:1px solid var(--border); color:var(--text); }
+.handoff-doc-btn:hover { border-color:var(--gold); color:var(--gold); }
+.handoff-rendered { line-height:1.75; color:var(--text); }
+.handoff-rendered h1, .handoff-rendered h2, .handoff-rendered h3 { color: var(--gold); }
+.handoff-rendered h4 { color: var(--text); margin-top: 1.2rem; }
+.handoff-rendered table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+.handoff-rendered th, .handoff-rendered td { border: 1px solid var(--border); padding: .7rem; text-align: left; vertical-align: top; }
+.handoff-rendered th { color: var(--gold); background: rgba(255,255,255,.03); }
+.handoff-rendered blockquote { margin: 1rem 0; padding: .9rem 1rem; border-left: 3px solid var(--gold); background: rgba(255,255,255,.025); color: var(--text-muted); }
+.handoff-rendered ul li, .handoff-rendered ol li { margin-bottom: .35rem; }
+.handoff-rendered pre, .handoff-markdown-fallback { white-space: pre-wrap; word-break: break-word; overflow-x: auto; padding: 1rem; border-radius: 16px; background: rgba(255,255,255,.03); border: 1px solid var(--border); }
+.handoff-rendered code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+.handoff-rendered a { color: var(--gold); }
+.handoff-doc-title { margin: 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="handoff-doc-shell">
+    <article class="handoff-doc-card">
+        <div class="handoff-kicker">Mirrored handoff document</div>
+        <h1 class="handoff-doc-title">{{ doc.title }}</h1>
+        <p class="handoff-doc-summary">{{ doc.summary }}</p>
+        <div class="handoff-doc-meta">
+            <span class="handoff-pill">Source: {{ doc.source_path }}</span>
+            <span class="handoff-pill">Slug: {{ doc.slug }}</span>
+        </div>
+        <div class="handoff-doc-actions">
+            <a class="handoff-doc-btn" href="/handoff">Back to portal</a>
+            <a class="handoff-doc-btn" href="/api/handoff/docs/{{ doc.slug }}">Open JSON</a>
+            <a class="handoff-doc-btn" href="{{ doc.raw_url }}" target="_blank" rel="noreferrer">Open raw markdown</a>
+            <a class="handoff-doc-btn" href="{{ doc.download_url }}">Download markdown</a>
+            <a class="handoff-doc-btn" href="/api/handoff/docs">All docs index</a>
+        </div>
+        <div class="handoff-rendered">{{ doc.html|safe }}</div>
+    </article>
+</section>
+{% endblock %}

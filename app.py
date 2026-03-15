@@ -3,7 +3,7 @@
 A private network where human connections inject energy
 and the protocol distributes it according to physics, not position.
 
-xxxiii.io
+heliosdigital.xyz
 """
 
 import os
@@ -11,7 +11,7 @@ import sys
 import time
 import logging
 from datetime import datetime, timezone
-from flask import Flask, render_template, request, g, jsonify
+from flask import Flask, render_template, request, g, jsonify, abort, Response
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import sentry_sdk
@@ -90,6 +90,8 @@ def create_app():
         origin = request.headers.get('Origin', '')
         allowed = (
             origin.endswith('.netlify.app') or
+            origin.endswith('.heliosdigital.xyz') or
+            origin == 'https://heliosdigital.xyz' or
             origin.endswith('.xxxiii.io') or
             origin == 'https://xxxiii.io' or
             HeliosConfig.DEBUG
@@ -178,7 +180,7 @@ def create_app():
     from api.routes import (
         identity_bp, field_bp, network_bp, energy_bp,
         wallet_bp, token_bp, chat_bp,
-        voice_bp, sms_bp, infra_bp,
+        voice_bp, sms_bp, infra_bp, handoff_bp,
         treasury_bp, certificates_bp,
         funding_bp,
         spaces_bp, metrics_bp, rewards_bp
@@ -193,6 +195,7 @@ def create_app():
     app.register_blueprint(voice_bp)
     app.register_blueprint(sms_bp)
     app.register_blueprint(infra_bp)
+    app.register_blueprint(handoff_bp)
     app.register_blueprint(treasury_bp)
     app.register_blueprint(certificates_bp)
     app.register_blueprint(funding_bp)
@@ -239,6 +242,42 @@ def create_app():
     @app.route("/guide")
     def guide():
         return render_template("guide.html")
+
+    @app.route("/start")
+    @app.route("/handoff")
+    def handoff():
+        from core.handoff import get_handoff_manifest, list_handoff_docs
+
+        return render_template("handoff.html", manifest=get_handoff_manifest(), docs=list_handoff_docs())
+
+    @app.route("/handoff/docs/<slug>")
+    def handoff_doc_page(slug):
+        from core.handoff import get_handoff_doc
+
+        document = get_handoff_doc(slug)
+        if not document:
+            abort(404)
+        return render_template("handoff_doc.html", doc=document)
+
+    @app.route("/handoff/docs/<slug>/raw")
+    def handoff_doc_raw(slug):
+        from core.handoff import get_handoff_doc
+
+        document = get_handoff_doc(slug)
+        if not document:
+            abort(404)
+        return Response(document["content"], mimetype="text/markdown; charset=utf-8")
+
+    @app.route("/handoff/docs/<slug>/download")
+    def handoff_doc_download(slug):
+        from core.handoff import get_handoff_doc
+
+        document = get_handoff_doc(slug)
+        if not document:
+            abort(404)
+        response = Response(document["content"], mimetype="text/markdown; charset=utf-8")
+        response.headers["Content-Disposition"] = f"attachment; filename={slug}.md"
+        return response
 
     @app.route("/protocol")
     def protocol():

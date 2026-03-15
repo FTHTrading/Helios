@@ -9,9 +9,11 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
-
 BASE_DIR = Path(__file__).resolve().parent
+
+for env_path in (BASE_DIR / ".env", BASE_DIR / ".env.local"):
+    if env_path.exists():
+        load_dotenv(dotenv_path=env_path, override=False, encoding="utf-8")
 
 
 def _env_bool(name: str, default: str = "false") -> bool:
@@ -29,7 +31,7 @@ class HeliosConfig:
     DEBUG = _env_bool("HELIOS_DEBUG")
     HOST = os.getenv("HELIOS_HOST", "0.0.0.0")
     PORT = int(os.getenv("HELIOS_PORT", "5050"))
-    DOMAIN = "xxxiii.io"
+    DOMAIN = "heliosdigital.xyz"
     BUILD_ID = os.getenv("HELIOS_BUILD_ID", "")
     BUILD_WATERMARK = os.getenv("HELIOS_BUILD_WATERMARK", "")
     LAUNCH_KEY = os.getenv("HELIOS_LAUNCH_KEY", "")
@@ -290,7 +292,7 @@ class HeliosConfig:
     RATE_LIMIT_STORAGE_URI = REDIS_URL or "memory://"
     RATE_LIMIT_DEFAULT = os.getenv("HELIOS_RATE_LIMIT_DEFAULT", "200 per hour;50 per minute")
 
-    # ——— Cloudflare / DNS — xxxiii.io ——————————————————————————————
+    # ——— Cloudflare / DNS — heliosdigital.xyz ———————————————————————
     CF_API_TOKEN = os.getenv("HELIOS_CF_TOKEN", "")
     CF_ZONE_ID = os.getenv("HELIOS_CF_ZONE_ID", "")
 

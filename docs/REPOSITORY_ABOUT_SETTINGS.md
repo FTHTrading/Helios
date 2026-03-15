@@ -8,7 +8,7 @@ The GitHub repository should not be left with an empty About section.
 
 ## Recommended website
 
-- production: `https://xxxiii.io`
+- production: `https://heliosdigital.xyz`
 - if using the repo as the public launch handoff before site cutover, use the launch documentation link temporarily
 
 ## Recommended topics

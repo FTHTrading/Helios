@@ -47,7 +47,7 @@
   <!-- Bottom line -->
   <text x="600" y="520" text-anchor="middle" fill="#f59e0b" font-family="Inter,system-ui,sans-serif" font-size="16" font-weight="600" letter-spacing="2">$100 ENTRY  ·  METAL-BACKED  ·  CONSERVATION LAW ENFORCED</text>
   <!-- Domain -->
-  <text x="600" y="570" text-anchor="middle" fill="#71717a" font-family="Inter,system-ui,sans-serif" font-size="14" font-weight="500">xxxiii.io</text>
+  <text x="600" y="570" text-anchor="middle" fill="#71717a" font-family="Inter,system-ui,sans-serif" font-size="14" font-weight="500">heliosdigital.xyz</text>
   <!-- Gold bottom border -->
   <rect x="0" y="625" width="1200" height="5" fill="#f59e0b" opacity="0.6"/>
 </svg>

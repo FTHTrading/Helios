@@ -9,7 +9,7 @@
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![Flask](https://img.shields.io/badge/Flask-3.0-000000?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com)
 [![License](https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge)](LICENSE)
-[![Deploy](https://img.shields.io/badge/Netlify-Deployed-00C7B7?style=for-the-badge&logo=netlify&logoColor=white)](https://xxxiii.io)
+[![Deploy](https://img.shields.io/badge/Netlify-Deployed-00C7B7?style=for-the-badge&logo=netlify&logoColor=white)](https://heliosdigital.xyz)
 [![Status](https://img.shields.io/badge/Status-Production-22c55e?style=for-the-badge)]()
 
 <br>
@@ -18,7 +18,7 @@
 
 <br>
 
-**`xxxiii.io`** — $100 atomic entry · Pentagonal bounded field · Metal-backed treasury · Cryptographic certificates · Conservation law
+**`heliosdigital.xyz`** — $100 atomic entry · Pentagonal bounded field · Metal-backed treasury · Cryptographic certificates · Conservation law
 
 </div>
 
@@ -30,21 +30,34 @@ This repo now includes a public launch package suitable for `Helios-launch` with
 
 **Incoming team:** start with [START.md](START.md).
 
+Quick local validation after changes:
+
+- run `python verify_launch.py`
+- check `/api/infra/launch-readiness` for the final blocker report
+
 - [docs/HELIOS_LAUNCH_BLUEPRINT.md](docs/HELIOS_LAUNCH_BLUEPRINT.md) — production architecture and deployment stack
 - [docs/HELIOS_REVIEW_RESPONSE.md](docs/HELIOS_REVIEW_RESPONSE.md) — color-coded response to the March 5 codebase review
 - [docs/HELIOS_CLAIMS_COVERAGE_MATRIX.md](docs/HELIOS_CLAIMS_COVERAGE_MATRIX.md) — claim-by-claim implementation coverage and remaining launch work
 - [docs/HELIOS_DIRECT_RESPONSE_TO_REVIEW.md](docs/HELIOS_DIRECT_RESPONSE_TO_REVIEW.md) — direct answer to the March 5 report as the repo stands today
+- [docs/HELIOS_FULL_REBUTTAL.md](docs/HELIOS_FULL_REBUTTAL.md) — full rebuttal package for future diligence and operator questions
 - [docs/HELIOS_SIMPLIFIED_OPTION.md](docs/HELIOS_SIMPLIFIED_OPTION.md) — simpler recommended launch version for easier adoption
+- [docs/HELIOS_WHITE_PAPER.md](docs/HELIOS_WHITE_PAPER.md) — full white paper representing the current system, build, and launch posture
+- [docs/HELIOS_OPERATOR_SYSTEM_GUIDE.md](docs/HELIOS_OPERATOR_SYSTEM_GUIDE.md) — operator-grade system guide covering responsibilities, validation, and release discipline
+- [docs/HELIOS_SR_ENGINEERED_TOKENOMICS.md](docs/HELIOS_SR_ENGINEERED_TOKENOMICS.md) — high-level senior-engineered tokenomics framing
+- [docs/HELIOS_AI_SYSTEM.md](docs/HELIOS_AI_SYSTEM.md) — build-aware AI knowledge system overview
 - [docs/HELIOS_EXECUTIVE_ONE_PAGER.md](docs/HELIOS_EXECUTIVE_ONE_PAGER.md) — short non-technical summary for stakeholders and operators
 - [docs/BUILD_ROUTE_OPTIONS.md](docs/BUILD_ROUTE_OPTIONS.md) — layered route options for the takeover team to choose from
 - [docs/REPOSITORY_ABOUT_SETTINGS.md](docs/REPOSITORY_ABOUT_SETTINGS.md) — recommended GitHub description, website, topics, and professional repo settings
 - [docs/GITHUB_HANDOFF_CHECKLIST.md](docs/GITHUB_HANDOFF_CHECKLIST.md) — exact GitHub About values, protections, and default route choice for the takeover team
 - [docs/TAKEOVER_START_HERE.md](docs/TAKEOVER_START_HERE.md) — first-read document for the incoming build and launch team
 - [docs/OPERATOR_HANDOFF_CHECKLIST.md](docs/OPERATOR_HANDOFF_CHECKLIST.md) — exact operator setup and launch checklist
+- [docs/FINAL_LAUNCH_READINESS.md](docs/FINAL_LAUNCH_READINESS.md) — final in-repo launch status, remaining blockers, and exact production actions left
 - [docs/PAGE_ALIGNMENT_MEMO.md](docs/PAGE_ALIGNMENT_MEMO.md) — what to keep, soften, or remove from the original Helios institutional page
 - [docs/TAKEOVER_PROMPT_PACK.md](docs/TAKEOVER_PROMPT_PACK.md) — recommended prompts for the incoming team to use during setup and launch
 - [docs/FINAL_RECOMMENDATION.md](docs/FINAL_RECOMMENDATION.md) — single authoritative recommendation for route, stack, messaging, and first actions
 - [docs/MOVE_FORWARD_RUNBOOK.md](docs/MOVE_FORWARD_RUNBOOK.md) — full execution runbook for taking the repo from handoff to launch readiness
+- [.env.production.example](.env.production.example) — production environment template for final infrastructure promotion
+- [core/handoff.py](core/handoff.py) — mirrored site handoff manifest powering the documentation portal and references
 - [docs/REPOSITORY_PROTECTIONS.md](docs/REPOSITORY_PROTECTIONS.md) — recommended GitHub protections
 - [docs/PUSH_TO_HELIOS_LAUNCH.md](docs/PUSH_TO_HELIOS_LAUNCH.md) — exact push steps for the new GitHub repository
 - [SECURITY.md](SECURITY.md) — security reporting policy
@@ -937,7 +950,7 @@ helios-os/
 flowchart LR
     A[git push] -->|webhook| B[Netlify]
     B -->|python freeze.py| C[15 HTML pages]
-    C -->|CDN| D["xxxiii.io"]
+    C -->|CDN| D["heliosdigital.xyz"]
     D -->|static-fallback.js| E[Demo data]
 
     style B fill:#00C7B7,stroke:#008F7F,color:#fff
@@ -1029,12 +1042,12 @@ Member activation flow:
 
 | Endpoint | Proves |
 |:---------|:-------|
-| [`/api/token/verify`](https://xxxiii.io/api/token/verify) | 100M supply, no mint |
-| [`/api/energy/conservation`](https://xxxiii.io/api/energy/conservation) | ∑in = ∑out |
-| [`/api/certificates/covenant`](https://xxxiii.io/api/certificates/covenant) | RRR auto-enforced |
-| [`/api/treasury/reserves`](https://xxxiii.io/api/treasury/reserves) | Metal is real + XRPL |
-| [`/api/metrics/all`](https://xxxiii.io/api/metrics/all) | 4 health metrics public |
-| [`/api/field/status`](https://xxxiii.io/api/field/status) | Field bounded at 5 |
+| [`/api/token/verify`](https://heliosdigital.xyz/api/token/verify) | 100M supply, no mint |
+| [`/api/energy/conservation`](https://heliosdigital.xyz/api/energy/conservation) | ∑in = ∑out |
+| [`/api/certificates/covenant`](https://heliosdigital.xyz/api/certificates/covenant) | RRR auto-enforced |
+| [`/api/treasury/reserves`](https://heliosdigital.xyz/api/treasury/reserves) | Metal is real + XRPL |
+| [`/api/metrics/all`](https://heliosdigital.xyz/api/metrics/all) | 4 health metrics public |
+| [`/api/field/status`](https://heliosdigital.xyz/api/field/status) | Field bounded at 5 |
 
 ---
 
@@ -1057,7 +1070,7 @@ Member activation flow:
 
 **Settlement follows physics, not position.**
 
-**`xxxiii.io`**
+**`heliosdigital.xyz`**
 
 ☀
 

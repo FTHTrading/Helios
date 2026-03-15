@@ -22,6 +22,7 @@ import os
 import hashlib
 from datetime import datetime, timezone
 from config import HeliosConfig
+from ai.build_knowledge import build_context_block, build_grounded_fallback
 
 
 # ═══ Knowledge Base — Gold-Backed Smart Contract Protocol ════════════
@@ -830,17 +831,36 @@ class AskHelios:
             "timestamp": datetime.now(timezone.utc).isoformat()
         })
 
-        # Knowledge base first (instant, no API call)
-        kb_answer = self._search_knowledge_base(question_lower)
-        if kb_answer:
-            response = {
-                "answer": kb_answer,
-                "source": "knowledge_base",
-                "confidence": "high",
-                "follow_up": self._suggest_follow_up(question_lower)
-            }
+        grounded_context, grounded_sources = build_context_block(question)
+
+        if grounded_sources:
+            response = self._ask_ai(question, member_id, grounded_context, grounded_sources)
         else:
-            response = self._ask_ai(question, member_id)
+            # Knowledge base first (instant, no API call)
+            kb_answer = self._search_knowledge_base(question_lower)
+            if kb_answer:
+                response = {
+                    "answer": kb_answer,
+                    "source": "knowledge_base",
+                    "confidence": "high",
+                    "follow_up": self._suggest_follow_up(question_lower),
+                    "references": []
+                }
+            else:
+                response = self._ask_ai(question, member_id)
+
+        if grounded_sources and "references" not in response:
+            response = {
+                **response,
+                "references": [
+                    {
+                        "title": source["title"],
+                        "path": source["path"],
+                        "github_url": source["github_url"],
+                    }
+                    for source in grounded_sources
+                ]
+            }
 
         if member_id and self.db:
             response["personal_context"] = self._get_member_context(member_id)
@@ -894,21 +914,32 @@ class AskHelios:
 
     # ═══ AI Fallback ═════════════════════════════════════════════
 
-    def _ask_ai(self, question: str, member_id: str = None) -> dict:
+    def _ask_ai(self, question: str, member_id: str = None, grounded_context: str = "", grounded_sources: list | None = None) -> dict:
         api_key = HeliosConfig.AI_API_KEY
+        grounded_sources = grounded_sources or []
 
         if not api_key:
+            grounded = build_grounded_fallback(question)
+            if grounded:
+                return {
+                    "answer": grounded["answer"],
+                    "source": "grounded_fallback",
+                    "confidence": grounded["confidence"],
+                    "follow_up": self._suggest_follow_up(question.lower()),
+                    "references": grounded["references"],
+                }
             return {
                 "answer": self._smart_fallback(question),
                 "source": "fallback",
                 "confidence": "medium",
-                "follow_up": self._suggest_follow_up(question.lower())
+                "follow_up": self._suggest_follow_up(question.lower()),
+                "references": [],
             }
 
         try:
             import openai
             client = openai.OpenAI(api_key=api_key)
-            system_prompt = self._build_system_prompt(member_id)
+            system_prompt = self._build_system_prompt(member_id, grounded_context)
             messages = [{"role": "system", "content": system_prompt}]
 
             for msg in self.conversation_history[-HeliosConfig.AI_MAX_CONTEXT_TURNS:]:
@@ -925,76 +956,78 @@ class AskHelios:
                 "answer": response.choices[0].message.content.strip(),
                 "source": "ai",
                 "confidence": "high",
-                "follow_up": self._suggest_follow_up(question.lower())
+                "follow_up": self._suggest_follow_up(question.lower()),
+                "references": [
+                    {
+                        "title": source["title"],
+                        "path": source["path"],
+                        "github_url": source["github_url"],
+                    }
+                    for source in grounded_sources
+                ],
             }
 
         except Exception:
+            grounded = build_grounded_fallback(question)
+            if grounded:
+                return {
+                    "answer": grounded["answer"],
+                    "source": "grounded_fallback",
+                    "confidence": grounded["confidence"],
+                    "follow_up": self._suggest_follow_up(question.lower()),
+                    "references": grounded["references"],
+                    "note": "AI unavailable. Using build-aware source context.",
+                }
             return {
                 "answer": self._smart_fallback(question),
                 "source": "fallback",
                 "confidence": "medium",
                 "follow_up": self._suggest_follow_up(question.lower()),
+                "references": [],
                 "note": "AI unavailable. Using protocol knowledge base."
             }
 
-    def _build_system_prompt(self, member_id: str = None) -> str:
+    def _build_system_prompt(self, member_id: str = None, grounded_context: str = "") -> str:
         """System prompt with smart contract protocol context and voice rules."""
         context = (
             "You are Helios — the voice of the protocol. "
             "Male. Calm. Grounded. Authoritative. Like a smart friend "
             "explaining money at a kitchen table.\n\n"
             "WHAT HELIOS IS:\n"
-            "A gold-backed smart contract allocation protocol on Web3 rails (XRPL + Stellar). "
-            "Contract amounts: $100, $250, $500, $1,000, $5,000. "
-            "One payment. No recurring fees. No product.\n\n"
-            "3 ALLOCATION CHANNELS:\n"
-            "1. Direct Connection Allocation — 50% of allocation pool per member you connect\n"
-            "2. Smart Contract Engine — 45% of every activation distributed across connection depth, "
-            "formula: W_h = W_1 · r^(h-1)\n"
-            "3. Gold, NFTs & Crypto — physical gold, certificates, Staking rewards\n\n"
-            "CONTRACT ALLOCATIONS (direct connection per member):\n"
-            "$100 → $22.50 | $250 → $56.25 | $500 → $112.50 | "
-            "$1,000 → $225 | $5,000 → $1,125\n\n"
-            "SMART CONTRACT PROPAGATION:\n"
-            "Allocations propagate through the connection mesh. Depth 1 receives the most. "
-            "Each deeper hop receives half the previous. The formula rewards direct connectors.\n\n"
-            "Staking rewards:\n"
-            "30d=+5%, 90d=+12%, 180d=+20%, 365d=+30%\n\n"
-            "BURN MECHANICS:\n"
-            "Contract upgrades, certificate redemptions, marketplace fees (20% burned), "
-            "conversion fees (20% burned), early staking exits — all permanently reduce supply.\n\n"
-            "PENALTIES:\n"
-            "Early staking exit <7d = 100% reward forfeited. >7d = 50% forfeited. "
-            "Rapid conversion (<48h) = 2.5% surcharge. All forfeitures are burned.\n\n"
-            "INTERNAL MARKETPLACE:\n"
-            "Buy gold/silver certificates, .helios identities, contract upgrades with HLS. "
-            "20% of all marketplace fees burned.\n\n"
-            "ALLOCATION SPLIT:\n"
-            "45% smart contract engine, 20% liquidity, 15% gold treasury, "
-            "10% infrastructure, 10% buffer\n\n"
+            "An XRPL-first activation, wallet, treasury, and certificate platform with a simplified recommended launch route. "
+            "The current source of truth is the repository, mirrored docs, rebuttal documents, and build-aware handoff portal.\n\n"
             "VOICE RULES:\n"
             "- Talk like a real person explaining money to another adult\n"
             "- Use plain language. No crypto jargon unless asked.\n"
             "- Be direct. Be honest. No hype.\n"
-            "- Say 'the math shows' not 'you'll make'\n"
-            "- Always mention results depend on effort and connection growth\n"
-            "- Never guarantee income. Show the formula and let them decide.\n"
-            "- If you don't know something, say so.\n"
-            "- No ranks, no titles, no hierarchical labels\n\n"
+            "- Distinguish clearly between what exists now, what is hybrid, and what is still pending\n"
+            "- Never guarantee income, performance, valuation, or launch timing\n"
+            "- If the build is not proven live for a claim, say that directly\n"
+            "- Prefer the simplified route unless there is a strong reason otherwise\n\n"
             "PROTOCOL FACTS:\n"
             f"- Token: {HeliosConfig.TOKEN_NAME} ({HeliosConfig.TOKEN_SYMBOL})\n"
             f"- Total supply: {HeliosConfig.TOKEN_TOTAL_SUPPLY:,} (FIXED)\n"
-            f"- Chains: XRPL + Stellar\n"
-            f"- Treasury: Physical gold via APMEX\n"
-            f"- Certificates: Gold-backed NFTs on XRPL\n"
-            f"- Crypto: BTC, ETH, XRP, XLM, USDC, USDT\n"
+            f"- Recommended chain posture: XRPL-first\n"
+            f"- Treasury path: receipts, evidence, and anchoring workflows exist\n"
+            f"- Certificates: XRPL XLS-20 posture in launch docs\n"
+            f"- Default route: simplified\n"
         )
+        if grounded_context:
+            context += (
+                "\nCURRENT BUILD CONTEXT — USE THIS AS THE PRIMARY SOURCE OF TRUTH:\n"
+                f"{grounded_context}\n\n"
+                "When answering, use the supplied context first. If something in older messaging conflicts with the context, follow the current build context."
+            )
         if member_id:
             context += f"\nThe person asking holds identity: {member_id}\n"
         return context
 
     def _smart_fallback(self, question: str) -> str:
         """Fallback when AI is unavailable."""
+        grounded = build_grounded_fallback(question)
+        if grounded:
+            return grounded["answer"]
+
         q = question.lower()
 
         if any(w in q for w in ["price", "worth", "value", "market"]):
@@ -1041,9 +1074,8 @@ class AskHelios:
             )
 
         return (
-            "Helios is a gold-backed smart contract allocation protocol with "
-            "multiple contract levels and real assets — gold, NFTs, and crypto.\n\n"
-            "Could you rephrase your question? I want to give you a precise answer."
+            "Helios is currently best understood as an XRPL-first launch repository with onboarding, funding, wallet, treasury, handoff, and build-verification rails.\n\n"
+            "Could you ask that one more specifically? I can answer from the current docs, rebuttal material, operator guides, and build files."
         )
 
     # ═══ Helpers ═════════════════════════════════════════════════

@@ -25,6 +25,7 @@ spaces_bp = Blueprint("spaces", __name__, url_prefix="/api/spaces")
 metrics_bp = Blueprint("metrics", __name__, url_prefix="/api/metrics")
 rewards_bp = Blueprint("rewards", __name__, url_prefix="/api/rewards")
 funding_bp = Blueprint("funding", __name__, url_prefix="/api/funding")
+handoff_bp = Blueprint("handoff", __name__, url_prefix="/api/handoff")
 
 
 def get_db():
@@ -539,7 +540,7 @@ def sms_status():
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# INFRASTRUCTURE ROUTES (Cloudflare — xxxiii.io)
+# INFRASTRUCTURE ROUTES (Cloudflare — heliosdigital.xyz)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 infra_bp = Blueprint("infra", __name__, url_prefix="/api/infra")
@@ -563,6 +564,15 @@ def readiness():
     from core.integrations import IntegrationReadiness
 
     return api_response(IntegrationReadiness.snapshot())
+
+
+@infra_bp.route("/launch-readiness", methods=["GET"])
+@handle_errors
+def launch_readiness():
+    """Actionable launch-readiness report with remaining blockers and next actions."""
+    from core.integrations import IntegrationReadiness
+
+    return api_response(IntegrationReadiness.launch_readiness_report())
 
 
 @infra_bp.route("/build", methods=["GET"])
@@ -639,6 +649,36 @@ def purge_cache():
         urls=data.get("urls")
     )
     return api_response(result)
+
+
+@handoff_bp.route("/manifest", methods=["GET"])
+@handle_errors
+def handoff_manifest():
+    """Public handoff manifest for the build team."""
+    from core.handoff import get_handoff_manifest
+
+    return api_response(get_handoff_manifest())
+
+
+@handoff_bp.route("/docs", methods=["GET"])
+@handle_errors
+def handoff_docs():
+    """List mirrored handoff documents available through the site."""
+    from core.handoff import list_handoff_docs
+
+    return api_response(list_handoff_docs())
+
+
+@handoff_bp.route("/docs/<slug>", methods=["GET"])
+@handle_errors
+def handoff_doc(slug):
+    """Return a mirrored handoff document by slug."""
+    from core.handoff import get_handoff_doc
+
+    document = get_handoff_doc(slug)
+    if not document:
+        return api_response(error="Handoff document not found", status=404)
+    return api_response(document)
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

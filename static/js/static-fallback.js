@@ -183,7 +183,7 @@
 
         // ── Infrastructure / Status ──
         if (url === '/api/infra/status')
-            return { success: true, data: { status: 'hybrid', zone: { name: 'xxxiii.io' }, services: { xrpl: 'simulated', ipfs: 'not_configured', cloudflare: 'active', apmex: 'manual', stripe: 'not_configured' } } };
+            return { success: true, data: { status: 'hybrid', zone: { name: 'heliosdigital.xyz' }, services: { xrpl: 'simulated', ipfs: 'not_configured', cloudflare: 'active', apmex: 'manual', stripe: 'not_configured' } } };
 
         if (url === '/api/infra/readiness')
             return { success: true, data: { mode: 'hybrid', production_ready: false, recommended_chain: 'XRPL', recommended_certificate_standard: 'XLS-20', recommended_token_model: 'XRPL issued fungible token' } };
@@ -291,7 +291,7 @@
 
         // ── System Status (catch-all) ──
         if (url === '/api/status')
-            return { success: true, status: 'operational', version: '3.0.0', protocol: 'Helios Neural Field', domain: 'xxxiii.io' };
+            return { success: true, status: 'operational', version: '3.0.0', protocol: 'Helios Neural Field', domain: 'heliosdigital.xyz' };
 
         // Fallback
         return { success: true, data: {} };

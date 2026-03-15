@@ -47,10 +47,17 @@ Before public launch, prove:
 
 - `/api/infra/build` works
 - `/api/infra/readiness` matches expected state
+- `/api/infra/launch-readiness` shows only the expected live-provider blockers
+- `/api/handoff/manifest` exposes the mirrored docs and GitHub refs
+- `/ask` returns build-aware answers with references
 - checkout works
 - wallet connect works
 - trustline works
 - activation flow completes end to end
+
+## Quick validation command
+
+- run `python verify_launch.py`
 
 ## One-line instruction
 

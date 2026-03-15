@@ -81,9 +81,12 @@ The team must validate:
 - `/health`
 - `/api/infra/build`
 - `/api/infra/readiness`
+- `/api/infra/launch-readiness`
 - `/api/funding/catalog`
+- `/api/handoff/manifest`
 - `/activate`
 - `/web3`
+- `/ask`
 
 Then validate real flows:
 
@@ -92,6 +95,10 @@ Then validate real flows:
 - Xaman sign-in payload
 - XRPL trustline flow
 - full onboarding continuation to dashboard
+
+Recommended local verification pass:
+
+- run `python verify_launch.py`
 
 ## Phase 6 — Public messaging alignment
 

@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% block title %}Helios — Build Handoff Portal{% endblock %}
+{% block og_title %}Helios — Build Handoff Portal{% endblock %}
+{% block og_description %}Operational handoff portal for the incoming Helios build team: route choice, required stack, mirrored launch docs, and validation endpoints.{% endblock %}
+{% block og_url %}/handoff{% endblock %}
+
+{% block head %}
+<style>
+.handoff-shell { max-width: 1180px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+.handoff-hero { display:grid; grid-template-columns: 1.3fr .9fr; gap:1.25rem; align-items:stretch; margin-bottom:1.25rem; }
+.handoff-card { background: linear-gradient(180deg, rgba(10,10,12,.96), rgba(16,18,23,.94)); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.35rem; box-shadow: 0 22px 50px rgba(0,0,0,.28); }
+.handoff-kicker { font: 600 .74rem 'Inter', sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); margin-bottom: .7rem; }
+.handoff-title { font-size: clamp(2rem, 4vw, 3.2rem); line-height: 1.05; margin: 0 0 .8rem; }
+.handoff-copy { color: var(--text-muted); line-height: 1.75; max-width: 52rem; }
+.handoff-badges { display:flex; flex-wrap:wrap; gap:.6rem; margin-top:1rem; }
+.handoff-badge { border:1px solid rgba(41,151,255,.18); background: rgba(41,151,255,.07); color: var(--text); border-radius:999px; padding:.45rem .75rem; font:600 .78rem 'Inter', sans-serif; }
+.handoff-metric { display:grid; gap:.4rem; }
+.handoff-metric strong { font-size:1.65rem; color:var(--gold); }
+.handoff-metric-spaced { margin-top:1rem; }
+.handoff-domain { font-size:1.3rem !important; }
+.handoff-grid { display:grid; grid-template-columns: repeat(12, 1fr); gap:1rem; margin-top:1rem; }
+.span-4 { grid-column: span 4; }
+.span-6 { grid-column: span 6; }
+.span-8 { grid-column: span 8; }
+.span-12 { grid-column: span 12; }
+.handoff-list, .handoff-stack, .handoff-endpoints { display:grid; gap:.75rem; }
+.handoff-item { padding:.8rem .95rem; border:1px solid var(--border); border-radius:14px; background:rgba(255,255,255,.02); }
+.handoff-doc-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:.85rem; }
+.handoff-doc { border:1px solid var(--border); border-radius:16px; padding:1rem; background:rgba(255,255,255,.02); display:flex; flex-direction:column; gap:.8rem; }
+.handoff-doc h3 { margin:0; font-size:1rem; }
+.handoff-doc p { margin:0; color:var(--text-muted); line-height:1.6; }
+.handoff-actions { display:flex; gap:.55rem; flex-wrap:wrap; margin-top:auto; }
+.handoff-btn { text-decoration:none; border-radius:999px; padding:.55rem .9rem; font:600 .78rem 'Inter', sans-serif; border:1px solid var(--border); color:var(--text); }
+.handoff-btn:hover { border-color:var(--gold); color:var(--gold); }
+.handoff-btn.primary { border-color:rgba(41,151,255,.35); background:rgba(41,151,255,.08); }
+.handoff-code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size:.82rem; word-break:break-all; }
+.handoff-note { margin-top:1rem; padding:1rem; border-radius:14px; border:1px solid rgba(255,181,71,.22); background:rgba(255,181,71,.06); color:#f5ddb6; line-height:1.65; }
+.handoff-muted { color: var(--text-muted); }
+.handoff-link-grid { display:grid; gap:.75rem; }
+.handoff-featured { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1rem; margin-top:1rem; }
+.handoff-feature-card { border:1px solid rgba(245,158,11,.18); background:linear-gradient(180deg, rgba(245,158,11,.08), rgba(255,255,255,.02)); border-radius:18px; padding:1rem; display:grid; gap:.7rem; }
+.handoff-feature-card h3 { margin:0; }
+@media (max-width: 900px) {
+  .handoff-hero { grid-template-columns: 1fr; }
+  .span-4, .span-6, .span-8, .span-12 { grid-column: span 12; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="handoff-shell">
+    <div class="handoff-hero">
+        <div class="handoff-card">
+            <div class="handoff-kicker">Build handoff portal</div>
+            <h1 class="handoff-title">Everything the incoming team needs, without full GitHub access.</h1>
+            <p class="handoff-copy">
+                This portal mirrors the launch instructions, route choice, environment checklist, and validation path
+                required to deploy Helios on {{ manifest.domain }}. The default operating rule is simple: launch the
+                simplified route first, keep attribution hidden, validate the live path, then expand.
+            </p>
+            <div class="handoff-badges">
+                <span class="handoff-badge">Default route: {{ manifest.default_route_key }}</span>
+                <span class="handoff-badge">Watermark: {{ manifest.default_watermark_mode }}</span>
+                <span class="handoff-badge">Source of truth: portal docs</span>
+            </div>
+        </div>
+        <div class="handoff-card">
+            <div class="handoff-kicker">Launch defaults</div>
+            <div class="handoff-metric">
+                <span>Recommended route</span>
+                <strong>{{ manifest.default_route }}</strong>
+            </div>
+            <div class="handoff-metric handoff-metric-spaced">
+                <span>Production domain</span>
+                <strong class="handoff-domain">{{ manifest.domain }}</strong>
+            </div>
+            <div class="handoff-metric handoff-metric-spaced">
+                <span>Retrieval manifest</span>
+                <div class="handoff-code">{{ manifest.retrieval.manifest }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="handoff-card span-12">
+        <div class="handoff-kicker">Featured senior-engineered documents</div>
+        <div class="handoff-featured">
+            {% for doc in docs if doc.slug in ['white-paper', 'sr-engineered-tokenomics'] %}
+            <article class="handoff-feature-card">
+                <h3>{{ doc.title }}</h3>
+                <p class="handoff-muted">{{ doc.summary }}</p>
+                <div class="handoff-actions">
+                    <a class="handoff-btn primary" href="/handoff/docs/{{ doc.slug }}">Read on site</a>
+                    <a class="handoff-btn" href="{{ doc.raw_url }}" target="_blank" rel="noreferrer">Open raw</a>
+                    <a class="handoff-btn" href="{{ doc.download_url }}">Download</a>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="handoff-grid">
+        <div class="handoff-card span-4">
+            <div class="handoff-kicker">Read first</div>
+            <div class="handoff-list">
+                {% for doc in docs[:5] %}
+                <div class="handoff-item"><strong>{{ loop.index }}. {{ doc.title }}</strong><br><span class="handoff-muted">{{ doc.summary }}</span></div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="handoff-card span-4">
+            <div class="handoff-kicker">Stack to launch first</div>
+            <div class="handoff-stack">
+                {% for item in manifest.recommended_stack %}
+                <div class="handoff-item">{{ item }}</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="handoff-card span-4">
+            <div class="handoff-kicker">Do not block launch on</div>
+            <div class="handoff-stack">
+                {% for item in manifest.defer_until_phase_two %}
+                <div class="handoff-item">{{ item }}</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="handoff-card span-8">
+            <div class="handoff-kicker">Mirrored documents they can retrieve</div>
+            <div class="handoff-doc-grid">
+                {% for doc in docs %}
+                <article class="handoff-doc">
+                    <h3>{{ doc.title }}</h3>
+                    <p>{{ doc.summary }}</p>
+                    <div class="handoff-actions">
+                        <a class="handoff-btn primary" href="/handoff/docs/{{ doc.slug }}">Open on site</a>
+                        <a class="handoff-btn" href="{{ doc.download_url }}">Download</a>
+                        <a class="handoff-btn" href="/api/handoff/docs/{{ doc.slug }}">JSON</a>
+                    </div>
+                    <div class="handoff-code">{{ doc.api_url }}</div>
+                </article>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="handoff-card span-4">
+            <div class="handoff-kicker">Validation endpoints</div>
+            <div class="handoff-endpoints">
+                {% for endpoint in manifest.validation_endpoints %}
+                <div class="handoff-item handoff-code">{{ manifest.site_base_url }}{{ endpoint }}</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="handoff-card span-6">
+            <div class="handoff-kicker">Environment values they must request</div>
+            <div class="handoff-endpoints">
+                {% for key in manifest.env_requirements %}
+                <div class="handoff-item handoff-code">{{ key }}</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="handoff-card span-6">
+            <div class="handoff-kicker">API retrieval endpoints</div>
+            <div class="handoff-link-grid">
+                <div class="handoff-item"><strong>Manifest</strong><br><span class="handoff-code">{{ manifest.retrieval.manifest }}</span></div>
+                <div class="handoff-item"><strong>Docs index</strong><br><span class="handoff-code">{{ manifest.retrieval.docs_index }}</span></div>
+                <div class="handoff-item"><strong>Portal</strong><br><span class="handoff-code">{{ manifest.retrieval.portal }}</span></div>
+            </div>
+            <div class="handoff-note">
+                {{ manifest.security_note }}
+            </div>
+        </div>
+
+        <div class="handoff-card span-6">
+            <div class="handoff-kicker">GitHub references</div>
+            <div class="handoff-link-grid">
+                <div class="handoff-item"><strong>Source repo</strong><br><a class="handoff-code" href="{{ manifest.github.source_repo }}" target="_blank" rel="noreferrer">{{ manifest.github.source_repo }}</a></div>
+                <div class="handoff-item"><strong>Launch repo</strong><br><a class="handoff-code" href="{{ manifest.github.launch_repo }}" target="_blank" rel="noreferrer">{{ manifest.github.launch_repo }}</a></div>
+            </div>
+        </div>
+
+        <div class="handoff-card span-6">
+            <div class="handoff-kicker">What they can see that is already built</div>
+            <div class="handoff-stack">
+                {% for item in manifest.built_system %}
+                <div class="handoff-item">{{ item }}</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

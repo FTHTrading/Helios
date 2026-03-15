@@ -12,7 +12,7 @@ Use:
   - `XRPL-first launch repository for Helios onboarding, wallet activation, funding, and production rollout.`
 
 - **Website**
-  - `https://xxxiii.io`
+  - `https://heliosdigital.xyz`
 
 - **Topics**
   - `xrpl`

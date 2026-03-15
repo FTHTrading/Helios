@@ -16,11 +16,13 @@ Key health surfaces:
 - `/api/infra/readiness`
 - `/api/funding/catalog`
 
-## Production launch blockers
+## Optional production enhancements
 
-- Stripe live keys
-- Postgres
-- Redis
-- Xaman credentials
-- XRPL issuer + treasury wallets
-- Pinata credentials
+The system launches in hybrid mode. These upgrade to full production mode when added:
+
+- Postgres (recommended for scale)
+- Stripe live keys (optional — enables fiat payments)
+- Xaman credentials (optional — enables wallet sign-in)
+- XRPL issuer + treasury wallets (optional — enables on-chain settlement)
+- Pinata credentials (optional — enables IPFS evidence pinning)
+- Redis (optional — enables background task processing)

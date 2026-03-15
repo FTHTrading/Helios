@@ -27,6 +27,8 @@ This is the exact first-run checklist for the incoming operators.
 ## Environment setup
 
 - [ ] set `HELIOS_DATABASE_URL` to Postgres
+- [ ] set `HELIOS_AI_API_KEY`
+- [ ] set `HELIOS_AI_MODEL`
 - [ ] set `HELIOS_STRIPE_SECRET_KEY`
 - [ ] set `HELIOS_STRIPE_PUBLISHABLE_KEY`
 - [ ] set `HELIOS_STRIPE_WEBHOOK_SECRET`
@@ -44,8 +46,11 @@ This is the exact first-run checklist for the incoming operators.
 - [ ] `/api/infra/build` returns build fingerprint
 - [ ] `/api/infra/readiness` reflects configured providers
 - [ ] `/api/funding/catalog` returns expected offers
+- [ ] `/handoff` loads and shows mirrored docs
+- [ ] `/api/handoff/manifest` returns docs and GitHub references
 - [ ] `/activate` loads correctly
 - [ ] `/web3` loads correctly
+- [ ] `/ask` answers using build-aware references
 - [ ] Stripe checkout creation succeeds
 - [ ] Xaman payload creation succeeds
 - [ ] trustline flow succeeds on testnet
