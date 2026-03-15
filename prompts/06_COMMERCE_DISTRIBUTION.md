@@ -408,7 +408,7 @@ That is the whole engine. Six steps. Nothing more.
 
 | Brand | Primary CTA | Secondary CTA | Key Trust Cue |
 |-------|-------------|---------------|---------------|
-| **Helios** | Join Network | Share | Treasury reserve + active nodes |
+| **Helios** | Join the Helios Club — $99.95 | Share Invitation | Reserve visibility + insured custody + founding membership |
 | **FTH** | Get Access | Save Contact | Trading performance + audit trail |
 | **UnyKorn** | Start Building | Invite | Ecosystem growth + founding certificates |
 | **xxxiii** | Enter Studio | Share | Creative provenance + co-signs |
