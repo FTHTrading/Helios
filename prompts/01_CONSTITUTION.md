@@ -141,4 +141,36 @@ If you remember nothing else, remember that.
 
 ---
 
-*Master Constitution v1 — The highest law across all UnyKorn systems.*
+## Article XI — The Forward Doctrine
+
+**Even when the backend is complex, the product must feel simple, clear, premium, and easy to trust.**
+
+This is the permanent operating rule:
+
+- All new systems follow this doctrine
+- All redesigns move toward this doctrine
+- All old systems get simplified toward this doctrine over time
+- All features must justify themselves against this doctrine
+
+For every system, ask:
+
+1. **What is the simple promise?** — One sentence only.
+2. **What is the one main thing the user can do?** — Not five. One.
+3. **What is the one reason they trust it?** — Proof, reserve, audit, live state.
+4. **What is the one next action?** — Join, activate, verify, buy, share.
+5. **What complexity can be hidden until later?** — Everything non-essential.
+
+The two-layer standard:
+
+| Layer | Rule |
+|-------|------|
+| **Public layer** | Simple, elegant, minimal, premium, obvious |
+| **System layer** | Powerful, modular, scalable, compliant, adaptive |
+
+> **We accept backend complexity when necessary, but we never ship front-end confusion.**
+
+> **Everything forward must simplify the experience, sharpen the offer, and strengthen the money path.**
+
+---
+
+*Master Constitution v1.1 — The highest law across all UnyKorn systems.*
