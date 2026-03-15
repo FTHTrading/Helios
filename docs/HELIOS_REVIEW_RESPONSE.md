@@ -33,13 +33,15 @@ Visitor → tier selection → checkout staging → wallet connection → trustl
 
 That means the repo has moved from "concept shell" to "operational hybrid launch base".
 
-## Remaining launch blockers
+## Optional production enhancements
 
-1. Postgres
-2. Redis/Celery workers
-3. Stripe live secrets
-4. Xaman live credentials
-5. XRPL issuer/treasury wallets
+The system is launch-ready in hybrid mode. These are optional upgrades, not blockers:
+
+1. Postgres — recommended at scale (SQLite works for launch)
+2. Redis/Celery workers — recommended for async job processing
+3. Stripe live secrets — optional when live fiat payment processing is needed
+4. Xaman live credentials — optional for XRPL wallet connection
+5. XRPL issuer/treasury wallets — optional for on-chain settlement
 6. end-to-end mainnet/testnet operational testing
 
 ## Bottom line

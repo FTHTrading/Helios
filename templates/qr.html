@@ -195,18 +195,32 @@
             <span class="join-url" id="qr-url">—</span>
         </div>
 
-        <div class="qr-info-strip">
+        <div class="qr-info-strip" id="qr-live-stats">
             <div class="qr-info-cell">
-                <span class="val">$100–$5K</span>
-                <span class="lbl">Contracts</span>
+                <span class="val" id="stat-status">●</span>
+                <span class="lbl">Node</span>
             </div>
             <div class="qr-info-cell">
-                <span class="val">∞</span>
+                <span class="val" id="stat-referrals">—</span>
+                <span class="lbl">Referrals</span>
+            </div>
+            <div class="qr-info-cell">
+                <span class="val" id="stat-depth">—</span>
                 <span class="lbl">Depth</span>
             </div>
+        </div>
+        <div class="qr-info-strip" id="qr-live-stats-2" style="border-top:none;">
             <div class="qr-info-cell">
-                <span class="val">Gold</span>
-                <span class="lbl">Backed</span>
+                <span class="val" id="stat-rewards">—</span>
+                <span class="lbl">Rewards</span>
+            </div>
+            <div class="qr-info-cell">
+                <span class="val" id="stat-scans">—</span>
+                <span class="lbl">Scans</span>
+            </div>
+            <div class="qr-info-cell">
+                <span class="val" id="stat-last">—</span>
+                <span class="lbl">Last Active</span>
             </div>
         </div>
 
@@ -582,6 +596,56 @@
     // Store for download/share
     window._qrIdentity = identity;
     window._qrJoinUrl = joinUrl;
+
+    // ═══ Fetch live node stats from telemetry API ═══
+    fetch('/api/nodes/' + identity + '/stats')
+        .then(function(r) { return r.json(); })
+        .then(function(resp) {
+            if (!resp.success || !resp.data) return;
+            var d = resp.data;
+
+            // Status indicator (Green/Yellow/Red)
+            var statusEl = document.getElementById('stat-status');
+            var statusColors = { green: '#22c55e', yellow: '#eab308', red: '#ef4444' };
+            statusEl.style.color = statusColors[d.status] || '#888';
+            statusEl.textContent = '● ' + (d.status === 'green' ? 'Active' : d.status === 'yellow' ? 'Idle' : 'New');
+
+            document.getElementById('stat-referrals').textContent = d.total_joined || 0;
+            document.getElementById('stat-depth').textContent = d.chain_depth || 0;
+            document.getElementById('stat-rewards').textContent = (d.connection_rewards || 0) + ' HLS';
+            document.getElementById('stat-scans').textContent = d.total_scans || 0;
+
+            // Last activation
+            if (d.last_activation) {
+                var dt = new Date(d.last_activation);
+                var now = new Date();
+                var diff = Math.floor((now - dt) / (1000 * 60 * 60 * 24));
+                document.getElementById('stat-last').textContent = diff === 0 ? 'Today' : diff + 'd ago';
+            } else {
+                document.getElementById('stat-last').textContent = 'None';
+            }
+
+            // Bottom referrer stats
+            document.getElementById('ref-scan-count').textContent = d.total_scans || 0;
+            document.getElementById('ref-join-count').textContent = d.total_joined || 0;
+            document.getElementById('ref-chain-depth').textContent = d.chain_depth || 0;
+            document.getElementById('ref-reward-total').textContent = (d.connection_rewards || 0) + ' HLS';
+        })
+        .catch(function() { /* Stats unavailable — leave defaults */ });
+
+    // ═══ Emit qr_view event ═══
+    fetch('/api/nodes/' + identity + '/event', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            event_type: 'qr_view',
+            session_id: sessionStorage.getItem('helios_session') || (function() {
+                var sid = 'qs_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+                sessionStorage.setItem('helios_session', sid);
+                return sid;
+            })()
+        })
+    }).catch(function() {});
 })();
 
 // ═══ QR Code Generator — Pure JS, no CDN ═══
@@ -929,6 +993,13 @@ function roundRectFill(ctx, x, y, w, h, r) {
 function shareQR() {
     var url = window._qrJoinUrl;
     var identity = window._qrIdentity;
+
+    // Emit share_link_copied event
+    fetch('/api/nodes/' + identity + '/event', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ event_type: 'share_link_copied' })
+    }).catch(function() {});
 
     if (navigator.share) {
         navigator.share({

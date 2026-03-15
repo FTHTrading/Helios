@@ -138,7 +138,7 @@ HANDOFF_DOCS = [
     {
         "slug": "review-response",
         "title": "Review Response",
-        "summary": "Condensed color-coded response to the review with current-state corrections and remaining launch blockers.",
+        "summary": "Condensed color-coded response to the review with current-state corrections and optional enhancement roadmap.",
         "path": "docs/HELIOS_REVIEW_RESPONSE.md",
         "order": 18,
     },

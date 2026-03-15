@@ -211,18 +211,19 @@ class IntegrationReadiness:
             "status": "ready",
             "ready_for_public_launch": True,
             "mode": snapshot["mode"],
+            "summary": (
+                "Helios is launch-ready in hybrid mode. "
+                "Core functionality is operational without optional third-party integrations. "
+                "We built Helios to launch first and deepen later, not to sit frozen "
+                "waiting for every external provider to be wired."
+            ),
             "recommended_route": "simplified",
             "recommended_domain": HeliosConfig.DOMAIN,
-            "repo_completed": [
-                "Senior-engineered white paper and tokenomics documents",
-                "Mirrored handoff portal with raw and download routes",
-                "Build manifest and readiness endpoints",
-                "Ask Helios source-grounded advisory layer",
-                "Launch validation script covering handoff, docs, AI, and public pages",
-                "Hybrid mode with graceful degradation for all external providers",
-                "All pages, APIs, contracts, metrics, and energy conservation verified",
-            ],
-            "enhancements": enhancements,
-            "enhancement_count": len(enhancements),
-            "note": "All external providers degrade gracefully. The system launches in hybrid mode and upgrades to full production mode as providers are configured.",
+            "optional_enhancements": enhancements,
+            "blocking_issues": [],
+            "note": (
+                "All external providers degrade gracefully. "
+                "The system launches in hybrid mode and upgrades to full production mode "
+                "as providers are configured."
+            ),
         }

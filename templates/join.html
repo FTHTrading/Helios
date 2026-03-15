@@ -154,6 +154,27 @@ const referrer = "{{ referrer or '' }}" || (function() {
     return '';
 })();
 
+// ═══ Session tracking for node telemetry ═══
+const heliosSession = sessionStorage.getItem('helios_session') || (function() {
+    const sid = 'js_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    sessionStorage.setItem('helios_session', sid);
+    return sid;
+})();
+
+// Bind attribution immediately on page load
+if (referrer) {
+    localStorage.setItem('helios_ref', referrer);
+    // Emit join_page_open event
+    fetch('/api/nodes/' + referrer + '/event', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            event_type: 'join_page_open',
+            session_id: heliosSession
+        })
+    }).catch(function() {});
+}
+
 // ─── Step 1: Name validation ──────────────────────────────
 nameInput.addEventListener('input', function() {
     const name = this.value.toLowerCase().trim();
@@ -220,6 +241,29 @@ btnStep1.addEventListener('click', function() {
             offer_code: selectedOffer || null,
             phone_verified: false
         }));
+
+        // ═══ Emit member_created + child_node_created events ═══
+        if (referrer) {
+            fetch('/api/nodes/' + referrer + '/event', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    event_type: 'member_created',
+                    session_id: heliosSession,
+                    child_member_id: data.data.helios_id,
+                    metadata: { offer_code: selectedOffer || null }
+                })
+            }).catch(function() {});
+            fetch('/api/nodes/' + referrer + '/event', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    event_type: 'child_node_created',
+                    session_id: heliosSession,
+                    child_member_id: data.data.helios_id
+                })
+            }).catch(function() {});
+        }
 
         document.getElementById('step-1').classList.remove('active');
         document.getElementById('step-2').classList.add('active');

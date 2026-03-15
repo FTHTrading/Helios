@@ -26,6 +26,7 @@ metrics_bp = Blueprint("metrics", __name__, url_prefix="/api/metrics")
 rewards_bp = Blueprint("rewards", __name__, url_prefix="/api/rewards")
 funding_bp = Blueprint("funding", __name__, url_prefix="/api/funding")
 handoff_bp = Blueprint("handoff", __name__, url_prefix="/api/handoff")
+nodes_bp = Blueprint("nodes", __name__, url_prefix="/api/nodes")
 
 
 def get_db():
@@ -569,7 +570,7 @@ def readiness():
 @infra_bp.route("/launch-readiness", methods=["GET"])
 @handle_errors
 def launch_readiness():
-    """Actionable launch-readiness report with remaining blockers and next actions."""
+    """Actionable launch-readiness report with optional enhancements and next actions."""
     from core.integrations import IntegrationReadiness
 
     return api_response(IntegrationReadiness.launch_readiness_report())
@@ -1285,4 +1286,110 @@ def active_certificates():
     db = get_db()
     engine = CertificateEngine(db)
     result = engine.list_certificates(state="active")
+    return api_response(result)
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# NODE TELEMETRY ROUTES — /api/nodes
+# Member QR codes as live nodes with full telemetry, stats, events,
+# chain visualization, and propagation tree.
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+@nodes_bp.route("/<slug>/stats", methods=["GET"])
+@handle_errors
+def node_stats(slug):
+    """Live QR node stats — scans, joins, depth, rewards, status."""
+    from core.node_telemetry import NodeTelemetry
+
+    telemetry = NodeTelemetry(get_db())
+    result = telemetry.get_node_stats(slug)
+    return api_response(result)
+
+
+@nodes_bp.route("/<slug>/event", methods=["POST"])
+@handle_errors
+def node_event(slug):
+    """Emit a telemetry event for a member node."""
+    from core.node_telemetry import NodeTelemetry
+
+    data = request.get_json() or {}
+    event_type = data.get("event_type")
+    if not event_type:
+        return api_response(error="event_type is required", status=400)
+
+    telemetry = NodeTelemetry(get_db())
+    event = telemetry.emit(
+        event_type=event_type,
+        issuer_slug=slug.replace(".helios", ""),
+        session_id=data.get("session_id"),
+        device_id=data.get("device_id"),
+        child_member_id=data.get("child_member_id"),
+        amount_paid=data.get("amount_paid"),
+        hls_amount=data.get("hls_amount"),
+        offer_code=data.get("offer_code"),
+        tx_hash=data.get("tx_hash"),
+        nft_token_ids=data.get("nft_token_ids"),
+        chain_depth=data.get("chain_depth"),
+        ip_hash=str(hash(request.remote_addr))[-8:] if request.remote_addr else None,
+        user_agent=request.headers.get("User-Agent", "")[:256],
+        metadata=data.get("metadata"),
+    )
+    return api_response({"event_id": event.id, "event_type": event.event_type}, status=201)
+
+
+@nodes_bp.route("/<slug>/events", methods=["GET"])
+@handle_errors
+def node_events(slug):
+    """Event history for a member node."""
+    from core.node_telemetry import NodeTelemetry
+
+    limit = request.args.get("limit", 50, type=int)
+    event_type = request.args.get("type")
+    telemetry = NodeTelemetry(get_db())
+    result = telemetry.get_event_history(slug, limit=limit, event_type=event_type)
+    return api_response(result)
+
+
+@nodes_bp.route("/<slug>/funnel", methods=["GET"])
+@handle_errors
+def node_funnel(slug):
+    """Conversion funnel for a member node — scan to issuance."""
+    from core.node_telemetry import NodeTelemetry
+
+    telemetry = NodeTelemetry(get_db())
+    result = telemetry.get_conversion_funnel(slug)
+    return api_response(result)
+
+
+@nodes_bp.route("/<slug>/tree", methods=["GET"])
+@handle_errors
+def node_tree(slug):
+    """Propagation tree — full recursive network from this node."""
+    from core.node_telemetry import NodeTelemetry
+
+    max_depth = request.args.get("depth", 15, type=int)
+    telemetry = NodeTelemetry(get_db())
+    result = telemetry.get_propagation_tree(slug, max_depth=max_depth)
+    return api_response(result)
+
+
+@nodes_bp.route("/<slug>/chain", methods=["GET"])
+@handle_errors
+def node_chain(slug):
+    """Chain visualization data — d3-compatible nodes/links."""
+    from core.node_telemetry import NodeTelemetry
+
+    telemetry = NodeTelemetry(get_db())
+    result = telemetry.get_chain_data(slug)
+    return api_response(result)
+
+
+@nodes_bp.route("/network/stats", methods=["GET"])
+@handle_errors
+def network_wide_stats():
+    """Global network stats across all member nodes."""
+    from core.node_telemetry import NodeTelemetry
+
+    telemetry = NodeTelemetry(get_db())
+    result = telemetry.get_network_stats()
     return api_response(result)

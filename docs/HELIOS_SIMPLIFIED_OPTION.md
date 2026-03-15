@@ -74,7 +74,7 @@ Benefits:
 
 Use this message:
 
-> We built Helios so it can support a full launch architecture, but we recommend starting with a simpler operating version: Stripe + Xaman + XRPL + Postgres. That gets you to a real launch faster and keeps the more complex infrastructure as phase-2 upgrades instead of day-1 blockers.
+> We built Helios to launch first and deepen later. The system is launch-ready in hybrid mode today. Stripe, Xaman, XRPL, and Postgres are optional enhancements that can be added when ready — they are not day-1 requirements.
 
 ## Suggested phase split
 

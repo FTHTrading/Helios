@@ -105,9 +105,35 @@ print(f"Docs index: {len(docs)} mirrored docs")
 print("\n=== FINAL LAUNCH READINESS ===")
 launch = api('/api/infra/launch-readiness')
 print(f"Status: {launch['status']}  Public launch ready: {launch['ready_for_public_launch']}  Mode: {launch.get('mode', 'hybrid')}")
-print(f"Optional enhancements: {launch.get('enhancement_count', 0)}")
-for enh in launch.get('enhancements', [])[:7]:
+print(f"Blocking issues: {len(launch.get('blocking_issues', []))}")
+print(f"Optional enhancements: {len(launch.get('optional_enhancements', []))}")
+for enh in launch.get('optional_enhancements', [])[:7]:
     print(f"  [{enh.get('priority')}] {enh.get('area')}: {enh.get('description')}")
+
+print("\n=== NODE TELEMETRY SYSTEM ===")
+# Test node stats endpoint (should return defaults for any slug)
+node_stats = api('/api/nodes/kenny/stats')
+print(f"Node: {node_stats.get('node')}  Status: {node_stats.get('status')}  Scans: {node_stats.get('total_scans')}  Joined: {node_stats.get('total_joined')}")
+
+# Test event emission
+node_event = post_api('/api/nodes/kenny/event', {'event_type': 'qr_view', 'session_id': 'verify_test'})
+print(f"Event emitted: id={node_event.get('event_id')}  type={node_event.get('event_type')}")
+
+# Test event history
+node_events = api('/api/nodes/kenny/events')
+print(f"Event history: {len(node_events)} events")
+
+# Test conversion funnel
+funnel = api('/api/nodes/kenny/funnel')
+print(f"Funnel: {funnel.get('funnel', {})}")
+
+# Test chain visualization
+chain = api('/api/nodes/kenny/chain')
+print(f"Chain data: {chain.get('total_nodes', 0)} nodes, {len(chain.get('links', []))} links")
+
+# Test network-wide stats
+net_stats = api('/api/nodes/network/stats')
+print(f"Network: {net_stats.get('total_events')} events, {net_stats.get('total_joins')} joins, {net_stats.get('total_scans')} scans")
 
 print("\n=== ASK HELIOS ===")
 ask = post_api('/api/chat/ask', {'question': 'What is built now and where is the rebuttal?'})

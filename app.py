@@ -159,6 +159,7 @@ def create_app():
     from models.space import Space, SpaceEvent  # noqa: F401
     from models.subscription import Subscription  # noqa: F401
     from models.payment_event import PaymentEvent  # noqa: F401
+    from models.node_event import NodeEvent  # noqa: F401 — QR node telemetry
     Base.metadata.create_all(engine)
 
     SessionFactory = sessionmaker(bind=engine)
@@ -183,7 +184,8 @@ def create_app():
         voice_bp, sms_bp, infra_bp, handoff_bp,
         treasury_bp, certificates_bp,
         funding_bp,
-        spaces_bp, metrics_bp, rewards_bp
+        spaces_bp, metrics_bp, rewards_bp,
+        nodes_bp
     )
     app.register_blueprint(identity_bp)
     app.register_blueprint(field_bp)
@@ -202,6 +204,7 @@ def create_app():
     app.register_blueprint(spaces_bp)
     app.register_blueprint(metrics_bp)
     app.register_blueprint(rewards_bp)
+    app.register_blueprint(nodes_bp)
 
     # ─── Page Routes ──────────────────────────────────────────────
     @app.route("/")

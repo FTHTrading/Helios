@@ -33,7 +33,7 @@ This repo now includes a public launch package suitable for `Helios-launch` with
 Quick local validation after changes:
 
 - run `python verify_launch.py`
-- check `/api/infra/launch-readiness` for the final blocker report
+- check `/api/infra/launch-readiness` for the launch-readiness report (hybrid mode)
 
 - [docs/HELIOS_LAUNCH_BLUEPRINT.md](docs/HELIOS_LAUNCH_BLUEPRINT.md) — production architecture and deployment stack
 - [docs/HELIOS_REVIEW_RESPONSE.md](docs/HELIOS_REVIEW_RESPONSE.md) — color-coded response to the March 5 codebase review
@@ -51,7 +51,7 @@ Quick local validation after changes:
 - [docs/GITHUB_HANDOFF_CHECKLIST.md](docs/GITHUB_HANDOFF_CHECKLIST.md) — exact GitHub About values, protections, and default route choice for the takeover team
 - [docs/TAKEOVER_START_HERE.md](docs/TAKEOVER_START_HERE.md) — first-read document for the incoming build and launch team
 - [docs/OPERATOR_HANDOFF_CHECKLIST.md](docs/OPERATOR_HANDOFF_CHECKLIST.md) — exact operator setup and launch checklist
-- [docs/FINAL_LAUNCH_READINESS.md](docs/FINAL_LAUNCH_READINESS.md) — final in-repo launch status, remaining blockers, and exact production actions left
+- [docs/FINAL_LAUNCH_READINESS.md](docs/FINAL_LAUNCH_READINESS.md) — final in-repo launch status (launch-ready in hybrid mode) and optional production enhancements
 - [docs/PAGE_ALIGNMENT_MEMO.md](docs/PAGE_ALIGNMENT_MEMO.md) — what to keep, soften, or remove from the original Helios institutional page
 - [docs/TAKEOVER_PROMPT_PACK.md](docs/TAKEOVER_PROMPT_PACK.md) — recommended prompts for the incoming team to use during setup and launch
 - [docs/FINAL_RECOMMENDATION.md](docs/FINAL_RECOMMENDATION.md) — single authoritative recommendation for route, stack, messaging, and first actions
