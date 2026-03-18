@@ -204,12 +204,13 @@ class HeliosIdentity:
         """Calculate activity score for the last 30 days."""
         from models.transaction import Transaction
         from datetime import timedelta
-        cutoff = datetime.now(timezone.utc) - timedelta(
-            days=HeliosConfig.NETWORK_ACTIVITY_WINDOW_DAYS
-        )
+        window = HeliosConfig.FIELD_ACTIVITY_WINDOW_DAYS
+        cutoff = datetime.now(timezone.utc) - timedelta(days=window)
+        # SQLite stores naive datetimes — compare naive to avoid TypeError
+        cutoff_naive = cutoff.replace(tzinfo=None)
         txns = self.db.query(Transaction).filter(
             Transaction.member_id == helios_id,
-            Transaction.created_at >= cutoff
+            Transaction.created_at >= cutoff_naive
         ).count()
         # Normalize: 1 txn/day = score of 100
-        return min(round(txns / HeliosConfig.NETWORK_ACTIVITY_WINDOW_DAYS * 100, 1), 100.0)
+        return min(round(txns / window * 100, 1), 100.0)

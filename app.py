@@ -450,6 +450,12 @@ def create_app():
 # ─── Entry Point ──────────────────────────────────────────────────
 
 if __name__ == "__main__":
+    import sys
+    if sys.stdout.encoding and sys.stdout.encoding.lower() not in ('utf-8', 'utf-16'):
+        try:
+            sys.stdout.reconfigure(encoding='utf-8')
+        except Exception:
+            pass
     app = create_app()
     print(f"""
     ╔══════════════════════════════════════════════════╗
@@ -467,7 +473,7 @@ if __name__ == "__main__":
     ║   Domain:      {HeliosConfig.DOMAIN}                      ║
     ║                                                  ║
     ╚══════════════════════════════════════════════════╝
-    """)
+    """, flush=True)
     app.run(
         host=HeliosConfig.HOST,
         port=HeliosConfig.PORT,
