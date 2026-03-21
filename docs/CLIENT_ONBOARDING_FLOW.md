@@ -48,12 +48,12 @@ Content-Type: application/json
 
 ---
 
-## Step 2 — Form Bond
+## Step 2 — Form Link
 
 Client connects with an existing member. Both must have active identities.
 
 ```
-POST /api/field/bond
+POST /api/field/link
 Content-Type: application/json
 
 {
@@ -67,21 +67,21 @@ Content-Type: application/json
 {
   "success": true,
   "data": {
-    "bonded": true,
-    "bond_id": 1,
+    "linked": true,
+    "link_id": 1,
     "nodes": ["existingmember.helios", "firstname.helios"],
     "initiator_state": "connected",
     "peer_state": "connected",
-    "message": "Bond formed between firstname.helios and existingmember.helios."
+    "message": "Link formed between firstname.helios and existingmember.helios."
   }
 }
 ```
 
 **Rules:**
-- Max 5 bonds per node
-- 24-hour cooldown between new bonds
-- Duplicate bonds rejected with clear error
-- Bond is undirected — no hierarchy
+- Max 5 links per node
+- 24-hour cooldown between new links
+- Duplicate links rejected with clear error
+- Link is undirected — no hierarchy
 
 ---
 
@@ -244,7 +244,7 @@ GET /api/token/verify
 **Node stats:**
 ```
 GET /api/field/stats/firstname.helios
-→ { bond_count, node_state, field_reach }
+→ { link_count, node_state, field_reach }
 ```
 
 **Network health:**
@@ -260,7 +260,7 @@ GET /api/metrics/all
 ```
 Client arrives
   → POST /api/identity/create          (get helios_id + recovery phrase)
-  → POST /api/field/bond               (connect to referrer)
+  → POST /api/field/link               (connect to referrer)
   → GET  /api/funding/catalog           (see activation tiers)
   → POST /api/funding/checkout          (pay via Stripe)
   → [Stripe webhook auto-fulfills]
@@ -270,7 +270,7 @@ Client arrives
   
 Client is now:
   - An active node in the Helios field
-  - Bonded to at least one peer
+  - Linked to at least one peer
   - Holding HLS tokens
   - Energy routed through the protocol
   - Verifiable on XRPL testnet
@@ -293,6 +293,6 @@ All errors return structured JSON:
 |--------|---------|
 | 400 | Validation error — wrong/missing fields |
 | 404 | Resource not found |
-| 409 | Duplicate — identity or bond already exists |
+| 409 | Duplicate — identity or link already exists |
 | 429 | Rate limited or cooldown active |
 | 500 | Server error (should not happen — report if seen) |

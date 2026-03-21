@@ -12,7 +12,7 @@
 
 Helios is a smart-contract-governed allocation protocol. Members contribute fiat. The protocol converts contributions into stablecoins, gold-backed certificates, and XRPL/Stellar settlement positions — automatically, governed by deterministic math.
 
-Every QR code is a live member node. Every scan, join, wallet creation, and issuance event is captured in a full telemetry spine. Energy propagates through bonds using physics-based attenuation (1/2^hop, max 15 hops). There is no position power. Settlement follows physics, not hierarchy.
+Every QR code is a live member node. Every scan, join, wallet creation, and issuance event is captured in a full telemetry spine. Energy propagates through links using physics-based attenuation (1/2^hop, max 15 hops). There is no position power. Settlement follows physics, not hierarchy.
 
 **Launch verdict: GO — with phase-gated rollout.**
 
@@ -66,7 +66,7 @@ The protocol is functionally complete, operationally verified, and ready for a c
 - [x] Identity engine creates, verifies, and recovers member IDs
 - [x] Wallet engine tracks balance, history, send/receive
 - [x] Token pools initialized with 10B HLS across 7 pools
-- [x] Energy propagation settles deterministically through bonds
+- [x] Energy propagation settles deterministically through links
 - [x] Certificate engine issues gold-backed, vault-linked certificates
 - [x] Treasury displays multi-asset reserve allocation
 
@@ -135,7 +135,7 @@ The protocol is functionally complete, operationally verified, and ready for a c
 - **Activities:**
   - Second-wave members generate their own QR codes and invite
   - Verify: 3-tier node status distribution (Green/Yellow/Red)
-  - First energy propagation settlements through bond network
+  - First energy propagation settlements through link network
   - Monitor: conversion rate, top nodes by scans and joins
   - Optional: configure Stripe for live payment processing
   - Optional: configure Xaman for mobile XRPL signing
@@ -176,7 +176,7 @@ Helios is approved for controlled soft-launch with the first 20–50 founding me
 Flask 3.x / Python 3.11.9 / SQLAlchemy 2.x / SQLite (hybrid)
 ├── 20 page routes (index, join, QR, dashboard, activate, ops, ...)
 ├── 19 API blueprints (identity, wallet, token, network, nodes, ...)
-├── 14 data models (Member, Bond, Reward, NodeEvent, Certificate, ...)
+├── 14 data models (Member, Link, Reward, NodeEvent, Certificate, ...)
 ├── Core engines: Identity, Wallet, Token, Propagation, Telemetry, Antifraud
 ├── Domain: heliosdigital.xyz
 ├── Repos: FTHTrading/Helios, FTHTrading/Helios-launch

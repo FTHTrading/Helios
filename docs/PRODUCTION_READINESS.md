@@ -54,7 +54,7 @@
 - [ ] Set `.env` → `HELIOS_DATABASE_URL=postgresql://user:pass@host:5432/helios`
 - [ ] Install driver: `pip install psycopg2-binary` (already in requirements.txt)
 - [ ] Run app once to auto-create tables (SQLAlchemy `create_all()` runs on startup)
-- [ ] Verify all 15 models created: Member, Transaction, TokenPool, WalletTx, Bond, Certificate, Credential, EnergyEvent, NodeEvent, PaymentEvent, Reward, Space, Subscription, VaultReceipt
+- [ ] Verify all 15 models created: Member, Transaction, TokenPool, WalletTx, Link, Certificate, Credential, EnergyEvent, NodeEvent, PaymentEvent, Reward, Space, Subscription, VaultReceipt
 - [ ] Set up automated daily backups
 
 ---
@@ -184,7 +184,7 @@ All 12 steps must pass:
 5. Metrics snapshot
 6. Identity creation
 7. Duplicate identity rejection
-8. Bond formation
+8. Link formation
 9. Energy injection
 10. Wallet balance check
 11. Funding catalog (11 offers)
@@ -221,7 +221,7 @@ Execute in this exact order:
 | Stripe | Package installed, keys missing | Register + add keys |
 | Xaman | Code wired, keys missing | Register + add keys |
 | Sentry | Package in requirements.txt | Set DSN |
-| Bond formation | Fixed (was 500, now 201) | No action |
+| Link formation | Fixed (was 500, now 201) | No action |
 | Validation | 9 schemas active | No action |
 | 12-step test | All passing | Re-run after each change |
 | Frontend | 9 pages freeze correctly | Deploy to Netlify |

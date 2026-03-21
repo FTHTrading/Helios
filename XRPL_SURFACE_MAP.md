@@ -252,7 +252,7 @@ Lazy import pattern means the app starts and runs correctly even without `xrpl-p
 | Simulation leakage | Every response includes `"simulation": true/false` — callers can validate |
 | Unsigned Xaman payloads | `get_payload()` checks `signed` and `expired` before acting on resolution |
 | Replay attacks | Each tx anchored with timestamp + unique MVR ID or member ID |
-| Bot minting | `AntifraudEngine` gates every join/bond/reward event before NFT issuance |
+| Bot minting | `AntifraudEngine` gates every join/link/reward event before NFT issuance |
 
 ---
 

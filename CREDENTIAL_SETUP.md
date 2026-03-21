@@ -10,7 +10,7 @@
 | **Xaman** | **Needs 5 min** | Code ready — just need developer credentials |
 | Identity | **LIVE** | name.helios creation, QR codes, recovery |
 | Energy | **LIVE** | $100 atomic split, conservation law |
-| Bonds | **LIVE** | Power-of-5, validation, cooldown |
+| Links | **LIVE** | Power-of-5, validation, cooldown |
 
 ---
 
