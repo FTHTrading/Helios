@@ -81,6 +81,15 @@ class HeliosConfig:
     ACKNOWLEDGEMENT_AMOUNT = 10.0           # HLS paid to initiator on join
     ACKNOWLEDGEMENT_TYPE = "acknowledgement"
 
+    # ═══ REGISTRATION BONUS — TOKEN GRANT ON SIGNUP ═══════════════════
+    # Every new member who pays the $100 entry receives HLS tokens.
+    # Phase 1 price: $0.05 per HLS → $100 = 2,000 HLS.
+    # Tokens are credited from the circulation pool immediately.
+    REGISTRATION_BONUS_ENABLED = True
+    REGISTRATION_TOKEN_PRICE = 0.05             # USD per HLS — Phase 1
+    REGISTRATION_BONUS_HLS = 2000.0             # $100 / $0.05 = 2,000 HLS
+    REGISTRATION_BONUS_TYPE = "registration_bonus"
+
     # ═══ ABSORPTION — FRACTIONAL REMAINDER ════════════════════════════
     # After hop 15, the fractional remainder is absorbed into protocol pools.
     # This funds long-term network stability, not individuals.

@@ -73,6 +73,7 @@ def handle_errors(f):
 def create_helios_id():
     """Register a new Helios ID — instantiate a node in the field."""
     from core.identity import HeliosIdentity
+    from config import HeliosConfig
 
     data = validate_payload("identity_create", request.get_json())
     name = data.get("name", "").strip()
@@ -81,9 +82,49 @@ def create_helios_id():
     identity = HeliosIdentity(get_db())
     result = identity.create_id(name, referrer)
 
+    # ── Registration Bonus: credit HLS tokens on signup ───────────
+    bonus_info = None
+    if HeliosConfig.REGISTRATION_BONUS_ENABLED:
+        from models.reward import Reward
+        from models.token_pool import TokenPool
+        from datetime import datetime, timezone
+
+        helios_id = result["helios_id"]
+        bonus_amount = HeliosConfig.REGISTRATION_BONUS_HLS
+
+        bonus = Reward(
+            member_id=helios_id,
+            source_member_id="POOL:circulation",
+            amount=bonus_amount,
+            reward_type=HeliosConfig.REGISTRATION_BONUS_TYPE,
+            activity_type="registration",
+            reason=f"Registration bonus: {bonus_amount:,.0f} HLS at ${HeliosConfig.REGISTRATION_TOKEN_PRICE}/HLS",
+            created_at=datetime.now(timezone.utc),
+            status="settled"
+        )
+        get_db().add(bonus)
+
+        # Deduct from circulation pool to maintain supply integrity
+        circ_pool = get_db().query(TokenPool).filter_by(name="circulation").first()
+        if circ_pool:
+            circ_pool.amount -= bonus_amount
+
+        get_db().commit()
+
+        bonus_info = {
+            "tokens_granted": bonus_amount,
+            "token": HeliosConfig.TOKEN_SYMBOL,
+            "price_per_token": HeliosConfig.REGISTRATION_TOKEN_PRICE,
+            "display": f"{bonus_amount:,.0f} {HeliosConfig.TOKEN_SYMBOL}",
+            "source": "circulation_pool",
+            "status": "credited"
+        }
+
     # Don't send internal key in API response — only in initial registration
     safe_result = {k: v for k, v in result.items() if k != "_internal_key"}
     safe_result["_key"] = result.get("_internal_key")  # Send once, client stores
+    if bonus_info:
+        safe_result["registration_bonus"] = bonus_info
 
     return api_response(safe_result, status=201)
 
