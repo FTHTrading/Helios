@@ -205,7 +205,7 @@ class NodeTelemetry:
                 "member": f"{slug}.helios",
                 "depth": depth,
                 "node_state": node.node_state if node else "unknown",
-                "bond_count": node.bond_count if node else 0,
+                "link_count": node.link_count if node else 0,
                 "children": [],
             }
             if depth < max_depth:
@@ -292,7 +292,7 @@ class NodeTelemetry:
                 "label": member,
                 "depth": depth,
                 "state": subtree.get("node_state", "instantiated"),
-                "bonds": subtree.get("bond_count", 0),
+                "links": subtree.get("link_count", 0),
                 "active": is_active,
                 "group": min(depth, 4),  # for d3 color grouping
             })

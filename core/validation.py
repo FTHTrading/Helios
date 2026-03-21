@@ -60,12 +60,12 @@ class XamanPayloadSchema(Schema):
     amount = fields.Float(load_default=None, allow_none=True)
 
 
-class BondCreateSchema(Schema):
+class LinkCreateSchema(Schema):
     initiator_id = fields.Str(required=True, validate=validate.Length(min=3, max=64))
     peer_id = fields.Str(required=True, validate=validate.Length(min=3, max=64))
 
 
-class BondDissolveSchema(Schema):
+class LinkDissolveSchema(Schema):
     initiator_id = fields.Str(required=True, validate=validate.Length(min=3, max=64))
     peer_id = fields.Str(required=True, validate=validate.Length(min=3, max=64))
 
@@ -78,8 +78,8 @@ _SCHEMAS = {
     "treasury_receipt": TreasuryReceiptSchema(),
     "treasury_anchor": TreasuryAnchorSchema(),
     "xaman_payload": XamanPayloadSchema(),
-    "bond_create": BondCreateSchema(),
-    "bond_dissolve": BondDissolveSchema(),
+    "link_create": LinkCreateSchema(),
+    "link_dissolve": LinkDissolveSchema(),
 }
 
 

@@ -1,7 +1,7 @@
 """
 Helios Neural Field Engine
 ═══════════════════════════════════════════════════
-Undirected bounded graph. Max degree = 5 bonds per node.
+Undirected bounded graph. Max degree = 5 links per node.
 No above. No below. Only connected peers inside a bounded field.
 Settlement follows rules, not relationships.
 """
@@ -14,22 +14,22 @@ from config import HeliosConfig
 class FieldEngine:
     """
     Manages the Helios neural field — an undirected bounded graph.
-    Each node can hold at most 5 bonds. Energy propagates through bonds
+    Each node can hold at most 5 links. Energy propagates through links
     using distance-based attenuation: weight(hop) = 1/(2^hop).
     """
 
     def __init__(self, db_session):
         self.db = db_session
 
-    # ═══ Bond Formation ═══════════════════════════════════════════════
-    def form_bond(self, initiator_id: str, peer_id: str) -> dict:
+    # ═══ Link Formation ═══════════════════════════════════════════════
+    def form_link(self, initiator_id: str, peer_id: str) -> dict:
         """
-        Create a bond between two nodes.
-        Bonds are UNDIRECTED — there is no hierarchy.
-        Both nodes must be active. Neither can be saturated (5 bonds).
+        Create a link between two nodes.
+        Links are UNDIRECTED — there is no hierarchy.
+        Both nodes must be active. Neither can be saturated (5 links).
         """
         from models.member import Member
-        from models.bond import Bond
+        from models.link import Link
 
         # Validate both exist and are active
         initiator = self.db.query(Member).filter_by(
@@ -44,115 +44,115 @@ class FieldEngine:
         if not peer:
             raise ValueError(f"Node '{peer_id}' not found in the field.")
         if initiator_id == peer_id:
-            raise ValueError("A node cannot bond with itself.")
+            raise ValueError("A node cannot link with itself.")
 
-        # Check saturation — max 5 bonds per node
-        if initiator.bond_count >= HeliosConfig.FIELD_MAX_BONDS:
+        # Check saturation — max 5 links per node
+        if initiator.link_count >= HeliosConfig.FIELD_MAX_LINKS:
             raise ValueError(
-                f"Node '{initiator_id}' has reached maximum bond capacity "
-                f"({HeliosConfig.FIELD_MAX_BONDS}). Fully saturated."
+                f"Node '{initiator_id}' has reached maximum link capacity "
+                f"({HeliosConfig.FIELD_MAX_LINKS}). Fully saturated."
             )
-        if peer.bond_count >= HeliosConfig.FIELD_MAX_BONDS:
+        if peer.link_count >= HeliosConfig.FIELD_MAX_LINKS:
             raise ValueError(
-                f"Node '{peer_id}' has reached maximum bond capacity "
-                f"({HeliosConfig.FIELD_MAX_BONDS}). Fully saturated."
+                f"Node '{peer_id}' has reached maximum link capacity "
+                f"({HeliosConfig.FIELD_MAX_LINKS}). Fully saturated."
             )
 
         # Normalize pair (undirected — always store lower ID first)
-        node_a, node_b = Bond.ordered_pair(initiator_id, peer_id)
+        node_a, node_b = Link.ordered_pair(initiator_id, peer_id)
 
-        # Check for existing bond
-        existing = self.db.query(Bond).filter_by(
+        # Check for existing link
+        existing = self.db.query(Link).filter_by(
             node_a=node_a, node_b=node_b
         ).first()
         if existing:
-            if existing.state == HeliosConfig.BOND_STATE_ACTIVE:
-                raise ValueError("Bond already active between these nodes.")
-            if existing.state == HeliosConfig.BOND_STATE_INACTIVE:
-                # Reactivate dormant bond
-                existing.state = HeliosConfig.BOND_STATE_ACTIVE
+            if existing.state == HeliosConfig.LINK_STATE_ACTIVE:
+                raise ValueError("Link already active between these nodes.")
+            if existing.state == HeliosConfig.LINK_STATE_INACTIVE:
+                # Reactivate dormant link
+                existing.state = HeliosConfig.LINK_STATE_ACTIVE
                 existing.activated_at = datetime.now(timezone.utc)
                 existing.deactivated_at = None
-                initiator.bond_count += 1
-                peer.bond_count += 1
+                initiator.link_count += 1
+                peer.link_count += 1
                 initiator.update_node_state()
                 peer.update_node_state()
                 self.db.commit()
                 return {
                     "reactivated": True,
-                    "bond_id": existing.id,
+                    "link_id": existing.id,
                     "nodes": [initiator_id, peer_id],
-                    "message": f"Bond reactivated between {initiator_id} and {peer_id}."
+                    "message": f"Link reactivated between {initiator_id} and {peer_id}."
                 }
 
-        # Create bond
-        bond = Bond(
+        # Create link
+        link = Link(
             node_a=node_a,
             node_b=node_b,
-            state=HeliosConfig.BOND_STATE_ACTIVE,
+            state=HeliosConfig.LINK_STATE_ACTIVE,
             initiated_by=initiator_id,
             created_at=datetime.now(timezone.utc),
             activated_at=datetime.now(timezone.utc)
         )
-        self.db.add(bond)
+        self.db.add(link)
 
-        # Update bond counts and node states
-        initiator.bond_count += 1
-        peer.bond_count += 1
+        # Update link counts and node states
+        initiator.link_count += 1
+        peer.link_count += 1
         initiator.update_node_state()
         peer.update_node_state()
 
         self.db.commit()
 
         return {
-            "bonded": True,
-            "bond_id": bond.id,
+            "linked": True,
+            "link_id": link.id,
             "nodes": [initiator_id, peer_id],
             "initiator_state": initiator.node_state,
             "peer_state": peer.node_state,
-            "message": f"Bond formed between {initiator_id} and {peer_id}."
+            "message": f"Link formed between {initiator_id} and {peer_id}."
         }
 
-    def dissolve_bond(self, node_id: str, peer_id: str) -> dict:
-        """Deactivate a bond. History is permanent — state changes to INACTIVE."""
+    def dissolve_link(self, node_id: str, peer_id: str) -> dict:
+        """Deactivate a link. History is permanent — state changes to INACTIVE."""
         from models.member import Member
-        from models.bond import Bond
+        from models.link import Link
 
-        node_a, node_b = Bond.ordered_pair(node_id, peer_id)
-        bond = self.db.query(Bond).filter_by(
-            node_a=node_a, node_b=node_b, state=HeliosConfig.BOND_STATE_ACTIVE
+        node_a, node_b = Link.ordered_pair(node_id, peer_id)
+        link = self.db.query(Link).filter_by(
+            node_a=node_a, node_b=node_b, state=HeliosConfig.LINK_STATE_ACTIVE
         ).first()
 
-        if not bond:
-            raise ValueError("No active bond found between these nodes.")
+        if not link:
+            raise ValueError("No active link found between these nodes.")
 
-        bond.state = HeliosConfig.BOND_STATE_INACTIVE
-        bond.deactivated_at = datetime.now(timezone.utc)
+        link.state = HeliosConfig.LINK_STATE_INACTIVE
+        link.deactivated_at = datetime.now(timezone.utc)
 
-        # Update bond counts
+        # Update link counts
         node = self.db.query(Member).filter_by(helios_id=node_id).first()
         peer = self.db.query(Member).filter_by(helios_id=peer_id).first()
         if node:
-            node.bond_count = max(0, node.bond_count - 1)
+            node.link_count = max(0, node.link_count - 1)
             node.update_node_state()
         if peer:
-            peer.bond_count = max(0, peer.bond_count - 1)
+            peer.link_count = max(0, peer.link_count - 1)
             peer.update_node_state()
 
         self.db.commit()
-        return {"dissolved": True, "message": "Bond deactivated."}
+        return {"dissolved": True, "message": "Link deactivated."}
 
     # ═══ Field Traversal (BFS — Undirected Graph) ═════════════════════
     def get_field(self, helios_id: str, max_hops: int = None) -> dict:
         """
         Traverse the neural field from a node outward.
-        Returns all reachable nodes and bonds within max_hops.
+        Returns all reachable nodes and links within max_hops.
         No hierarchy — just distance from the origin node.
         """
         if max_hops is None:
             max_hops = min(HeliosConfig.PROPAGATION_MAX_HOPS, 6)  # Viz default
 
-        from models.bond import Bond
+        from models.link import Link
         from models.member import Member
 
         visited = {}  # helios_id → hop distance
@@ -174,20 +174,20 @@ class FieldEngine:
                     "name": member.display_name,
                     "hops": hops,
                     "node_state": member.node_state,
-                    "bond_count": member.bond_count,
+                    "link_count": member.link_count,
                     "activity": self._get_activity_score(current_id),
                     "is_origin": current_id == helios_id,
                     "energy_weight": 1.0 / (HeliosConfig.PROPAGATION_DECAY_BASE ** hops) if hops > 0 else 1.0
                 })
 
-            # Get all active bonds for this node (undirected)
-            bonds = self.db.query(Bond).filter(
-                ((Bond.node_a == current_id) | (Bond.node_b == current_id)),
-                Bond.state == HeliosConfig.BOND_STATE_ACTIVE
+            # Get all active links for this node (undirected)
+            links = self.db.query(Link).filter(
+                ((Link.node_a == current_id) | (Link.node_b == current_id)),
+                Link.state == HeliosConfig.LINK_STATE_ACTIVE
             ).all()
 
-            for bond in bonds:
-                peer_id = bond.peer_of(current_id)
+            for link in links:
+                peer_id = link.peer_of(current_id)
                 edge_key = tuple(sorted([current_id, peer_id]))
 
                 # Add edge (deduplicated)
@@ -196,8 +196,8 @@ class FieldEngine:
                         "source": current_id,
                         "target": peer_id,
                         "key": edge_key,
-                        "state": bond.state,
-                        "since": bond.created_at.isoformat()
+                        "state": link.state,
+                        "since": link.created_at.isoformat()
                     })
 
                 # Traverse to peer if not visited and within range
@@ -209,31 +209,31 @@ class FieldEngine:
             "origin": helios_id,
             "max_hops": max_hops,
             "total_nodes": len(nodes),
-            "total_bonds": len(edges),
+            "total_links": len(edges),
             "nodes": nodes,
             "edges": edges
         }
 
-    def get_bonds(self, helios_id: str) -> list:
-        """Get all active bonds for a node — its direct peers."""
-        from models.bond import Bond
+    def get_links(self, helios_id: str) -> list:
+        """Get all active links for a node — its direct peers."""
+        from models.link import Link
         from models.member import Member
 
-        bonds = self.db.query(Bond).filter(
-            ((Bond.node_a == helios_id) | (Bond.node_b == helios_id)),
-            Bond.state == HeliosConfig.BOND_STATE_ACTIVE
+        links = self.db.query(Link).filter(
+            ((Link.node_a == helios_id) | (Link.node_b == helios_id)),
+            Link.state == HeliosConfig.LINK_STATE_ACTIVE
         ).all()
 
         result = []
-        for bond in bonds:
-            peer_id = bond.peer_of(helios_id)
+        for link in links:
+            peer_id = link.peer_of(helios_id)
             peer = self.db.query(Member).filter_by(helios_id=peer_id).first()
             if peer:
                 result.append({
                     "helios_id": peer_id,
                     "name": peer.display_name,
                     "node_state": peer.node_state,
-                    "bond_since": bond.created_at.isoformat(),
+                    "linked_since": link.created_at.isoformat(),
                     "activity": self._get_activity_score(peer_id)
                 })
 
@@ -241,7 +241,7 @@ class FieldEngine:
 
     def get_propagation_path(self, from_id: str, to_id: str) -> dict:
         """Find shortest path between two nodes via BFS. Used for settlement routing."""
-        from models.bond import Bond
+        from models.link import Link
 
         if from_id == to_id:
             return {"path": [from_id], "hops": 0}
@@ -252,13 +252,13 @@ class FieldEngine:
         while queue:
             current = queue.popleft()
 
-            bonds = self.db.query(Bond).filter(
-                ((Bond.node_a == current) | (Bond.node_b == current)),
-                Bond.state == HeliosConfig.BOND_STATE_ACTIVE
+            links = self.db.query(Link).filter(
+                ((Link.node_a == current) | (Link.node_b == current)),
+                Link.state == HeliosConfig.LINK_STATE_ACTIVE
             ).all()
 
-            for bond in bonds:
-                peer = bond.peer_of(current)
+            for link in links:
+                peer = link.peer_of(current)
                 if peer not in visited:
                     visited[peer] = current
                     if peer == to_id:
@@ -283,11 +283,11 @@ class FieldEngine:
         if not member:
             raise ValueError(f"Node '{helios_id}' not found.")
 
-        bonds = self.get_bonds(helios_id)
+        links = self.get_links(helios_id)
         field = self.get_field(helios_id, max_hops=5)
 
-        # Bond capacity
-        capacity = member.bond_count / HeliosConfig.FIELD_MAX_BONDS * 100
+        # Link capacity
+        capacity = member.link_count / HeliosConfig.FIELD_MAX_LINKS * 100
 
         # Field reach at different distances
         hop_distribution = {}
@@ -300,10 +300,10 @@ class FieldEngine:
         return {
             "helios_id": helios_id,
             "node_state": member.node_state,
-            "bond_count": member.bond_count,
-            "bond_capacity": f"{capacity:.0f}%",
-            "max_bonds": HeliosConfig.FIELD_MAX_BONDS,
-            "direct_peers": len(bonds),
+            "link_count": member.link_count,
+            "link_capacity": f"{capacity:.0f}%",
+            "max_links": HeliosConfig.FIELD_MAX_LINKS,
+            "direct_peers": len(links),
             "field_reach_5_hops": field["total_nodes"],
             "activity_score": self._get_activity_score(helios_id),
             "hop_distribution": hop_distribution,
@@ -313,10 +313,10 @@ class FieldEngine:
     # ═══ Activity Measurement ═════════════════════════════════════════
     def record_activity(self, helios_id: str, activity_type: str,
                         value: float = 1.0, extra_data: dict = None) -> dict:
-        """Record any field activity: bond, transaction, engagement, verification."""
+        """Record any field activity: link, transaction, engagement, verification."""
         from models.transaction import Transaction
 
-        valid_types = ["bond", "transaction", "engagement", "verification", "propagation"]
+        valid_types = ["link", "transaction", "engagement", "verification", "propagation"]
         if activity_type not in valid_types:
             raise ValueError(f"Activity type must be one of: {valid_types}")
 

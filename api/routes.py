@@ -2,7 +2,7 @@
 Helios API Routes
 ─────────────────
 Protocol-enforced REST API. No hierarchy language.
-Network, not MLM. Bonds, not downlines.
+Network, not MLM. Links, not downlines.
 """
 
 from flask import Blueprint, request, jsonify, g
@@ -130,30 +130,30 @@ def get_qr(helios_id):
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# FIELD ROUTES (Neural Field — Bonds, not connections)
+# FIELD ROUTES (Neural Field — Links, not connections)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-@field_bp.route("/bond", methods=["POST"])
+@field_bp.route("/link", methods=["POST"])
 @handle_errors
-def form_bond():
-    """Form a bond between two peers. Undirected. Max 5 bonds per node."""
+def form_link():
+    """Form a link between two peers. Undirected. Max 5 links per node."""
     from core.network import FieldEngine
 
-    data = validate_payload("bond_create", request.get_json())
+    data = validate_payload("link_create", request.get_json())
     engine = FieldEngine(get_db())
-    result = engine.form_bond(data["initiator_id"], data["peer_id"])
+    result = engine.form_link(data["initiator_id"], data["peer_id"])
     return api_response(result, status=201)
 
 
-@field_bp.route("/bond/dissolve", methods=["POST"])
+@field_bp.route("/link/dissolve", methods=["POST"])
 @handle_errors
-def dissolve_bond():
-    """Dissolve a bond — sets state to INACTIVE."""
+def dissolve_link():
+    """Dissolve a link — sets state to INACTIVE."""
     from core.network import FieldEngine
 
-    data = validate_payload("bond_dissolve", request.get_json())
+    data = validate_payload("link_dissolve", request.get_json())
     engine = FieldEngine(get_db())
-    result = engine.dissolve_bond(data["initiator_id"], data["peer_id"])
+    result = engine.dissolve_link(data["initiator_id"], data["peer_id"])
     return api_response(result)
 
 
@@ -172,7 +172,7 @@ def get_field_graph(helios_id):
 @field_bp.route("/stats/<helios_id>", methods=["GET"])
 @handle_errors
 def get_node_stats(helios_id):
-    """Get node statistics — bonds, state, field reach."""
+    """Get node statistics — links, state, field reach."""
     from core.network import FieldEngine
 
     engine = FieldEngine(get_db())
@@ -180,14 +180,14 @@ def get_node_stats(helios_id):
     return api_response(result)
 
 
-@field_bp.route("/bonds/<helios_id>", methods=["GET"])
+@field_bp.route("/links/<helios_id>", methods=["GET"])
 @handle_errors
-def get_bonds(helios_id):
-    """Get direct bonds (peers)."""
+def get_links(helios_id):
+    """Get direct links (peers)."""
     from core.network import FieldEngine
 
     engine = FieldEngine(get_db())
-    result = engine.get_bonds(helios_id)
+    result = engine.get_links(helios_id)
     return api_response(result)
 
 
@@ -1207,19 +1207,19 @@ def network_stats(helios_id):
 @field_bp.route("/status", methods=["GET"])
 @handle_errors
 def field_status():
-    """Overall field status — node count, bond count, average degree."""
+    """Overall field status — node count, link count, average degree."""
     from models.member import Member
-    from models.bond import Bond
+    from models.link import Link
 
     db = get_db()
     total_nodes = db.query(Member).count()
-    total_bonds = db.query(Bond).count()
-    avg_degree = round((total_bonds * 2) / max(total_nodes, 1), 2)
+    total_links = db.query(Link).count()
+    avg_degree = round((total_links * 2) / max(total_nodes, 1), 2)
     return api_response({
         "total_nodes": total_nodes,
-        "total_bonds": total_bonds,
+        "total_links": total_links,
         "avg_degree": avg_degree,
-        "max_bonds_per_node": 5,
+        "max_links_per_node": 5,
         "status": "active"
     })
 
@@ -1238,7 +1238,7 @@ def rewards_protocol():
         "acknowledgement_amount": HeliosConfig.ACKNOWLEDGEMENT_AMOUNT,
         "propagation_max_hops": HeliosConfig.PROPAGATION_MAX_HOPS,
         "propagation_decay_base": HeliosConfig.PROPAGATION_DECAY_BASE,
-        "field_max_bonds": HeliosConfig.FIELD_MAX_BONDS,
+        "field_max_links": HeliosConfig.FIELD_MAX_LINKS,
         "settlement_min_activity": HeliosConfig.SETTLEMENT_MIN_ACTIVITY_SCORE,
         "absorption_pools": {
             "stability": HeliosConfig.ABSORPTION_STABILITY_PERCENT,

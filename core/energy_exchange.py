@@ -4,13 +4,13 @@ Energy Exchange Engine — Conservation-Law-Enforced Flow System
 Conservation Law: Total Inflows = Routed + Stored + Pooled + Ops + Buffer
 
 Every $100 entry injects energy. That energy is split per config:
-  45% propagation (bonds), 20% LP, 15% treasury, 10% infra, 10% buffer
+  45% propagation (links), 20% LP, 15% treasury, 10% infra, 10% buffer
 
 The energy ledger records EVERY movement. Nothing is unaccounted for.
 
 4 Instruments:
   - Helios Name (identity)
-  - Helios Energy HE (utility unit — flows through bonds)
+  - Helios Energy HE (utility unit — flows through links)
   - Helios Certificate HC-NFT (stored energy battery)
   - Helios Vault Credit HVC (internal accounting unit)
 """
@@ -102,7 +102,7 @@ class EnergyExchange:
                      amount_he: float, hop_number: int,
                      reference_id: str = None) -> dict:
         """
-        Route energy through a bond. Records the flow in the ledger.
+        Route energy through a link. Records the flow in the ledger.
         weight(hop) = 1 / (2 ^ hop)
         """
         self._record_event(

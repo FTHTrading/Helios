@@ -1,7 +1,7 @@
 """Helios Models Package — Neural Field + Energy Exchange"""
 
 from models.member import Member
-from models.bond import Bond
+from models.link import Link
 from models.transaction import Transaction
 from models.reward import Reward
 from models.token_pool import TokenPool
@@ -14,7 +14,7 @@ from models.space import Space, SpaceEvent
 from models.subscription import Subscription
 
 __all__ = [
-    "Member", "Bond", "Transaction",
+    "Member", "Link", "Transaction",
     "Reward", "TokenPool", "WalletTransaction",
     "VaultReceipt", "Certificate", "EnergyEvent",
     "Credential", "Space", "SpaceEvent", "Subscription"

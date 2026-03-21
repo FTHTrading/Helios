@@ -55,7 +55,7 @@ Working tree: **clean**
 
 | Module | Class / Role |
 |---|---|
-| `network.py` | `FieldEngine` — Power of 5, BFS field traversal, bond creation |
+| `network.py` | `FieldEngine` — Power of 5, BFS field traversal, link creation |
 | `energy_exchange.py` | `EnergyExchange` — conservation law, $100 atomic split |
 | `rewards.py` | `PropagationEngine` — 3-phase settlement, hop decay |
 | `certificates.py` | `CertificateEngine` — HC-NFT mint/redeem/cancel, RRR covenant |
@@ -91,7 +91,7 @@ Working tree: **clean**
 | Model | State Machine | Role |
 |---|---|---|
 | `member.py` | 5 states (instantiated → stable) | Node in the field |
-| `bond.py` | 4 states | Undirected peer bond (ordered pair, unique constraint) |
+| `link.py` | 4 states | Undirected peer link (ordered pair, unique constraint) |
 | `certificate.py` | 3 states (active → redeemed / cancelled) | HC-NFT stored energy battery |
 | `vault_receipt.py` | 4 states (MVR custody FSM) | Physical metal receipt |
 | `energy_event.py` | — | Immutable ledger (7 event types) |
@@ -112,7 +112,7 @@ Working tree: **clean**
 | Blueprint | Prefix | Key endpoints |
 |---|---|---|
 | `identity_bp` | `/api/identity` | create, verify, recover, QR |
-| `field_bp` | `/api/field` | bond, dissolve, graph, status |
+| `field_bp` | `/api/field` | link, dissolve, graph, status |
 | `network_bp` | `/api/network` | field traversal, BFS graph |
 | `energy_bp` | `/api/energy` | inject, propagate, conservation |
 | `wallet_bp` | `/api/wallet` | balance, send, xaman payload |
@@ -134,7 +134,7 @@ Working tree: **clean**
 | Route | Template | Description |
 |---|---|---|
 | `/` | `index.html` | 3D spinning coin, neural lattice BG |
-| `/dashboard` | `dashboard.html` | Balance, history, bond status |
+| `/dashboard` | `dashboard.html` | Balance, history, link status |
 | `/field` | `network.html` | D3 force-directed neural lattice |
 | `/ask` | `ask.html` | GPT-4 chat + ElevenLabs voice |
 | `/treasury` | `treasury.html` | Metal reserves, MVR |
@@ -171,7 +171,7 @@ Working tree: **clean**
 assert token_allocation == 100%        # 40 + 35 + 15 + 10
 assert absorption_pools == 100%        # 40 + 25 + 20 + 15
 assert energy_allocation == 100%       # 45 + 20 + 15 + 10 + 10
-assert FIELD_MAX_BONDS == 5            # Power of 5
+assert FIELD_MAX_LINKS == 5            # Power of 5
 assert PROPAGATION_MAX_HOPS == 15      # Energy horizon
 assert ENTRY_FEE_USD == 100            # Atomic entry
 assert CERTIFICATE_CANCEL_FRICTION == 0.02   # 2% burn

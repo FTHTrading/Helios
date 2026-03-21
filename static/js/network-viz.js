@@ -57,7 +57,7 @@ function renderField(data) {
         'instantiated': '#6366f1'   // Indigo â€” just joined
     };
 
-    // Size based on bond count, not "rank"
+    // Size based on link count, not "rank"
     const sizeScale = d3.scaleLinear()
         .domain([0, 5])
         .range([6, 18]);
@@ -68,11 +68,11 @@ function renderField(data) {
         name: n.name,
         hops: n.hops,
         node_state: n.node_state,
-        bond_count: n.bond_count || 0,
+        link_count: n.link_count || 0,
         activity: n.activity,
         is_origin: n.is_origin,
         energy_weight: n.energy_weight || 1.0,
-        radius: n.is_origin ? 24 : sizeScale(n.bond_count || 1)
+        radius: n.is_origin ? 24 : sizeScale(n.link_count || 1)
     }));
 
     const nodeIds = new Set(nodes.map(n => n.id));
@@ -92,7 +92,7 @@ function renderField(data) {
         .force('x', d3.forceX(width / 2).strength(0.03))
         .force('y', d3.forceY(height / 2).strength(0.03));
 
-    // Bond lines
+    // Link lines
     const link = svg.append('g')
         .selectAll('line')
         .data(links)
@@ -101,7 +101,7 @@ function renderField(data) {
         .attr('stroke-width', 1.5)
         .attr('stroke-opacity', 0.2);
 
-    // Energy pulse animation on bonds
+    // Energy pulse animation on links
     const pulseGroup = svg.append('g');
     links.forEach((l, i) => {
         pulseGroup.append('circle')
@@ -150,9 +150,9 @@ function renderField(data) {
             }
         });
 
-    // Bond count indicator (small number)
+    // Link count indicator (small number)
     node.append('text')
-        .text(d => d.is_origin ? 'â˜€' : (d.bond_count || ''))
+        .text(d => d.is_origin ? '☀' : (d.link_count || ''))
         .attr('text-anchor', 'middle')
         .attr('dy', d => d.is_origin ? 5 : 4)
         .attr('fill', d => d.is_origin ? '#64d2ff' : 'rgba(255,255,255,0.7)')
@@ -225,7 +225,7 @@ function renderField(data) {
         detail.style.display = 'block';
         document.getElementById('detail-name').textContent = `${d.name} (${d.id})`;
         document.getElementById('detail-state').textContent = d.node_state;
-        document.getElementById('detail-bonds').textContent = `${d.bond_count}/5 bonds`;
+        document.getElementById('detail-links').textContent = `${d.link_count}/5 links`;
         document.getElementById('detail-hops').textContent = `${d.hops} hops from you`;
         document.getElementById('detail-energy').textContent = `${(d.energy_weight * 100).toFixed(3)}% energy weight`;
     }

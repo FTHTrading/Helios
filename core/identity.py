@@ -100,7 +100,7 @@ class HeliosIdentity:
             "helios_id": member.helios_id,
             "display_name": member.display_name,
             "member_since": member.created_at.isoformat(),
-            "bond_count": self._get_bond_count(member.helios_id),
+            "link_count": self._get_link_count(member.helios_id),
             "node_state": member.node_state,
             "activity_score": self._get_activity_score(member.helios_id),
             "verified": member.verified
@@ -191,12 +191,12 @@ class HeliosIdentity:
         ]
         return [secrets.choice(words) for _ in range(word_count)]
 
-    def _get_bond_count(self, helios_id: str) -> int:
-        """Count active bonds for a node."""
-        from models.bond import Bond
-        count = self.db.query(Bond).filter(
-            ((Bond.node_a == helios_id) | (Bond.node_b == helios_id)),
-            Bond.state == "active"
+    def _get_link_count(self, helios_id: str) -> int:
+        """Count active links for a node."""
+        from models.link import Link
+        count = self.db.query(Link).filter(
+            ((Link.node_a == helios_id) | (Link.node_b == helios_id)),
+            Link.state == "active"
         ).count()
         return count
 

@@ -115,7 +115,7 @@
             return { success: true, data: { exists: true, display_name: 'founder', helios_id: 'founder.helios', member_since: '2025-01-15T00:00:00Z', phone_verified: true } };
 
         if (url === '/api/identity/create')
-            return { success: true, data: { helios_id: 'demo.helios', _key: 'demo_key_static', recovery_phrase: ['solar','field','energy','protocol','bond','treasury','metal','reserve','vault','certificate','helios','network'], qr_code: '' } };
+            return { success: true, data: { helios_id: 'demo.helios', _key: 'demo_key_static', recovery_phrase: ['solar','field','energy','protocol','link','treasury','metal','reserve','vault','certificate','helios','network'], qr_code: '' } };
 
         // ── Network ──
         if (url.match(/\/api\/network\/stats\//))
@@ -251,7 +251,7 @@
 
         if (url === '/api/chat/ask')
             return { success: true, data: {
-                answer: "Helios is a private network protocol where human connections inject energy and the system distributes it according to physics, not position.\n\nEvery node holds a maximum of 5 bonds. Energy radiates outward — strongest at direct connections, halving at each hop, up to 15 hops deep. The remainder absorbs into protocol pools.\n\nThe treasury is backed by physical metal purchased through APMEX. Every receipt is anchored on XRPL with SHA-256 proof. Certificates store energy and can be redeemed for gold or stablecoin at any time.\n\n$100 entry. Conservation law enforced. Verifiable by anyone.",
+                answer: "Helios is a private network protocol where human connections inject energy and the system distributes it according to physics, not position.\n\nEvery node holds a maximum of 5 links. Energy radiates outward — strongest at direct connections, halving at each hop, up to 15 hops deep. The remainder absorbs into protocol pools.\n\nThe treasury is backed by physical metal purchased through APMEX. Every receipt is anchored on XRPL with SHA-256 proof. Certificates store energy and can be redeemed for gold or stablecoin at any time.\n\n$100 entry. Conservation law enforced. Verifiable by anyone.",
                 follow_up: ['How does the reserve ratio work?', 'What happens when I cancel a certificate?', 'Tell me about the Power of 5']
             }};
 
@@ -283,7 +283,7 @@
 
         // ── Field Status ──
         if (url === '/api/field/status')
-            return { success: true, data: { total_nodes: 147, total_bonds: 312, active_bonds: 289, avg_bond_strength: 0.72, field_health: 'stable' } };
+            return { success: true, data: { total_nodes: 147, total_links: 312, active_links: 289, avg_link_strength: 0.72, field_health: 'stable' } };
 
         // ── Certificates Active ──
         if (url === '/api/certificates/active')
@@ -303,36 +303,36 @@
 
     function demoNetworkGraph() {
         const nodes = [
-            { id: 'founder.helios', name: 'founder', hops: 0, node_state: 'stable', bond_count: 4, activity: 92, is_origin: true, energy_weight: 1.0 },
-            // Hop 1 — direct bonds
-            { id: 'alpha.helios', name: 'alpha', hops: 1, node_state: 'stable', bond_count: 3, activity: 78, is_origin: false, energy_weight: 0.5 },
-            { id: 'sierra.helios', name: 'sierra', hops: 1, node_state: 'stable', bond_count: 5, activity: 85, is_origin: false, energy_weight: 0.5 },
-            { id: 'echo.helios', name: 'echo', hops: 1, node_state: 'propagating', bond_count: 2, activity: 64, is_origin: false, energy_weight: 0.5 },
-            { id: 'nova.helios', name: 'nova', hops: 1, node_state: 'stable', bond_count: 4, activity: 71, is_origin: false, energy_weight: 0.5 },
+            { id: 'founder.helios', name: 'founder', hops: 0, node_state: 'stable', link_count: 4, activity: 92, is_origin: true, energy_weight: 1.0 },
+            // Hop 1 — direct links
+            { id: 'alpha.helios', name: 'alpha', hops: 1, node_state: 'stable', link_count: 3, activity: 78, is_origin: false, energy_weight: 0.5 },
+            { id: 'sierra.helios', name: 'sierra', hops: 1, node_state: 'stable', link_count: 5, activity: 85, is_origin: false, energy_weight: 0.5 },
+            { id: 'echo.helios', name: 'echo', hops: 1, node_state: 'propagating', link_count: 2, activity: 64, is_origin: false, energy_weight: 0.5 },
+            { id: 'nova.helios', name: 'nova', hops: 1, node_state: 'stable', link_count: 4, activity: 71, is_origin: false, energy_weight: 0.5 },
             // Hop 2
-            { id: 'vega.helios', name: 'vega', hops: 2, node_state: 'connected', bond_count: 2, activity: 55, is_origin: false, energy_weight: 0.25 },
-            { id: 'orion.helios', name: 'orion', hops: 2, node_state: 'stable', bond_count: 3, activity: 68, is_origin: false, energy_weight: 0.25 },
-            { id: 'luna.helios', name: 'luna', hops: 2, node_state: 'propagating', bond_count: 4, activity: 74, is_origin: false, energy_weight: 0.25 },
-            { id: 'sol.helios', name: 'sol', hops: 2, node_state: 'connected', bond_count: 1, activity: 42, is_origin: false, energy_weight: 0.25 },
-            { id: 'zephyr.helios', name: 'zephyr', hops: 2, node_state: 'stable', bond_count: 3, activity: 60, is_origin: false, energy_weight: 0.25 },
-            { id: 'atlas.helios', name: 'atlas', hops: 2, node_state: 'connected', bond_count: 2, activity: 51, is_origin: false, energy_weight: 0.25 },
-            { id: 'iris.helios', name: 'iris', hops: 2, node_state: 'stable', bond_count: 3, activity: 63, is_origin: false, energy_weight: 0.25 },
-            { id: 'bolt.helios', name: 'bolt', hops: 2, node_state: 'acknowledged', bond_count: 1, activity: 30, is_origin: false, energy_weight: 0.25 },
+            { id: 'vega.helios', name: 'vega', hops: 2, node_state: 'connected', link_count: 2, activity: 55, is_origin: false, energy_weight: 0.25 },
+            { id: 'orion.helios', name: 'orion', hops: 2, node_state: 'stable', link_count: 3, activity: 68, is_origin: false, energy_weight: 0.25 },
+            { id: 'luna.helios', name: 'luna', hops: 2, node_state: 'propagating', link_count: 4, activity: 74, is_origin: false, energy_weight: 0.25 },
+            { id: 'sol.helios', name: 'sol', hops: 2, node_state: 'connected', link_count: 1, activity: 42, is_origin: false, energy_weight: 0.25 },
+            { id: 'zephyr.helios', name: 'zephyr', hops: 2, node_state: 'stable', link_count: 3, activity: 60, is_origin: false, energy_weight: 0.25 },
+            { id: 'atlas.helios', name: 'atlas', hops: 2, node_state: 'connected', link_count: 2, activity: 51, is_origin: false, energy_weight: 0.25 },
+            { id: 'iris.helios', name: 'iris', hops: 2, node_state: 'stable', link_count: 3, activity: 63, is_origin: false, energy_weight: 0.25 },
+            { id: 'bolt.helios', name: 'bolt', hops: 2, node_state: 'acknowledged', link_count: 1, activity: 30, is_origin: false, energy_weight: 0.25 },
             // Hop 3
-            { id: 'drift.helios', name: 'drift', hops: 3, node_state: 'connected', bond_count: 2, activity: 40, is_origin: false, energy_weight: 0.125 },
-            { id: 'flux.helios', name: 'flux', hops: 3, node_state: 'acknowledged', bond_count: 1, activity: 28, is_origin: false, energy_weight: 0.125 },
-            { id: 'ember.helios', name: 'ember', hops: 3, node_state: 'stable', bond_count: 3, activity: 55, is_origin: false, energy_weight: 0.125 },
-            { id: 'wave.helios', name: 'wave', hops: 3, node_state: 'connected', bond_count: 2, activity: 44, is_origin: false, energy_weight: 0.125 },
-            { id: 'peak.helios', name: 'peak', hops: 3, node_state: 'propagating', bond_count: 2, activity: 50, is_origin: false, energy_weight: 0.125 },
-            { id: 'core.helios', name: 'core', hops: 3, node_state: 'instantiated', bond_count: 1, activity: 15, is_origin: false, energy_weight: 0.125 },
-            { id: 'spark.helios', name: 'spark', hops: 3, node_state: 'connected', bond_count: 2, activity: 38, is_origin: false, energy_weight: 0.125 },
-            { id: 'reef.helios', name: 'reef', hops: 3, node_state: 'stable', bond_count: 3, activity: 52, is_origin: false, energy_weight: 0.125 },
-            { id: 'glow.helios', name: 'glow', hops: 3, node_state: 'acknowledged', bond_count: 1, activity: 22, is_origin: false, energy_weight: 0.125 },
-            { id: 'tide.helios', name: 'tide', hops: 3, node_state: 'connected', bond_count: 2, activity: 35, is_origin: false, energy_weight: 0.125 }
+            { id: 'drift.helios', name: 'drift', hops: 3, node_state: 'connected', link_count: 2, activity: 40, is_origin: false, energy_weight: 0.125 },
+            { id: 'flux.helios', name: 'flux', hops: 3, node_state: 'acknowledged', link_count: 1, activity: 28, is_origin: false, energy_weight: 0.125 },
+            { id: 'ember.helios', name: 'ember', hops: 3, node_state: 'stable', link_count: 3, activity: 55, is_origin: false, energy_weight: 0.125 },
+            { id: 'wave.helios', name: 'wave', hops: 3, node_state: 'connected', link_count: 2, activity: 44, is_origin: false, energy_weight: 0.125 },
+            { id: 'peak.helios', name: 'peak', hops: 3, node_state: 'propagating', link_count: 2, activity: 50, is_origin: false, energy_weight: 0.125 },
+            { id: 'core.helios', name: 'core', hops: 3, node_state: 'instantiated', link_count: 1, activity: 15, is_origin: false, energy_weight: 0.125 },
+            { id: 'spark.helios', name: 'spark', hops: 3, node_state: 'connected', link_count: 2, activity: 38, is_origin: false, energy_weight: 0.125 },
+            { id: 'reef.helios', name: 'reef', hops: 3, node_state: 'stable', link_count: 3, activity: 52, is_origin: false, energy_weight: 0.125 },
+            { id: 'glow.helios', name: 'glow', hops: 3, node_state: 'acknowledged', link_count: 1, activity: 22, is_origin: false, energy_weight: 0.125 },
+            { id: 'tide.helios', name: 'tide', hops: 3, node_state: 'connected', link_count: 2, activity: 35, is_origin: false, energy_weight: 0.125 }
         ];
 
         const edges = [
-            // Origin bonds
+            // Origin links
             { source: 'founder.helios', target: 'alpha.helios' },
             { source: 'founder.helios', target: 'sierra.helios' },
             { source: 'founder.helios', target: 'echo.helios' },
@@ -346,7 +346,7 @@
             { source: 'echo.helios', target: 'atlas.helios' },
             { source: 'nova.helios', target: 'iris.helios' },
             { source: 'nova.helios', target: 'bolt.helios' },
-            // Cross bonds (non-hierarchical — peers connect to peers)
+            // Cross links (non-hierarchical — peers connect to peers)
             { source: 'orion.helios', target: 'luna.helios' },
             { source: 'zephyr.helios', target: 'iris.helios' },
             // Hop 2 → 3
@@ -360,7 +360,7 @@
             { source: 'iris.helios', target: 'reef.helios' },
             { source: 'bolt.helios', target: 'glow.helios' },
             { source: 'bolt.helios', target: 'tide.helios' },
-            // Cross bonds at hop 3
+            // Cross links at hop 3
             { source: 'ember.helios', target: 'reef.helios' },
             { source: 'drift.helios', target: 'spark.helios' }
         ];

@@ -157,7 +157,7 @@ def create_app():
     engine = create_engine(db_url, **engine_kwargs)
 
     # Import ALL models so their tables get created
-    from models.bond import Bond  # noqa: F401 — required for table creation
+    from models.link import Link  # noqa: F401 — required for table creation
     from models.vault_receipt import VaultReceipt  # noqa: F401
     from models.certificate import Certificate  # noqa: F401
     from models.energy_event import EnergyEvent  # noqa: F401

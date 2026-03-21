@@ -72,7 +72,7 @@ Quick local validation after changes:
 | 🟡 | [Protocol Overview](#-protocol-overview) | Why Helios exists — physics over position |
 | ⬡ | [Power of 5 — Pentagonal Geometry](#-power-of-5--pentagonal-geometry) | The bounded field, pentagonal topology, why 5 |
 | ⚡ | [Energy Exchange & Conservation Law](#-energy-exchange--conservation-law) | $100 atomic split, propagation decay, instruments |
-| 🔄 | [State Machines](#-state-machines) | 4 finite-state machines — nodes, bonds, certificates, custody |
+| 🔄 | [State Machines](#-state-machines) | 4 finite-state machines — nodes, links, certificates, custody |
 | 🌐 | [Neural Lattice Visualization](#-neural-lattice-visualization) | D3 force-directed graph, energy pulse, concentric rings |
 | 🔴 | [Smart Contracts](#-smart-contracts) | HLS token, HC-NFT certificates, anti-rug enforcement |
 | 🟣 | [Metrics & Formulas](#-metrics--formulas) | RRR, η, CP, V — SR-level analytics with thresholds |
@@ -92,7 +92,7 @@ Quick local validation after changes:
 
 Most network systems settle by position. First in, highest paid. Helios settles by **physics**.
 
-Energy propagates outward through an undirected bounded graph. Strongest at direct bonds, decaying naturally with distance. After 15 hops, the fractional remainder is absorbed into protocol stability pools. There is no "above." There is no "below." Only connected peers in a bounded field.
+Energy propagates outward through an undirected bounded graph. Strongest at direct links, decaying naturally with distance. After 15 hops, the fractional remainder is absorbed into protocol stability pools. There is no "above." There is no "below." Only connected peers in a bounded field.
 
 ```
 ┌──────────────────────┬───────────────────────────────────────────┐
@@ -100,7 +100,7 @@ Energy propagates outward through an undirected bounded graph. Strongest at dire
 ├──────────────────────┼───────────────────────────────────────────┤
 │ Tree (hierarchical)  │ Graph (undirected bounded field)          │
 │ Position = payout    │ Physics = payout (1/(2^hop) decay)        │
-│ Unlimited width      │ Max 5 bonds per node (Power of 5)        │
+│ Unlimited width      │ Max 5 links per node (Power of 5)        │
 │ Infinite depth       │ 15 hops max, then absorption              │
 │ Points / credits     │ HE energy with conservation law            │
 │ Promise of value     │ Metal-backed treasury (APMEX gold)         │
@@ -114,7 +114,7 @@ Energy propagates outward through an undirected bounded graph. Strongest at dire
 
 | Principle | Rule | Where It's Enforced |
 |:----------|:-----|:--------------------|
-| ⬡ **Power of 5** | Max 5 bonds per node — pentagonal saturation | `FieldEngine.form_bond()` → `config.FIELD_MAX_BONDS == 5` |
+| ⬡ **Power of 5** | Max 5 links per node — pentagonal saturation | `FieldEngine.form_link()` → `config.FIELD_MAX_LINKS == 5` |
 | 🔒 **Fixed Supply** | 100,000,000 HLS — no mint function exists | `TokenEngine` — `can_mint: False` in code |
 | ⚖ **Conservation Law** | `∑in = routed + stored + pooled + burned` | `EnergyExchange.verify_conservation()` |
 | ⚡ **Hop Decay** | `weight(hop) = 1/(2^hop)` — 15 hops max | `PropagationEngine.calculate_propagation()` |
@@ -135,21 +135,21 @@ The number 5 is the structural constant of the Helios field.
               ☀
              ╱ ╲
             ╱   ╲        A single node at saturation:
-           ◉─────◉       5 bonds, 5 direct peers, 5 rays.
+           ◉─────◉       5 links, 5 direct peers, 5 rays.
            │╲   ╱│       The minimum structure that creates
            │ ╲ ╱ │       a self-reinforcing lattice when
            │  ☀  │       nodes interconnect.
            │ ╱ ╲ │
-           ◉─────◉       Each peer can bond with 4 others
+           ◉─────◉       Each peer can link with 4 others
                           → 25 nodes at 2 hops (5×5)
                           → Bounded, not infinite.
 ```
 
 | Parameter | Value | Purpose |
 |:----------|:------|:--------|
-| `FIELD_MAX_BONDS` | **5** | Maximum degree per node — pentagonal saturation |
+| `FIELD_MAX_LINKS` | **5** | Maximum degree per node — pentagonal saturation |
 | `FIELD_POWER_OF_25` | **25** | 5 × 5 — network strength target at 2 hops |
-| `FIELD_COOLDOWN_HOURS` | **24** | Min time between new bonds (prevents rapid filling) |
+| `FIELD_COOLDOWN_HOURS` | **24** | Min time between new links (prevents rapid filling) |
 | `FIELD_ACTIVITY_WINDOW_DAYS` | **30** | Rolling window for activity measurement |
 
 ### Pentagonal Topology in the Coin
@@ -157,10 +157,10 @@ The number 5 is the structural constant of the Helios field.
 The Helios coin SVG on the landing page embeds the Power of 5 directly into its geometry:
 
 ```
-5 Sun Rays                  5 Neural Nodes              5 Bond Lines
+5 Sun Rays                  5 Neural Nodes              5 Link Lines
 radiating from center       arranged in a pentagon       connecting each node
 representing the max        around the center sun        to its neighbors
-bond capacity               representing a saturated     forming the pentagonal
+link capacity               representing a saturated     forming the pentagonal
                             node's direct peers          lattice structure
 ```
 
@@ -179,7 +179,7 @@ bond capacity               representing a saturated     forming the pentagonal
 <circle cx="96"  cy="148" .../> ← Node 4
 <circle cx="82"  cy="103" .../> ← Node 5
 
-<!-- 5 bonds forming the closed pentagon -->
+<!-- 5 links forming the closed pentagon -->
 Node1 → Node2 → Node3 → Node4 → Node5 → Node1
 ```
 
@@ -187,17 +187,17 @@ Node1 → Node2 → Node3 → Node4 → Node5 → Node1
 
 ```mermaid
 flowchart TD
-    A["form_bond(initiator, peer)"] --> B{Initiator bonds < 5?}
+    A["form_link(initiator, peer)"] --> B{Initiator links < 5?}
     B -->|No| C["❌ Fully saturated"]
-    B -->|Yes| D{Peer bonds < 5?}
+    B -->|Yes| D{Peer links < 5?}
     D -->|No| E["❌ Peer saturated"]
-    D -->|Yes| F{Bond already exists?}
-    F -->|Active| G["❌ Already bonded"]
-    F -->|Inactive| H["🔄 Reactivate dormant bond"]
+    D -->|Yes| F{Link already exists?}
+    F -->|Active| G["❌ Already linked"]
+    F -->|Inactive| H["🔄 Reactivate dormant link"]
     F -->|No| I{Cooldown expired?}
     I -->|No| J["❌ Wait (anti-saturation)"]
-    I -->|Yes| K["✅ Bond formed"]
-    K --> L["Update bond counts"]
+    I -->|Yes| K["✅ Link formed"]
+    K --> L["Update link counts"]
     L --> M["Recalculate node states"]
 
     style A fill:#f59e0b,stroke:#92400e,color:#000
@@ -206,19 +206,19 @@ flowchart TD
     style E fill:#ef4444,stroke:#b91c1c,color:#fff
 ```
 
-### Bonds Are Undirected — No Hierarchy
+### Links Are Undirected — No Hierarchy
 
 ```python
-# From models/bond.py — always store (smaller, larger) to prevent duplicates
+# From models/link.py — always store (smaller, larger) to prevent duplicates
 @staticmethod
 def ordered_pair(id_1: str, id_2: str) -> tuple:
     return (id_1, id_2) if id_1 < id_2 else (id_2, id_1)
 
 # Database-level uniqueness
-__table_args__ = (UniqueConstraint('node_a', 'node_b', name='uq_bond_pair'),)
+__table_args__ = (UniqueConstraint('node_a', 'node_b', name='uq_link_pair'),)
 ```
 
-There is no "upline" or "downline." A bond between Alice and Bob is the same bond as Bob and Alice. The ordered-pair normalization + unique constraint makes it structurally impossible to create directional hierarchy.
+There is no "upline" or "downline." A link between Alice and Bob is the same link as Bob and Alice. The ordered-pair normalization + unique constraint makes it structurally impossible to create directional hierarchy.
 
 ### Field Traversal — BFS on Undirected Graph
 
@@ -228,8 +228,8 @@ The network engine uses **breadth-first search** to traverse the field. Every di
 |:---------|:------------|:--------|
 | `hops` | BFS level | Distance from origin |
 | `energy_weight` | `1/(2^hops)` | Energy that reaches this node |
-| `node_state` | Bond count → state machine | Connectivity level |
-| `bond_count` | Active bonds | Progress toward pentagonal saturation |
+| `node_state` | Link count → state machine | Connectivity level |
+| `link_count` | Active links | Progress toward pentagonal saturation |
 | `activity` | 30-day rolling window | Settlement qualification score |
 
 ```python
@@ -237,12 +237,12 @@ The network engine uses **breadth-first search** to traverse the field. Every di
 queue = deque([(helios_id, 0)])
 while queue:
     current_id, hops = queue.popleft()
-    bonds = db.query(Bond).filter(
-        ((Bond.node_a == current_id) | (Bond.node_b == current_id)),
-        Bond.state == "active"
+    links = db.query(Link).filter(
+        ((Link.node_a == current_id) | (Link.node_b == current_id)),
+        Link.state == "active"
     ).all()
-    for bond in bonds:
-        peer_id = bond.peer_of(current_id)
+    for link in links:
+        peer_id = link.peer_of(current_id)
         if peer_id not in visited:
             visited[peer_id] = hops + 1
             queue.append((peer_id, hops + 1))
@@ -280,7 +280,7 @@ flowchart TD
     C --> F["$15 — Treasury Surplus (15%)"]
     C --> G["$10 — Infrastructure (10%)"]
     C --> H["$10 — Protocol Buffer (10%)"]
-    D --> I["Flows through bonds\nweight(hop) = 1/(2^hop)\nup to 15 hops"]
+    D --> I["Flows through links\nweight(hop) = 1/(2^hop)\nup to 15 hops"]
     E --> J["Redemption depth\nCertificates always redeemable"]
     F --> K["Net surplus × 0.07\n→ APMEX gold purchase"]
     G --> L["Ops, hosting, compliance"]
@@ -303,7 +303,7 @@ flowchart TD
 
 ### Propagation — Physics-Based Settlement
 
-When a new node joins, energy radiates outward through bonds via **BFS**. Settlement at each hop decays naturally:
+When a new node joins, energy radiates outward through links via **BFS**. Settlement at each hop decays naturally:
 
 $$\text{weight}(h) = \frac{1}{2^h}$$
 
@@ -363,7 +363,7 @@ Each instrument has a distinct role — no overlap:
 | Instrument | Symbol | Type | Lifecycle | Purpose |
 |:-----------|:------:|:-----|:----------|:--------|
 | 🏷 **Helios Name** | `name.helios` | Identity NFT | Permanent | Your address in the field. 3–24 chars. Reserved words blocked. |
-| ⚡ **Helios Energy** | HE | Utility unit | Transient | Flows through bonds. Decays with distance. Never compounds. |
+| ⚡ **Helios Energy** | HE | Utility unit | Transient | Flows through links. Decays with distance. Never compounds. |
 | 🔋 **Helios Certificate** | HC-NFT | Stored battery | Mint → Redeem/Cancel | Locks energy at a rate. Redeems for gold or stablecoin. |
 | 💳 **Helios Vault Credit** | HVC | Accounting unit | Internal | Internal bookkeeping for pool balances and treasury ops. |
 
@@ -373,7 +373,7 @@ Every energy movement is recorded. There are exactly 7 types:
 
 ```
 ENERGY_IN      ← External payment → energy enters the system
-ENERGY_ROUTE   ← Propagation through a bond (hop-by-hop)
+ENERGY_ROUTE   ← Propagation through a link (hop-by-hop)
 ENERGY_STORE   ← Energy locked into an HC-NFT certificate
 ENERGY_POOL    ← Absorbed into a protocol pool (LP, treasury, etc.)
 ENERGY_BURN    ← Permanently destroyed (cancel friction, compliance)
@@ -393,43 +393,43 @@ Helios has **4 finite-state machines** — each with strict transition rules enf
 stateDiagram-v2
     [*] --> Instantiated: Identity created\n(name.helios minted)
     Instantiated --> Acknowledged: Initiator paid\n($100 entry)
-    Acknowledged --> Connected: First bond formed\n(bond_count ≥ 1)
-    Connected --> Propagating: 3+ bonds active\n(field presence)
-    Propagating --> Stable: All 5 bonds filled\n(pentagonal saturation ☀)
+    Acknowledged --> Connected: First link formed\n(link_count ≥ 1)
+    Connected --> Propagating: 3+ links active\n(field presence)
+    Propagating --> Stable: All 5 links filled\n(pentagonal saturation ☀)
 
-    Stable --> Propagating: Bond dissolved\n(drops below 5)
+    Stable --> Propagating: Link dissolved\n(drops below 5)
     Propagating --> Connected: Drops below 3
-    Connected --> Acknowledged: Last bond dissolved
+    Connected --> Acknowledged: Last link dissolved
 
     note right of Stable
         Fully saturated node.
         Maximum field presence.
-        All 5 bond slots filled.
+        All 5 link slots filled.
         The pentagonal ideal. ☀
     end note
 ```
 
 ```python
-# From models/member.py — automatic state recalculation on every bond change
+# From models/member.py — automatic state recalculation on every link change
 def update_node_state(self):
-    if self.bond_count >= 5:   self.node_state = "stable"       # ☀ Pentagonal saturation
-    elif self.bond_count >= 3: self.node_state = "propagating"   # Active field presence
-    elif self.bond_count >= 1: self.node_state = "connected"     # Growing
+    if self.link_count >= 5:   self.node_state = "stable"       # ☀ Pentagonal saturation
+    elif self.link_count >= 3: self.node_state = "propagating"   # Active field presence
+    elif self.link_count >= 1: self.node_state = "connected"     # Growing
 ```
 
-### 2. Bond State Machine — Undirected Peer Connections
+### 2. Link State Machine — Undirected Peer Connections
 
 ```mermaid
 stateDiagram-v2
     [*] --> Discover: Intent to connect
-    Discover --> Bound: Bond request created
-    Bound --> Active: Both nodes active\n(energy flows through this bond)
+    Discover --> Bound: Link request created
+    Bound --> Active: Both nodes active\n(energy flows through this link)
     Active --> Inactive: Dormant\n(no energy propagation)
-    Inactive --> Active: Reactivated\n(bond counts restored)
+    Inactive --> Active: Reactivated\n(link counts restored)
 
     note right of Active
-        Energy flows through this bond.
-        Undirected — A↔B is one bond.
+        Energy flows through this link.
+        Undirected — A↔B is one link.
         Ordered pair prevents duplicates.
         UniqueConstraint at DB level.
     end note
@@ -496,9 +496,9 @@ The `/field` page renders the bounded field as a **D3.js force-directed graph** 
 |:--------|:---------------|:----|
 | **Undirected graph** | `d3.forceLink()` with no arrows | There is no "above" or "below" |
 | **5 concentric rings** | Dashed circles radiating from center | 5 hop levels (Power of 5 echo) |
-| **Node size = bond count** | `d3.scaleLinear([0,5], [6,18])` | Connectivity determines visual presence |
+| **Node size = link count** | `d3.scaleLinear([0,5], [6,18])` | Connectivity determines visual presence |
 | **Node color = state** | Gold/blue/purple spectrum | Instant field health at a glance |
-| **Energy pulse** | Animated circles traveling bond lines | Shows energy actually flowing |
+| **Energy pulse** | Animated circles traveling link lines | Shows energy actually flowing |
 | **Origin glow** | Extra ring + Gaussian blur filter | You're the center of your own field |
 | **☀ on origin** | Unicode sun symbol | The Helios identity |
 | **Pentagon geometry** | 5 nodes on coin SVG | Power of 5 in the visual brand |
@@ -506,10 +506,10 @@ The `/field` page renders the bounded field as a **D3.js force-directed graph** 
 ### Node State Colors in the Lattice
 
 ```
-stable         #f59e0b  Gold         5/5 bonds — fully saturated ☀
-propagating    #fbbf24  Light Gold   3-4 bonds — active field presence
-connected      #3b82f6  Blue         1-2 bonds — growing
-acknowledged   #8b5cf6  Purple       Entered, no bonds yet
+stable         #f59e0b  Gold         5/5 links — fully saturated ☀
+propagating    #fbbf24  Light Gold   3-4 links — active field presence
+connected      #3b82f6  Blue         1-2 links — growing
+acknowledged   #8b5cf6  Purple       Entered, no links yet
 instantiated   #6366f1  Indigo       Identity created
 ```
 
@@ -809,7 +809,7 @@ helios-os/
 ├── 🔷 api/routes.py             ← 15 blueprints, 80+ endpoints
 │
 ├── 🟢 core/                     ← Protocol engines
-│   ├── network.py               ← ⬡ FieldEngine — Power of 5, BFS, bonds, graph
+│   ├── network.py               ← ⬡ FieldEngine — Power of 5, BFS, links, graph
 │   ├── energy_exchange.py       ← ⚡ EnergyExchange — conservation law, atomic split
 │   ├── rewards.py               ← 🔄 PropagationEngine — 3-phase settlement, decay
 │   ├── certificates.py          ← 🔋 CertificateEngine — HC-NFT, RRR covenant
@@ -825,7 +825,7 @@ helios-os/
 │
 ├── 🟣 models/                   ← 12 SQLAlchemy models
 │   ├── member.py                ← Node (5-state FSM)
-│   ├── bond.py                  ← Undirected bond (4-state FSM, ordered pair)
+│   ├── link.py                  ← Undirected link (4-state FSM, ordered pair)
 │   ├── certificate.py           ← HC-NFT (3-state FSM, SHA-256 addressed)
 │   ├── vault_receipt.py         ← MVR (4-state custody FSM)
 │   ├── energy_event.py          ← Immutable ledger (7 event types)
@@ -861,7 +861,7 @@ helios-os/
 | Route | Feature |
 |:------|:--------|
 | `GET /` | Spinning coin (pentagonal geometry), neural lattice BG |
-| `GET /dashboard` | Balance, history, bond status, field view |
+| `GET /dashboard` | Balance, history, link status, field view |
 | `GET /field` | D3 force-directed neural lattice |
 | `GET /ask` | GPT-4 chat + ElevenLabs voice |
 | `GET /treasury` | Metal reserves + MVR receipts |
@@ -875,13 +875,13 @@ helios-os/
 ### API Groups (80+ endpoints)
 
 <details>
-<summary><strong>⬡ Field</strong> — Power of 5, bonds, BFS graph</summary>
+<summary><strong>⬡ Field</strong> — Power of 5, links, BFS graph</summary>
 
 | Endpoint | Description |
 |:---------|:------------|
-| `POST /api/field/bond` | Create bond (max 5, cooldown, bilateral) |
-| `POST /api/field/bond/dissolve` | Dissolve → inactive |
-| `GET /api/field/bonds/:id` | Active bonds for node |
+| `POST /api/field/link` | Create link (max 5, cooldown, bilateral) |
+| `POST /api/field/link/dissolve` | Dissolve → inactive |
+| `GET /api/field/links/:id` | Active links for node |
 | `GET /api/field/graph/:id` | D3 data (nodes + edges + weights) |
 | `GET /api/field/stats/:id` | Capacity, reach, health |
 | `GET /api/field/path/:a/:b` | BFS shortest path |
@@ -972,7 +972,7 @@ All protocol parameters in `config.py` (299 lines). Structural assertions at boo
 assert token_allocation == 100%         # 40 + 35 + 15 + 10
 assert absorption_pools == 100%         # 40 + 25 + 20 + 15
 assert energy_allocation == 100%        # 45 + 20 + 15 + 10 + 10
-assert FIELD_MAX_BONDS == 5             # Power of 5
+assert FIELD_MAX_LINKS == 5             # Power of 5
 assert PROPAGATION_MAX_HOPS == 15       # Energy horizon
 assert ENTRY_FEE_USD == 100             # Atomic entry
 assert CERTIFICATE_CANCEL_FRICTION == 0.02  # 2% burn
@@ -1055,9 +1055,9 @@ Member activation flow:
 
 | System | What's New | How It's Enforced |
 |:-------|:-----------|:------------------|
-| ⬡ **Pentagonal Geometry** | Bounded field, max 5 bonds, not a tree | Bilateral saturation check + cooldown |
+| ⬡ **Pentagonal Geometry** | Bounded field, max 5 links, not a tree | Bilateral saturation check + cooldown |
 | ⚡ **Conservation Law** | ∑in = routed + stored + pooled + burned | Verified every call, public API |
-| 🔄 **4 State Machines** | Nodes (5), bonds (4), certs (3), custody (4) | Code-enforced transitions, no overrides |
+| 🔄 **4 State Machines** | Nodes (5), links (4), certs (3), custody (4) | Code-enforced transitions, no overrides |
 | 🌐 **Neural Lattice** | D3 force graph + canvas particle background | Physics-based layout, no hierarchy |
 | 🔷 **Crypto Addressing** | `HC-{SHA256[:24]}` deterministic cert IDs | Content-addressed, anyone can verify |
 | 🛡 **RRR Covenant** | Auto-pause at RRR < 1.0 | No human override exists in code |

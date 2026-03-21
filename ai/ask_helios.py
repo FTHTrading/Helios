@@ -1139,7 +1139,7 @@ class AskHelios:
                     "member_since": member.created_at.isoformat(),
                     "display_name": member.display_name,
                     "node_state": member.node_state,
-                    "bond_count": member.bond_count
+                    "link_count": member.link_count
                 }
         except Exception:
             pass

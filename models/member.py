@@ -20,7 +20,7 @@ class Member(Base):
     # ═══ Node State Machine ═══
     # INSTANTIATED → ACKNOWLEDGED → CONNECTED → PROPAGATING → STABLE
     node_state = Column(String(20), default="instantiated", index=True)
-    bond_count = Column(Integer, default=0)  # Current number of active bonds
+    link_count = Column(Integer, default=0)  # Current number of active links
 
     status = Column(String(20), default="active", index=True)
     verified = Column(Boolean, default=False)
@@ -38,18 +38,18 @@ class Member(Base):
             "display_name": self.display_name,
             "initiator": self.referrer_id,
             "node_state": self.node_state,
-            "bond_count": self.bond_count,
+            "link_count": self.link_count,
             "status": self.status,
             "verified": self.verified,
             "member_since": self.created_at.isoformat() if self.created_at else None
         }
 
     def update_node_state(self):
-        """Recalculate node state based on bond count."""
-        if self.bond_count >= 5:
+        """Recalculate node state based on link count."""
+        if self.link_count >= 5:
             self.node_state = "stable"
-        elif self.bond_count >= 3:
+        elif self.link_count >= 3:
             self.node_state = "propagating"
-        elif self.bond_count >= 1:
+        elif self.link_count >= 1:
             self.node_state = "connected"
         # acknowledged and instantiated are set during join flow

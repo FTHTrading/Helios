@@ -77,7 +77,7 @@ HTTP Response
 ```
 config.py (HeliosConfig)
     ├── core/network.py (FieldEngine)
-    │       └── models/member.py, models/bond.py
+    │       └── models/member.py, models/link.py
     │
     ├── core/energy_exchange.py (EnergyExchange)
     │       └── core/rewards.py (PropagationEngine)
@@ -126,7 +126,7 @@ config.py (HeliosConfig)
 
 ```
 Member (node)
-  ├── has many Bonds (node_a / node_b — undirected, unique pair)
+  ├── has many Links (node_a / node_b — undirected, unique pair)
   ├── has many Certificates (HC-NFTs)
   ├── has many EnergyEvents (immutable ledger entries)
   ├── has many Rewards (settlement records)
@@ -155,12 +155,12 @@ Space
 ### 1. Node (Member) FSM
 ```
 INSTANTIATED → ACKNOWLEDGED → CONNECTED → PROPAGATING → STABLE
-    (created)    (initiator       (≥1 bond)    (≥3 bonds)   (5 bonds)
+    (created)    (initiator       (≥1 link)    (≥3 links)   (5 links)
                   paid)
 ```
-Transition triggered automatically by `member.update_node_state()` on every bond change.
+Transition triggered automatically by `member.update_node_state()` on every link change.
 
-### 2. Bond FSM
+### 2. Link FSM
 ```
 PENDING → ACTIVE → INACTIVE
               └──→ DISPUTED
@@ -187,7 +187,7 @@ Each state change anchored to XRPL via 0-drop self-payment memo.
 | Type | Direction | Trigger |
 |---|---|---|
 | `ENERGY_IN` | External → system | $100 entry payment received |
-| `ENERGY_ROUTE` | Hop-by-hop | Propagation through a bond |
+| `ENERGY_ROUTE` | Hop-by-hop | Propagation through a link |
 | `ENERGY_STORE` | → Certificate | Energy locked into HC-NFT |
 | `ENERGY_POOL` | → Protocol pool | Post-hop-15 absorption |
 | `ENERGY_BURN` | → Destroyed | Cancel friction (2%), compliance |
@@ -202,7 +202,7 @@ Conservation law verified at every call: `∑IN = ROUTE + STORE + POOL + BURN`
 
 | Destination | % | Amount |
 |---|---|---|
-| Propagation (bonds, 15 hops) | 45% | $45.00 |
+| Propagation (links, 15 hops) | 45% | $45.00 |
 | Treasury (metal spine) | 20% | $20.00 |
 | Protocol stability pool | 15% | $15.00 |
 | Network liquidity | 10% | $10.00 |

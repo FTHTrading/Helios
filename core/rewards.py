@@ -3,7 +3,7 @@ Helios Energy Propagation Engine
 ═══════════════════════════════════════════════════════════════
 Settlement follows physics, not position.
 Energy propagates outward from join events through the neural field.
-Strongest at direct bonds, attenuates naturally: weight(hop) = 1/(2^hop).
+Strongest at direct links, attenuates naturally: weight(hop) = 1/(2^hop).
 After hop 15, fractional remainder absorbs into protocol stability pools.
 """
 
@@ -20,7 +20,7 @@ class PropagationEngine:
 
     Join Event Flow:
     1. ACKNOWLEDGEMENT — one-time payment to the initiator
-    2. PROPAGATION — energy radiates outward through bonds up to 15 hops
+    2. PROPAGATION — energy radiates outward through links up to 15 hops
     3. ABSORPTION — fractional remainder after hop 15 enters protocol pools
     """
 
@@ -35,7 +35,7 @@ class PropagationEngine:
         Returns a full breakdown: acknowledgement + hop-by-hop distribution + absorption.
         """
         from models.member import Member
-        from models.bond import Bond
+        from models.link import Link
 
         origin = self.db.query(Member).filter_by(
             helios_id=origin_id, status="active"
@@ -75,7 +75,7 @@ class PropagationEngine:
                 })
                 total_propagated += ack_amount
 
-        # ─── Phase 2: Energy Propagation (BFS through bonds) ──────────
+        # ─── Phase 2: Energy Propagation (BFS through links) ──────────
         propagation_energy = energy_amount - total_propagated
         if propagation_energy <= 0:
             propagation_energy = energy_amount  # For non-join events
@@ -87,14 +87,14 @@ class PropagationEngine:
         while queue:
             current_id, hop = queue.popleft()
 
-            # Get active bonds from current node
-            bonds = self.db.query(Bond).filter(
-                ((Bond.node_a == current_id) | (Bond.node_b == current_id)),
-                Bond.state == HeliosConfig.BOND_STATE_ACTIVE
+            # Get active links from current node
+            links = self.db.query(Link).filter(
+                ((Link.node_a == current_id) | (Link.node_b == current_id)),
+                Link.state == HeliosConfig.LINK_STATE_ACTIVE
             ).all()
 
-            for bond in bonds:
-                peer_id = bond.peer_of(current_id)
+            for link in links:
+                peer_id = link.peer_of(current_id)
                 next_hop = hop + 1
 
                 if peer_id in visited:
@@ -300,7 +300,7 @@ class PropagationEngine:
             "total_propagated_to_nodes": float(total_distributed),
             "token": HeliosConfig.TOKEN_SYMBOL,
             "protocol_rules": {
-                "max_bonds_per_node": HeliosConfig.FIELD_MAX_BONDS,
+                "max_links_per_node": HeliosConfig.FIELD_MAX_LINKS,
                 "propagation_hops": HeliosConfig.PROPAGATION_MAX_HOPS,
                 "decay_function": f"1/(2^hop)",
                 "acknowledgement": f"{HeliosConfig.ACKNOWLEDGEMENT_AMOUNT} HLS",

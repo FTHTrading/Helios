@@ -31,13 +31,13 @@ with app.test_client() as c:
     ref_id = d["data"]["helios_id"]
     print("2. REFERRER:  OK |", ref_id)
 
-    # 3. Form bond
-    r = c.post("/api/field/bond", json={"initiator_id": member_id, "peer_id": ref_id})
+    # 3. Form link
+    r = c.post("/api/field/link", json={"initiator_id": member_id, "peer_id": ref_id})
     d = r.get_json()
     if d["success"]:
-        print("3. BOND:      OK |", d["data"].get("message", "bonded"))
+        print("3. LINK:      OK |", d["data"].get("message", "linked"))
     else:
-        print("3. BOND:      FAIL |", d.get("error", ""))
+        print("3. LINK:      FAIL |", d.get("error", ""))
 
     # 4. Inject energy
     r = c.post("/api/energy/inject", json={"member_id": member_id})
@@ -88,7 +88,7 @@ with app.test_client() as c:
     # 12. Field status
     r = c.get("/api/field/status")
     d = r.get_json()
-    print("12.FIELD:     OK | nodes=%s bonds=%s" % (d["data"]["total_nodes"], d["data"]["total_bonds"]))
+    print("12.FIELD:     OK | nodes=%s links=%s" % (d["data"]["total_nodes"], d["data"]["total_links"]))
 
     # Stripe check
     stripe = d["data"] if False else c.get("/api/infra/readiness").get_json()["data"]["providers"]["stripe"]
@@ -102,7 +102,7 @@ with app.test_client() as c:
     print("  Stripe:         %s" % ("LIVE" if stripe["ready"] else "NEEDS TEST KEYS (5 min setup)"))
     print("  Xaman:          %s" % ("LIVE" if xaman["ready"] else "NEEDS APP CREDENTIALS (5 min setup)"))
     print("  Identity:       OPERATIONAL")
-    print("  Bonds:          OPERATIONAL")
+    print("  Links:          OPERATIONAL")
     print("  Energy:         OPERATIONAL")
     print("  Token:          OPERATIONAL")
     print("  Database:       SQLite (production uses PostgreSQL)")

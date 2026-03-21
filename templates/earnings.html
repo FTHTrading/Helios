@@ -856,9 +856,9 @@
                 </div>
                 <div class="calc-input-group">
                     <label>Your Direct Connections</label>
-                    <input type="range" id="calcBonds" min="1" max="5" value="5" oninput="recalculate()">
+                    <input type="range" id="calcLinks" min="1" max="5" value="5" oninput="recalculate()">
                     <div style="display:flex;justify-content:space-between;font-size:.75rem;color:var(--text-muted);font-family:'Inter',sans-serif;">
-                        <span>1</span><span id="bondDisplay">5</span><span>5</span>
+                        <span>1</span><span id="linkDisplay">5</span><span>5</span>
                     </div>
                 </div>
                 <div class="calc-input-group">
@@ -1075,13 +1075,13 @@ function monthlyL5(pool) {
 // ═══ CALCULATOR ═══════════════════════════════════════════════
 function recalculate() {
     var yourTier = parseInt(document.getElementById('calcTier').value);
-    var bonds = parseInt(document.getElementById('calcBonds').value);
+    var links = parseInt(document.getElementById('calcLinks').value);
     var monthly = parseInt(document.getElementById('calcMonthly').value) || 0;
     var netTier = parseInt(document.getElementById('calcNetTier').value);
     var avgLevel = parseInt(document.getElementById('calcAvgLevel').value);
     var months = parseInt(document.getElementById('calcTimeframe').value);
 
-    document.getElementById('bondDisplay').textContent = bonds;
+    document.getElementById('linkDisplay').textContent = links;
 
     var netPool = TIERS[netTier].pool;
     var weight = W1 * Math.pow(R, avgLevel - 1);
@@ -1089,7 +1089,7 @@ function recalculate() {
     var networkAlloc = allocPerMember * monthly * months;
 
     var yourDirect = TIERS[yourTier].direct;
-    var directPerMonth = Math.min(bonds, Math.ceil(monthly * 0.2));
+    var directPerMonth = Math.min(links, Math.ceil(monthly * 0.2));
     var totalDirect = directPerMonth * yourDirect * months;
 
     var total = networkAlloc + totalDirect;

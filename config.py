@@ -59,16 +59,16 @@ class HeliosConfig:
     TOKEN_RESERVE_PERCENT = 10              # 10% emergency reserve (locked)
 
     # ═══ NEURAL FIELD — POWER OF 5 ═══════════════════════════════════
-    # Each node may hold a maximum of 5 bonds.
+    # Each node may hold a maximum of 5 links.
     # There is no "above" or "below". Only connected peers in a bounded field.
-    FIELD_MAX_BONDS = 5                     # Maximum degree per node
+    FIELD_MAX_LINKS = 5                     # Maximum degree per node
     FIELD_POWER_OF_25 = 25                  # 5 rays × 5 = network strength target
-    FIELD_COOLDOWN_HOURS = 0                # Instant bonds — no cooldown
+    FIELD_COOLDOWN_HOURS = 0                # Instant links — no cooldown
     FIELD_ACTIVITY_WINDOW_DAYS = 30         # Rolling activity measurement window
 
     # ═══ ENERGY PROPAGATION ══════════════════════════════════════════
     # When a new node joins, energy propagates outward from the join event.
-    # Strongest at direct bonds, attenuates naturally.
+    # Strongest at direct links, attenuates naturally.
     # weight(hop) = 1 / (2 ^ hop)
     # Never explodes. Never compounds infinitely.
     PROPAGATION_MAX_HOPS = 15               # Energy horizon — max distance
@@ -91,18 +91,18 @@ class HeliosConfig:
 
     # ═══ NODE STATES ════════════════════════════════════════════════
     # INSTANTIATED → ACKNOWLEDGED → CONNECTED → PROPAGATING → STABLE
-    NODE_STATE_INSTANTIATED = "instantiated"     # Created, no bonds yet
+    NODE_STATE_INSTANTIATED = "instantiated"     # Created, no links yet
     NODE_STATE_ACKNOWLEDGED = "acknowledged"     # Initiator paid, node active
-    NODE_STATE_CONNECTED = "connected"           # Has ≥1 bond
-    NODE_STATE_PROPAGATING = "propagating"       # Has ≥3 bonds, field active
-    NODE_STATE_STABLE = "stable"                 # Has 5 bonds, fully saturated
+    NODE_STATE_CONNECTED = "connected"           # Has ≥1 link
+    NODE_STATE_PROPAGATING = "propagating"       # Has ≥3 links, field active
+    NODE_STATE_STABLE = "stable"                 # Has 5 links, fully saturated
 
-    # ═══ BOND STATES ═══════════════════════════════════════════════
+    # ═══ LINK STATES ═══════════════════════════════════════════════════════
     # DISCOVER → BOUND → ACTIVE → INACTIVE
-    BOND_STATE_DISCOVER = "discover"        # Intent to connect
-    BOND_STATE_BOUND = "bound"              # Bond created, pending activation
-    BOND_STATE_ACTIVE = "active"            # Both nodes active, energy flows
-    BOND_STATE_INACTIVE = "inactive"        # Dormant — no energy propagation
+    LINK_STATE_DISCOVER = "discover"        # Intent to connect
+    LINK_STATE_BOUND = "bound"              # Link created, pending activation
+    LINK_STATE_ACTIVE = "active"            # Both nodes active, energy flows
+    LINK_STATE_INACTIVE = "inactive"        # Dormant — no energy propagation
 
     # ═══ SETTLEMENT RULES ═════════════════════════════════════════
     SETTLEMENT_MIN_ACTIVITY_SCORE = 10      # Minimum activity to receive energy
@@ -115,7 +115,7 @@ class HeliosConfig:
     IDENTITY_RESERVED = [
         "admin", "helios", "system", "support", "root",
         "founder", "official", "team", "network", "token",
-        "protocol", "field", "energy", "bond"
+        "protocol", "field", "energy", "link"
     ]
 
     # ═══ FOUNDERS — FOUNDING COUNCIL ════════════════════════════════
@@ -154,7 +154,7 @@ class HeliosConfig:
 
     # ═══ ENERGY ALLOCATION — WHERE THE $100 GOES ════════════════════
     # Every dollar has a destination. No slush funds.
-    ENERGY_PROPAGATION_PERCENT = 45         # Flows through bonds to peers
+    ENERGY_PROPAGATION_PERCENT = 45         # Flows through links to peers
     ENERGY_LIQUIDITY_PERCENT = 20           # Internal LP for redemption depth
     ENERGY_TREASURY_PERCENT = 15            # Surplus → metal purchases
     ENERGY_INFRASTRUCTURE_PERCENT = 10      # Ops, hosting, compliance
@@ -202,7 +202,7 @@ class HeliosConfig:
 
     # Energy event types (ledger)
     ENERGY_EVENT_IN = "ENERGY_IN"           # Entry payment → energy injected
-    ENERGY_EVENT_ROUTE = "ENERGY_ROUTE"     # Propagation through bonds
+    ENERGY_EVENT_ROUTE = "ENERGY_ROUTE"     # Propagation through links
     ENERGY_EVENT_STORE = "ENERGY_STORE"     # Stored into certificate
     ENERGY_EVENT_POOL = "ENERGY_POOL"       # Absorbed into protocol pool
     ENERGY_EVENT_BURN = "ENERGY_BURN"       # Compliance or protocol burn
@@ -336,7 +336,7 @@ class HeliosConfig:
         assert energy_total == 100, f"Energy allocation must be 100%, got {energy_total}%"
 
         # Structural invariants
-        assert cls.FIELD_MAX_BONDS == 5, "Power of 5: max bonds must be 5"
+        assert cls.FIELD_MAX_LINKS == 5, "Power of 5: max links must be 5"
         assert cls.PROPAGATION_MAX_HOPS == 15, "Propagation horizon must be 15"
         assert cls.ENTRY_FEE_USD == 100, "Entry fee is fixed at $100"
         assert cls.CERTIFICATE_CANCEL_FRICTION == 0.02, "Cancel friction must be 2%"
