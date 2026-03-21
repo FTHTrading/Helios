@@ -49,7 +49,11 @@ def handle_errors(f):
             return f(*args, **kwargs)
         except ValueError as e:
             return api_response(error=str(e), status=400)
+        except KeyError as e:
+            return api_response(error=f"Missing required field: {e}", status=400)
         except Exception as e:
+            import traceback, sys
+            traceback.print_exc(file=sys.stderr)
             return api_response(error="Something went wrong. Please try again.", status=500)
     return wrapper
 
@@ -129,7 +133,7 @@ def form_bond():
     """Form a bond between two peers. Undirected. Max 5 bonds per node."""
     from core.network import FieldEngine
 
-    data = request.get_json()
+    data = validate_payload("bond_create", request.get_json())
     engine = FieldEngine(get_db())
     result = engine.form_bond(data["initiator_id"], data["peer_id"])
     return api_response(result, status=201)
@@ -141,7 +145,7 @@ def dissolve_bond():
     """Dissolve a bond — sets state to INACTIVE."""
     from core.network import FieldEngine
 
-    data = request.get_json()
+    data = validate_payload("bond_dissolve", request.get_json())
     engine = FieldEngine(get_db())
     result = engine.dissolve_bond(data["initiator_id"], data["peer_id"])
     return api_response(result)

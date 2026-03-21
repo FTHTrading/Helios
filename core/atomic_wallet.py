@@ -19,6 +19,7 @@ import json
 import os
 import time
 from datetime import datetime, timezone
+from config import HeliosConfig
 from core.xrpl_bridge import XRPLBridge
 
 # ── Constants ──────────────────────────────────────────────────────────
