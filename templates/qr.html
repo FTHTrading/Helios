@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block title %}Helios — Your Network Code{% endblock %}
-{% block og_title %}Join Helios — Invitation from a Member{% endblock %}
-{% block og_description %}Scan this code to join Helios. Gold-backed smart contract protocol. One payment. Fully autonomous.{% endblock %}
-{% block og_url %}/qr{% endblock %}
+{% block title %}{% if helios_id %}{{ helios_id }}.helios — QR Code{% else %}Helios — Your Network Code{% endif %}{% endblock %}
+{% block og_title %}{% if helios_id %}Join Helios — Invitation from {{ helios_id }}.helios{% else %}Join Helios — Invitation from a Member{% endif %}{% endblock %}
+{% block og_description %}{% if helios_id %}{{ helios_id }}.helios invited you to Helios. Scan to join. Gold-backed smart contract protocol. One payment. Fully autonomous.{% else %}Scan this code to join Helios. Gold-backed smart contract protocol. One payment. Fully autonomous.{% endif %}{% endblock %}
+{% block og_url %}/qr{% if helios_id %}/{{ helios_id }}{% endif %}{% endblock %}
 
 {% block head %}
 <style>
