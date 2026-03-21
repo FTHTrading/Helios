@@ -85,21 +85,6 @@ class FieldEngine:
                     "message": f"Bond reactivated between {initiator_id} and {peer_id}."
                 }
 
-        # Enforce cooldown
-        last_bond = self.db.query(Bond).filter(
-            (Bond.node_a == initiator_id) | (Bond.node_b == initiator_id)
-        ).order_by(Bond.created_at.desc()).first()
-
-        if last_bond:
-            cooldown = timedelta(hours=HeliosConfig.FIELD_COOLDOWN_HOURS)
-            if datetime.now(timezone.utc) - last_bond.created_at < cooldown:
-                remaining = cooldown - (datetime.now(timezone.utc) - last_bond.created_at)
-                hours = int(remaining.total_seconds() // 3600)
-                raise ValueError(
-                    f"Bond cooldown active. Wait {hours} more hours. "
-                    "This prevents artificial saturation."
-                )
-
         # Create bond
         bond = Bond(
             node_a=node_a,

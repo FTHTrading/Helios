@@ -63,7 +63,7 @@ class HeliosConfig:
     # There is no "above" or "below". Only connected peers in a bounded field.
     FIELD_MAX_BONDS = 5                     # Maximum degree per node
     FIELD_POWER_OF_25 = 25                  # 5 rays × 5 = network strength target
-    FIELD_COOLDOWN_HOURS = 24               # Minimum hours between new bonds
+    FIELD_COOLDOWN_HOURS = 0                # Instant bonds — no cooldown
     FIELD_ACTIVITY_WINDOW_DAYS = 30         # Rolling activity measurement window
 
     # ═══ ENERGY PROPAGATION ══════════════════════════════════════════

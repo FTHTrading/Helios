@@ -52,8 +52,14 @@ def handle_errors(f):
         except KeyError as e:
             return api_response(error=f"Missing required field: {e}", status=400)
         except Exception as e:
-            import traceback, sys
+            import traceback, sys, logging
+            logging.error(f"500 ERROR in {f.__name__}: {e}")
+            logging.error(traceback.format_exc())
             traceback.print_exc(file=sys.stderr)
+            # Also write to file for debug
+            with open("_error_log.txt", "a") as ef:
+                ef.write(f"\n{'='*60}\n{f.__name__}: {e}\n")
+                traceback.print_exc(file=ef)
             return api_response(error="Something went wrong. Please try again.", status=500)
     return wrapper
 

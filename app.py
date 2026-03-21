@@ -145,11 +145,16 @@ def create_app():
     data_dir = os.path.join(os.path.dirname(__file__), "data")
     os.makedirs(data_dir, exist_ok=True)
 
-    engine = create_engine(
-        HeliosConfig.DATABASE_URL,
-        echo=False,
-        pool_pre_ping=True
-    )
+    db_url = HeliosConfig.DATABASE_URL
+    engine_kwargs = dict(echo=False)
+
+    # SQLite needs special handling for concurrent access
+    if db_url.startswith("sqlite"):
+        engine_kwargs["connect_args"] = {"check_same_thread": False, "timeout": 30}
+        from sqlalchemy.pool import NullPool
+        engine_kwargs["poolclass"] = NullPool
+
+    engine = create_engine(db_url, **engine_kwargs)
 
     # Import ALL models so their tables get created
     from models.bond import Bond  # noqa: F401 — required for table creation
@@ -177,6 +182,7 @@ def create_app():
             if exception:
                 session.rollback()
             session.close()
+        Session.remove()  # Release scoped session back to pool
 
     # ─── Register Blueprints ──────────────────────────────────────
     from api.routes import (
