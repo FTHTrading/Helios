@@ -71,19 +71,28 @@ def handle_errors(f):
 
 def require_auth(f):
     """
-    Lightweight API-key gate for mutating endpoints.
-    Checks the ``Authorization: Bearer <key>`` header against
-    ``HELIOS_API_KEY`` from the environment.  If no key is configured
-    the guard is **disabled** so local development still works.
+    API-key gate for mutating endpoints.
+    Checks ``Authorization: Bearer <key>`` against ``HELIOS_API_KEY``.
+
+    In production (REQUIRE_API_AUTH=True), if no API_KEY is configured,
+    the endpoint will REJECT all requests rather than allow everything.
+    In development, the guard is disabled only if no key is configured.
     """
     @wraps(f)
     def wrapper(*args, **kwargs):
         from config import HeliosConfig
         expected = getattr(HeliosConfig, "API_KEY", None)
+        require = getattr(HeliosConfig, "REQUIRE_API_AUTH", False)
+
+        if require and not expected:
+            # Production without API_KEY configured — reject everything
+            return api_response(error="Server misconfigured: API auth required but no key set", status=503)
+
         if expected:
             auth = request.headers.get("Authorization", "")
             if not auth.startswith("Bearer ") or auth[7:] != expected:
                 return api_response(error="Unauthorized", status=401)
+
         return f(*args, **kwargs)
     return wrapper
 

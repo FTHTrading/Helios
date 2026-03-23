@@ -1,0 +1,13 @@
+CANONICAL HELIOS REPOSITORY
+===========================
+Path:   C:\Users\Kevan\OneDrive - FTH Trading\03-Helios\helios final
+Remote: FTHTrading/Helios-launch
+Branch: main
+
+This is the ONLY authoritative working copy.
+Do not edit any other copy of this repo.
+
+If you find a second Helios folder, rename it to:
+  helios final__OLD_DO_NOT_USE
+
+Created: 2026-03-23

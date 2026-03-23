@@ -6,6 +6,7 @@ No admin overrides. Every parameter is auditable.
 """
 
 import os
+import secrets
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -14,6 +15,11 @@ BASE_DIR = Path(__file__).resolve().parent
 for env_path in (BASE_DIR / ".env", BASE_DIR / ".env.local"):
     if env_path.exists():
         load_dotenv(dotenv_path=env_path, override=False, encoding="utf-8")
+
+# Environment detection (imported from config_env for consistency)
+HELIOS_ENV = os.getenv("HELIOS_ENV", "development").lower()
+IS_PRODUCTION = HELIOS_ENV == "production"
+IS_STAGING = HELIOS_ENV == "staging"
 
 
 def _env_bool(name: str, default: str = "false") -> bool:
@@ -27,11 +33,11 @@ class HeliosConfig:
     """
 
     # ——— App ——————————————————————————————————————————————
-    # Stable fallback prevents session invalidation on restart.
-    # In production, ALWAYS set HELIOS_SECRET_KEY in .env.
-    _DEFAULT_SECRET = "helios-dev-key-change-me-in-production"
+    # In production, HELIOS_SECRET_KEY MUST be set. Dev gets a random key per restart.
+    _DEFAULT_SECRET = secrets.token_hex(32) if not IS_PRODUCTION else ""
     SECRET_KEY = os.getenv("HELIOS_SECRET_KEY", _DEFAULT_SECRET)
-    DEBUG = _env_bool("HELIOS_DEBUG")
+    DEBUG = False if IS_PRODUCTION else _env_bool("HELIOS_DEBUG")
+    ENV = HELIOS_ENV
     HOST = os.getenv("HELIOS_HOST", "0.0.0.0")
     PORT = int(os.getenv("HELIOS_PORT", "5050"))
     DOMAIN = "heliosdigital.xyz"
@@ -44,7 +50,9 @@ class HeliosConfig:
 
     # ——— API Auth —————————————————————————————————————————
     # When set, mutating POST endpoints require  Authorization: Bearer <key>
+    # In production, this MUST be set — unauthenticated API is not allowed.
     API_KEY = os.getenv("HELIOS_API_KEY", "")
+    REQUIRE_API_AUTH = IS_PRODUCTION or bool(API_KEY)
 
     # ——— Database —————————————————————————————————————————
     DATABASE_URL = os.getenv(
@@ -295,6 +303,15 @@ class HeliosConfig:
     XRPL_ISSUER_SECRET = os.getenv("HELIOS_XRPL_ISSUER_SECRET", XRPL_WALLET_SECRET)
     XRPL_TREASURY_ADDRESS = os.getenv("HELIOS_XRPL_TREASURY_WALLET", XRPL_ISSUER_ADDRESS)
     XRPL_TREASURY_SECRET = os.getenv("HELIOS_XRPL_TREASURY_SECRET", XRPL_ISSUER_SECRET)
+
+    # ——— EVM / ERC-20 — Secondary Issuance Rail ———————————————————
+    # Optional. Only used when EVM minting is explicitly enabled.
+    EVM_RPC_URL = os.getenv("HELIOS_EVM_RPC_URL", "")
+    EVM_CHAIN_ID = int(os.getenv("HELIOS_EVM_CHAIN_ID", "1"))
+    EVM_PRIVATE_KEY = os.getenv("HELIOS_EVM_PRIVATE_KEY", "")
+    EVM_CONTRACT_ADDRESS = os.getenv("HELIOS_EVM_CONTRACT_ADDRESS", "")
+    EVM_EXPLORER_URL = os.getenv("HELIOS_EVM_EXPLORER_URL", "https://etherscan.io")
+    EVM_ENABLED = bool(EVM_RPC_URL and EVM_PRIVATE_KEY)
 
     # ——— IPFS — Evidence Bundle Storage ————————————————————————————
     IPFS_GATEWAY = os.getenv("HELIOS_IPFS_GATEWAY", "https://ipfs.io/ipfs/")

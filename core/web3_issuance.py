@@ -14,10 +14,14 @@ All issuances are on-chain (XRPL NFTokenMint / Stellar custom ops).
 
 import hashlib
 import json
+import logging
 import time
 from datetime import datetime, timezone
 from config import HeliosConfig
 from core.xrpl_bridge import XRPLBridge
+from core.ipfs import IpfsBundleService
+
+log = logging.getLogger("helios.issuance")
 
 
 # ── Constants ──────────────────────────────────────────────────────────
@@ -95,12 +99,8 @@ class NFTCertificate:
         Mint an NFT certificate representing the member's gold-backed
         allocation. Issued on XRPL via NFTokenMint.
 
-        The NFT contains:
-          - Gold weight backing
-          - Contract tier
-          - Member identity hash
-          - Issuance timestamp
-          - Redemption terms hash
+        Metadata is pinned to IPFS (Pinata) first when credentials are
+        available; otherwise falls back to a deterministic hash-based URI.
         """
         metadata = {
             "name": f"Helios Gold Certificate — {contract_tier}",
@@ -115,7 +115,15 @@ class NFTCertificate:
             "standard": "XLS-20",
         }
 
-        metadata_uri = f"{CERT_METADATA_BASE}{hashlib.sha256(json.dumps(metadata).encode()).hexdigest()[:24]}"
+        # Pin metadata to IPFS before minting
+        ipfs = IpfsBundleService()
+        pin_result = ipfs.pin_json(metadata, f"cert-{member_id[:12]}")
+        if pin_result.get("stored") and pin_result.get("cid"):
+            metadata_uri = f"ipfs://{pin_result['cid']}"
+            log.info("Cert metadata pinned: %s", metadata_uri)
+        else:
+            metadata_uri = f"{CERT_METADATA_BASE}{hashlib.sha256(json.dumps(metadata).encode()).hexdigest()[:24]}"
+            log.warning("IPFS pin skipped for cert (simulation): %s", pin_result.get("error", "not configured"))
 
         nft_tx = XRPLBridge().mint_nft(
             metadata_uri=metadata_uri,
@@ -131,6 +139,8 @@ class NFTCertificate:
             "contract_tier": contract_tier,
             "gold_backing_oz": gold_weight_oz,
             "metadata_uri": metadata_uri,
+            "ipfs_cid": pin_result.get("cid"),
+            "metadata_pinned": pin_result.get("stored", False),
             "tx_hash": nft_tx.get("tx_hash"),
             "status": "minted" if nft_tx.get("submitted") else "simulated",
             "simulation": nft_tx.get("simulation", True),
@@ -175,6 +185,7 @@ class CeremonialNFT:
         """
         Mint a ceremonial NFT for the new member.
         Non-transferable (soulbound). One per member, ever.
+        Metadata is pinned to IPFS when Pinata is configured.
         """
         tier = CeremonialNFT.CEREMONIAL_TIERS.get(member_type,
                 CeremonialNFT.CEREMONIAL_TIERS["member"])
@@ -193,7 +204,14 @@ class CeremonialNFT:
             "soulbound": True,
         }
 
-        metadata_uri = f"{CEREMONIAL_METADATA_BASE}{hashlib.sha256(json.dumps(metadata).encode()).hexdigest()[:24]}"
+        # Pin metadata to IPFS before minting
+        ipfs = IpfsBundleService()
+        pin_result = ipfs.pin_json(metadata, f"ceremonial-{member_id[:12]}")
+        if pin_result.get("stored") and pin_result.get("cid"):
+            metadata_uri = f"ipfs://{pin_result['cid']}"
+            log.info("Ceremonial metadata pinned: %s", metadata_uri)
+        else:
+            metadata_uri = f"{CEREMONIAL_METADATA_BASE}{hashlib.sha256(json.dumps(metadata).encode()).hexdigest()[:24]}"
 
         nft_tx = XRPLBridge().mint_nft(
             metadata_uri=metadata_uri,
@@ -210,6 +228,8 @@ class CeremonialNFT:
             "destination": xrpl_address,
             "soulbound": True,
             "metadata_uri": metadata_uri,
+            "ipfs_cid": pin_result.get("cid"),
+            "metadata_pinned": pin_result.get("stored", False),
             "tx_hash": nft_tx.get("tx_hash"),
             "status": "minted" if nft_tx.get("submitted") else "simulated",
             "simulation": nft_tx.get("simulation", True),
@@ -221,21 +241,48 @@ class CeremonialNFT:
 
 def issue_new_member_package(member_id: str, xrpl_address: str,
                               contract_amount: float,
-                              member_type: str = "founding") -> dict:
+                              member_type: str = "founding",
+                              token_rail: str = "XRPL",
+                              evm_address: str = None) -> dict:
     """
     Complete Web3 issuance for a new member:
-      1. Instant HLS token delivery
-      2. Gold-backed NFT certificate
-      3. Ceremonial NFT (soulbound)
+      1. Instant HLS token delivery (XRPL or EVM rail)
+      2. Gold-backed NFT certificate (always XRPL — XLS-20)
+      3. Ceremonial NFT (always XRPL — soulbound)
 
-    Called after atomic wallet provisioning completes.
+    token_rail: "XRPL" (default) or "EVM"
+        When "EVM", tokens are minted via the ERC-20 contract instead.
+        NFTs remain on XRPL regardless of rail choice.
     """
-    # 1. Token issuance
-    token_result = TokenIssuance.issue_tokens(
-        member_id, xrpl_address, contract_amount, phase=1
-    )
+    # 1. Token issuance — rail-dependent
+    if token_rail == "EVM" and evm_address:
+        from core.evm_bridge import get_evm_bridge
+        calc = TokenIssuance.calculate_tokens(contract_amount, phase=1)
+        bridge = get_evm_bridge()
+        evm_result = bridge.mint(evm_address, calc["tokens_issued"])
 
-    # 2. NFT certificate (gold weight based on 15% treasury allocation)
+        token_result = {
+            "type": "token_issuance",
+            "member_id": member_id,
+            "destination": evm_address,
+            "tokens": calc["tokens_issued"],
+            "formatted": calc["formatted"],
+            "price": calc["price_per_hls"],
+            "phase": 1,
+            "chain": "EVM",
+            "chain_id": HeliosConfig.EVM_CHAIN_ID,
+            "tx_hash": evm_result.get("tx_hash"),
+            "status": evm_result.get("status", "simulated"),
+            "simulation": evm_result.get("simulation", True),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        log.info("EVM token issuance: %s HLS to %s", calc["formatted"], evm_address)
+    else:
+        token_result = TokenIssuance.issue_tokens(
+            member_id, xrpl_address, contract_amount, phase=1
+        )
+
+    # 2. NFT certificate — always XRPL (gold weight based on 15% treasury allocation)
     gold_allocation_usd = contract_amount * 0.15
     gold_oz = gold_allocation_usd / HeliosConfig.GOLD_SPOT_PRICE_USD
     cert_result = NFTCertificate.mint_membership_nft(
@@ -244,7 +291,7 @@ def issue_new_member_package(member_id: str, xrpl_address: str,
         gold_weight_oz=round(gold_oz, 4)
     )
 
-    # 3. Ceremonial NFT
+    # 3. Ceremonial NFT — always XRPL
     ceremonial_result = CeremonialNFT.mint_ceremonial(
         member_id, xrpl_address, member_type
     )
@@ -252,6 +299,7 @@ def issue_new_member_package(member_id: str, xrpl_address: str,
     return {
         "member_id": member_id,
         "package": "new_member_issuance",
+        "token_rail": token_rail,
         "issuances": [
             token_result,
             cert_result,
@@ -259,11 +307,12 @@ def issue_new_member_package(member_id: str, xrpl_address: str,
         ],
         "summary": {
             "tokens_issued": token_result["formatted"],
+            "token_chain": token_result.get("chain", "XRPL"),
             "nft_certificate": cert_result["contract_tier"],
             "gold_backing": f"{gold_oz:.4f} oz",
             "ceremonial_nft": ceremonial_result["tier"],
             "total_nfts": 2,
-            "chain": "XRPL",
+            "nft_chain": "XRPL",
         },
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
@@ -279,7 +328,7 @@ class Web3Preferences:
 
     DEFAULT_PREFERENCES = {
         "primary_chain": "XRPL",
-        "secondary_chain": "Stellar",
+        "secondary_chain": "EVM",
         "auto_stake": False,
         "auto_stake_duration": 90,   # days
         "preferred_stablecoin": "USDC",
@@ -290,10 +339,12 @@ class Web3Preferences:
         "notification_on_allocation": True,
         "identity_public": True,     # .helios identity visibility
         "cross_chain_settlement": True,
+        "token_rail": "XRPL",       # XRPL | EVM — which rail to mint on
     }
 
-    AVAILABLE_CHAINS = ["XRPL", "Stellar"]
-    AVAILABLE_ASSETS = ["HLS", "XRP", "XLM", "BTC", "ETH", "USDC", "USDT"]
+    AVAILABLE_CHAINS = ["XRPL", "EVM"]
+    AVAILABLE_RAILS = ["XRPL", "EVM"]
+    AVAILABLE_ASSETS = ["HLS", "XRP", "ETH", "BTC", "USDC", "USDT"]
     CERTIFICATE_FORMATS = ["nft", "json", "both"]
     STAKE_DURATIONS = [30, 90, 180, 365]
 
@@ -321,6 +372,7 @@ class Web3Preferences:
             "preferences": self.preferences,
             "available_options": {
                 "chains": self.AVAILABLE_CHAINS,
+                "rails": self.AVAILABLE_RAILS,
                 "assets": self.AVAILABLE_ASSETS,
                 "certificate_formats": self.CERTIFICATE_FORMATS,
                 "stake_durations": self.STAKE_DURATIONS,

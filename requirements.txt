@@ -24,5 +24,16 @@ celery>=5.4,<6.0
 psycopg2-binary>=2.9,<3.0
 sentry-sdk[flask]>=2.14,<3.0
 
+# EVM / ERC-20 (secondary rail)
+web3>=7.0,<8.0
+
+# Database migrations
+alembic>=1.13,<2.0
+
 # Static export
 frozen-flask>=1.0,<2.0
+
+# Dev / Test (install with: pip install -r requirements-dev.txt)
+# pytest>=8.0,<9.0
+# pytest-cov>=5.0,<6.0
+# ruff>=0.5,<1.0

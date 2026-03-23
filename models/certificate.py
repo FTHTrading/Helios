@@ -48,6 +48,11 @@ class Certificate(Base):
     is_final = Column(Boolean, default=False)                        # True once cancelled/redeemed
     energy_burned_he = Column(Float, nullable=True)                  # Permanent burn on cancel
 
+    # === IPFS / On-chain metadata ===
+    ipfs_cid = Column(String(128), nullable=True, index=True)         # Pinata CID after pinning
+    metadata_pinned = Column(Boolean, default=False)                  # True once pinned to IPFS
+    chain_rail = Column(String(16), default="XRPL")                   # XRPL | EVM
+
     # === Timestamps ===
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, onupdate=lambda: datetime.now(timezone.utc))

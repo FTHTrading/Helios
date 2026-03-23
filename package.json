@@ -1,0 +1,21 @@
+{
+  "name": "helios-contracts",
+  "version": "1.0.0",
+  "description": "Helios Protocol — ERC-20 smart contracts",
+  "scripts": {
+    "compile": "npx hardhat compile",
+    "test": "npx hardhat test",
+    "deploy:local": "npx hardhat run scripts/deploy.js --network hardhat",
+    "deploy:sepolia": "npx hardhat run scripts/deploy.js --network sepolia",
+    "deploy:amoy": "npx hardhat run scripts/deploy.js --network amoy",
+    "deploy:base-sepolia": "npx hardhat run scripts/deploy.js --network baseSepolia",
+    "deploy:mainnet": "npx hardhat run scripts/deploy.js --network mainnet",
+    "verify": "npx hardhat verify --network"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@openzeppelin/contracts": "^5.0.0",
+    "dotenv": "^16.4.0",
+    "hardhat": "^2.22.0"
+  }
+}
