@@ -27,7 +27,7 @@ class TestHeliosConfig:
 
     def test_total_supply(self):
         from config import HeliosConfig
-        assert HeliosConfig.TOTAL_SUPPLY == 100_000_000
+        assert HeliosConfig.TOKEN_TOTAL_SUPPLY == 100_000_000
 
     def test_token_decimals(self):
         from config import HeliosConfig
@@ -38,11 +38,11 @@ class TestHeliosConfig:
         assert HeliosConfig.GOLD_SPOT_PRICE_USD > 0
 
     def test_treasury_allocation_sums(self):
-        """Treasury allocation percentages should be internally consistent."""
+        """Treasury metal coefficient should be within its defined range."""
         from config import HeliosConfig
-        # Gold + Operations + Liquidity + Staking should be reasonable
-        gold = HeliosConfig.TREASURY_GOLD_ALLOCATION
-        assert 0 < gold <= 1.0, "Gold allocation should be between 0 and 1"
+        coeff = HeliosConfig.TREASURY_METAL_COEFFICIENT
+        assert HeliosConfig.TREASURY_METAL_COEFFICIENT_MIN <= coeff <= HeliosConfig.TREASURY_METAL_COEFFICIENT_MAX, \
+            "Metal coefficient should be within min/max range"
 
     def test_evm_config_keys_exist(self):
         """EVM config keys should be present (even if empty in testing)."""

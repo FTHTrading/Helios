@@ -161,8 +161,13 @@ def create_app():
     # SQLite needs special handling for concurrent access
     if db_url.startswith("sqlite"):
         engine_kwargs["connect_args"] = {"check_same_thread": False, "timeout": 30}
-        from sqlalchemy.pool import NullPool
-        engine_kwargs["poolclass"] = NullPool
+        if db_url in ("sqlite://", "sqlite:///"):
+            # In-memory DB — must reuse the single connection or tables vanish
+            from sqlalchemy.pool import StaticPool
+            engine_kwargs["poolclass"] = StaticPool
+        else:
+            from sqlalchemy.pool import NullPool
+            engine_kwargs["poolclass"] = NullPool
 
     engine = create_engine(db_url, **engine_kwargs)
 
@@ -177,6 +182,7 @@ def create_app():
     from models.payment_event import PaymentEvent  # noqa: F401
     from models.node_event import NodeEvent  # noqa: F401 — QR node telemetry
     from models.phone_verification import PhoneVerification  # noqa: F401
+    from models.token_pool import TokenPool  # noqa: F401 — required for genesis check
     Base.metadata.create_all(engine)
 
     SessionFactory = sessionmaker(bind=engine)
@@ -205,6 +211,7 @@ def create_app():
         spaces_bp, metrics_bp, rewards_bp,
         nodes_bp
     )
+    from api.evm_routes import evm_bp
     app.register_blueprint(identity_bp)
     app.register_blueprint(field_bp)
     app.register_blueprint(network_bp)
@@ -223,6 +230,7 @@ def create_app():
     app.register_blueprint(metrics_bp)
     app.register_blueprint(rewards_bp)
     app.register_blueprint(nodes_bp)
+    app.register_blueprint(evm_bp)
 
     # ─── Page Routes ──────────────────────────────────────────────
     @app.route("/")
