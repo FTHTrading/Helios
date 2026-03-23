@@ -56,10 +56,6 @@ def handle_errors(f):
             logging.error(f"500 ERROR in {f.__name__}: {e}")
             logging.error(traceback.format_exc())
             traceback.print_exc(file=sys.stderr)
-            # Also write to file for debug
-            with open("_error_log.txt", "a") as ef:
-                ef.write(f"\n{'='*60}\n{f.__name__}: {e}\n")
-                traceback.print_exc(file=ef)
             return api_response(error="Something went wrong. Please try again.", status=500)
     return wrapper
 
@@ -1300,7 +1296,7 @@ def rewards_pool():
 
     db = get_db()
     pools = db.query(TokenPool).all()
-    pool_data = {p.pool_name: float(p.balance) for p in pools} if pools else {}
+    pool_data = {p.name: float(p.amount) for p in pools} if pools else {}
     return api_response({
         "pools": pool_data,
         "total_supply": HeliosConfig.TOKEN_TOTAL_SUPPLY,
@@ -1315,8 +1311,8 @@ def rewards_total(helios_id):
     from models.energy_event import EnergyEvent
 
     db = get_db()
-    events = db.query(EnergyEvent).filter_by(target_id=helios_id).all()
-    total = sum(float(e.amount) for e in events) if events else 0.0
+    events = db.query(EnergyEvent).filter_by(to_id=helios_id).all()
+    total = sum(float(e.amount_he) for e in events) if events else 0.0
     return api_response({
         "helios_id": helios_id,
         "total_earned": round(total, 8),

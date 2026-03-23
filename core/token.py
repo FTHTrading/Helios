@@ -74,18 +74,19 @@ class TokenEngine:
         from sqlalchemy import func
 
         # Calculate circulating supply from actual distributions
+        # Pool rewards use prefixed IDs like "POOL:stability", "POOL:liquidity"
         distributed = self.db.query(
             func.sum(Reward.amount)
         ).filter(
             Reward.status == "settled",
-            Reward.member_id != "POOL"
+            ~Reward.member_id.like("POOL%")
         ).scalar() or Decimal('0')
 
         pool_balance = self.db.query(
             func.sum(Reward.amount)
         ).filter(
             Reward.status == "settled",
-            Reward.member_id == "POOL"
+            Reward.member_id.like("POOL%")
         ).scalar() or Decimal('0')
 
         pool_max = self._supply * HeliosConfig.TOKEN_POOL_LOCK_PERCENT / 100
@@ -173,9 +174,11 @@ class TokenEngine:
         pools = self.db.query(TokenPool).all()
         result = {}
         for pool in pools:
+            # SQLite stores naive datetimes — compare naive to naive
+            now_naive = datetime.now(timezone.utc).replace(tzinfo=None)
             is_unlocked = (
                 pool.unlock_date is not None and
-                datetime.now(timezone.utc) >= pool.unlock_date
+                now_naive >= pool.unlock_date
             )
             result[pool.name] = {
                 "balance": pool.amount,
@@ -230,8 +233,18 @@ class TokenEngine:
     # ─── Founder Lock Verification ────────────────────────────────────
 
     def check_founder_lock(self) -> dict:
-        """Check if founder tokens are still locked."""
-        lock_end = datetime.now(timezone.utc) + timedelta(
+        """Check if founder tokens are still locked (relative to pool genesis)."""
+        from models.token_pool import TokenPool
+
+        pool = self.db.query(TokenPool).filter_by(name="reward_pool").first()
+        if pool and pool.created_at:
+            # Use the actual pool genesis timestamp
+            genesis = pool.created_at.replace(tzinfo=timezone.utc) if pool.created_at.tzinfo is None else pool.created_at
+        else:
+            # Fallback: assume locked (pool not yet initialized)
+            genesis = datetime.now(timezone.utc)
+
+        lock_end = genesis + timedelta(
             days=HeliosConfig.TOKEN_FOUNDER_LOCK_YEARS * 365
         )
         locked = datetime.now(timezone.utc) < lock_end
@@ -239,9 +252,10 @@ class TokenEngine:
         return {
             "founder_tokens_locked": locked,
             "lock_years": HeliosConfig.TOKEN_FOUNDER_LOCK_YEARS,
+            "genesis": genesis.isoformat(),
             "lock_ends": lock_end.isoformat(),
             "message": (
-                f"Founder tokens locked for {HeliosConfig.TOKEN_FOUNDER_LOCK_YEARS} years. "
+                f"Founder tokens locked for {HeliosConfig.TOKEN_FOUNDER_LOCK_YEARS} years from genesis. "
                 "Nobody can access them early."
-            )
+            ) if locked else "Founder lock period has expired. Tokens are now accessible."
         }

@@ -238,7 +238,7 @@ else:
 print("\n[12] ENVIRONMENT")
 env_path = os.path.join(os.path.dirname(__file__), ".env")
 if os.path.exists(env_path):
-    with open(env_path) as f:
+    with open(env_path, encoding="utf-8", errors="replace") as f:
         lines = [l.strip() for l in f if l.strip() and not l.startswith('#')]
     print(f"  ✓ .env exists with {len(lines)} keys")
     keys_present = [l.split('=')[0] for l in lines]

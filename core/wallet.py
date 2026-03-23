@@ -70,9 +70,13 @@ class HeliosWallet:
         """
         Send HLS to another Helios member.
         No gas. No addresses. Just name.helios → name.helios.
+
+        Uses SELECT … FOR UPDATE on the sender row to serialise
+        concurrent transfers and prevent double-spend.
         """
         from models.member import Member
         from models.wallet_tx import WalletTransaction
+        from sqlalchemy import func as sa_func
 
         amount_d = Decimal(str(amount)).quantize(
             Decimal('0.00000001'), rounding=ROUND_DOWN
@@ -81,41 +85,74 @@ class HeliosWallet:
         if amount_d <= 0:
             raise ValueError("Amount must be positive.")
 
-        # Verify sender
-        sender = self.db.query(Member).filter_by(
-            helios_id=from_id, status="active"
-        ).first()
-        if not sender:
-            raise ValueError(f"Sender '{from_id}' not found.")
-
-        # Verify recipient
-        receiver = self.db.query(Member).filter_by(
-            helios_id=to_id, status="active"
-        ).first()
-        if not receiver:
-            raise ValueError(f"Recipient '{to_id}' not found.")
-
         if from_id == to_id:
             raise ValueError("Cannot send to yourself.")
 
-        # Check balance
-        balance = self.get_balance(from_id)
-        if Decimal(str(balance["balance"])) < amount_d:
-            raise ValueError(
-                f"Insufficient balance. You have {balance['display']}."
-            )
+        try:
+            # Lock sender row to serialise concurrent balance checks.
+            # with_for_update() issues SELECT … FOR UPDATE on supported
+            # backends; on SQLite it's a no-op but SQLite serialises
+            # writes at the DB level anyway.
+            sender = self.db.query(Member).filter_by(
+                helios_id=from_id, status="active"
+            ).with_for_update().first()
+            if not sender:
+                raise ValueError(f"Sender '{from_id}' not found.")
 
-        # Execute transfer
-        tx = WalletTransaction(
-            from_id=from_id,
-            to_id=to_id,
-            amount=float(amount_d),
-            note=note[:280] if note else "",
-            status="completed",
-            created_at=datetime.now(timezone.utc)
-        )
-        self.db.add(tx)
-        self.db.commit()
+            # Verify recipient (no lock needed — read-only)
+            receiver = self.db.query(Member).filter_by(
+                helios_id=to_id, status="active"
+            ).first()
+            if not receiver:
+                raise ValueError(f"Recipient '{to_id}' not found.")
+
+            # Compute balance inside the locked transaction
+            from models.reward import Reward
+            earned = self.db.query(
+                sa_func.sum(Reward.amount)
+            ).filter(
+                Reward.member_id == from_id,
+                Reward.status == "settled"
+            ).scalar() or Decimal('0')
+
+            sent_total = self.db.query(
+                sa_func.sum(WalletTransaction.amount)
+            ).filter(
+                WalletTransaction.from_id == from_id,
+                WalletTransaction.status == "completed"
+            ).scalar() or Decimal('0')
+
+            received_total = self.db.query(
+                sa_func.sum(WalletTransaction.amount)
+            ).filter(
+                WalletTransaction.to_id == from_id,
+                WalletTransaction.status == "completed"
+            ).scalar() or Decimal('0')
+
+            current_balance = Decimal(str(earned)) + Decimal(str(received_total)) - Decimal(str(sent_total))
+            if current_balance < amount_d:
+                raise ValueError(
+                    f"Insufficient balance. You have {float(current_balance):,.2f} {HeliosConfig.TOKEN_SYMBOL}."
+                )
+
+            # Execute transfer
+            tx = WalletTransaction(
+                from_id=from_id,
+                to_id=to_id,
+                amount=float(amount_d),
+                note=note[:280] if note else "",
+                status="completed",
+                created_at=datetime.now(timezone.utc)
+            )
+            self.db.add(tx)
+            self.db.commit()
+
+        except ValueError:
+            self.db.rollback()
+            raise
+        except Exception:
+            self.db.rollback()
+            raise
 
         return {
             "success": True,

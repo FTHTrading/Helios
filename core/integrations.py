@@ -123,7 +123,8 @@ class IntegrationReadiness:
             "launch_ready": True,
             "database": {
                 "backend": cls._database_backend(),
-                "url": HeliosConfig.DATABASE_URL,
+                # Never expose the full URL — it may contain credentials
+                "url_masked": cls._database_backend() + "://***",
             },
             "providers": providers,
             "optional_upgrades": optional_upgrades,

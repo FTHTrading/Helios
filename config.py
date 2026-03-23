@@ -27,7 +27,10 @@ class HeliosConfig:
     """
 
     # ——— App ——————————————————————————————————————————————
-    SECRET_KEY = os.getenv("HELIOS_SECRET_KEY", os.urandom(32).hex())
+    # Stable fallback prevents session invalidation on restart.
+    # In production, ALWAYS set HELIOS_SECRET_KEY in .env.
+    _DEFAULT_SECRET = "helios-dev-key-change-me-in-production"
+    SECRET_KEY = os.getenv("HELIOS_SECRET_KEY", _DEFAULT_SECRET)
     DEBUG = _env_bool("HELIOS_DEBUG")
     HOST = os.getenv("HELIOS_HOST", "0.0.0.0")
     PORT = int(os.getenv("HELIOS_PORT", "5050"))
