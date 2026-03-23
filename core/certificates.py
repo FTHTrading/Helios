@@ -217,14 +217,15 @@ class CertificateEngine:
         return cert.to_dict()
 
     def list_certificates(self, holder_id: str = None,
-                           state: str = None, limit: int = 50) -> list:
+                           state: str = None, limit: int = 50,
+                           offset: int = 0) -> list:
         """List certificates with optional filters."""
         query = self.db.query(Certificate)
         if holder_id:
             query = query.filter_by(holder_id=holder_id)
         if state:
             query = query.filter_by(state=state)
-        return [c.to_dict() for c in query.order_by(Certificate.created_at.desc()).limit(limit).all()]
+        return [c.to_dict() for c in query.order_by(Certificate.created_at.desc()).offset(offset).limit(limit).all()]
 
     def get_portfolio(self, holder_id: str) -> dict:
         """Get full certificate portfolio for a key."""

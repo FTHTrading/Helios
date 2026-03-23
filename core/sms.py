@@ -10,18 +10,16 @@ import secrets
 import time
 from datetime import datetime, timezone, timedelta
 from config import HeliosConfig
-
-
 class HeliosSMS:
     """
     SMS engine powered by Telnyx.
     - Phone verification during join flow
     - Reward notifications (opt-in only)
     - Security alerts
-    """
 
-    # In-memory verification store (production: use Redis or DB)
-    _pending_verifications = {}
+    Verification codes are persisted to the database so they
+    survive restarts and work across multiple worker processes.
+    """
 
     def __init__(self, db_session=None):
         self.db = db_session
@@ -64,15 +62,20 @@ class HeliosSMS:
         code = f"{secrets.randbelow(900000) + 100000}"
         verification_id = secrets.token_hex(16)
 
-        # Store verification
-        self._pending_verifications[verification_id] = {
-            "phone": phone,
-            "code": hashlib.sha256(code.encode()).hexdigest(),
-            "helios_id": helios_id,
-            "created_at": time.time(),
-            "attempts": 0,
-            "verified": False
-        }
+        # Store verification in database
+        from models.phone_verification import PhoneVerification
+        pv = PhoneVerification(
+            verification_id=verification_id,
+            phone_hash=hashlib.sha256(phone.encode()).hexdigest(),
+            code_hash=hashlib.sha256(code.encode()).hexdigest(),
+            helios_id=helios_id,
+            attempts=0,
+            verified=False,
+            expires_at=datetime.now(timezone.utc) + timedelta(minutes=self.expiry_minutes),
+        )
+        if self.db:
+            self.db.add(pv)
+            self.db.commit()
 
         # Send SMS
         message = (
@@ -95,7 +98,13 @@ class HeliosSMS:
 
         except Exception as e:
             # Clean up on failure
-            del self._pending_verifications[verification_id]
+            if self.db:
+                pv_cleanup = self.db.query(PhoneVerification).filter_by(
+                    verification_id=verification_id
+                ).first()
+                if pv_cleanup:
+                    self.db.delete(pv_cleanup)
+                    self.db.commit()
             return {
                 "sent": False,
                 "error": f"Failed to send SMS: {str(e)}"
@@ -104,8 +113,16 @@ class HeliosSMS:
     def verify_code(self, verification_id: str, code: str) -> dict:
         """
         Verify a phone number with the code received via SMS.
+        Uses DB-backed storage so codes survive restarts.
         """
-        pending = self._pending_verifications.get(verification_id)
+        from models.phone_verification import PhoneVerification
+
+        if not self.db:
+            return {"verified": False, "error": "Database session unavailable"}
+
+        pending = self.db.query(PhoneVerification).filter_by(
+            verification_id=verification_id
+        ).first()
 
         if not pending:
             return {
@@ -114,18 +131,21 @@ class HeliosSMS:
             }
 
         # Check expiry
-        elapsed = time.time() - pending["created_at"]
-        if elapsed > self.expiry_minutes * 60:
-            del self._pending_verifications[verification_id]
+        now = datetime.now(timezone.utc)
+        expires = pending.expires_at.replace(tzinfo=timezone.utc) if pending.expires_at.tzinfo is None else pending.expires_at
+        if now > expires:
+            self.db.delete(pending)
+            self.db.commit()
             return {
                 "verified": False,
                 "error": "Verification code expired. Please request a new one."
             }
 
         # Check attempts
-        pending["attempts"] += 1
-        if pending["attempts"] > self.max_attempts:
-            del self._pending_verifications[verification_id]
+        pending.attempts += 1
+        if pending.attempts > self.max_attempts:
+            self.db.delete(pending)
+            self.db.commit()
             return {
                 "verified": False,
                 "error": "Too many failed attempts. Please request a new code."
@@ -133,28 +153,31 @@ class HeliosSMS:
 
         # Verify code
         code_hash = hashlib.sha256(code.strip().encode()).hexdigest()
-        if code_hash != pending["code"]:
-            remaining = self.max_attempts - pending["attempts"]
+        if code_hash != pending.code_hash:
+            self.db.commit()  # persist attempt count
+            remaining = self.max_attempts - pending.attempts
             return {
                 "verified": False,
                 "error": f"Wrong code. {remaining} attempts remaining."
             }
 
         # Success — mark as verified
-        pending["verified"] = True
-        phone = pending["phone"]
-        helios_id = pending["helios_id"]
+        pending.verified = True
+        helios_id = pending.helios_id
+        # We don't store the raw phone — only the hash. Mask from hash is "***".
+        phone_masked = "***"
 
-        # Update member's verified status if DB available
-        if self.db and helios_id:
-            self._mark_member_verified(helios_id, phone)
+        # Update member's verified status if helios_id available
+        if helios_id:
+            self._mark_member_verified(helios_id, None)
 
         # Cleanup
-        del self._pending_verifications[verification_id]
+        self.db.delete(pending)
+        self.db.commit()
 
         return {
             "verified": True,
-            "phone_masked": self._mask_phone(phone),
+            "phone_masked": phone_masked,
             "helios_id": helios_id,
             "message": "Phone verified successfully! ✓"
         }
@@ -216,7 +239,7 @@ class HeliosSMS:
             "from_number": self._mask_phone(self.from_number) if self.from_number else "not_set",
             "verify_expiry_minutes": self.expiry_minutes,
             "max_attempts": self.max_attempts,
-            "pending_verifications": len(self._pending_verifications)
+            "pending_verifications": self._count_pending()
         }
 
         # Try to ping Telnyx API
@@ -294,12 +317,29 @@ class HeliosSMS:
 
     def _is_rate_limited(self, phone: str) -> bool:
         """Check if a phone number has too many recent verification attempts."""
-        one_hour_ago = time.time() - 3600
-        recent_count = sum(
-            1 for v in self._pending_verifications.values()
-            if v["phone"] == phone and v["created_at"] > one_hour_ago
-        )
+        from models.phone_verification import PhoneVerification
+
+        if not self.db:
+            return False
+
+        one_hour_ago = datetime.now(timezone.utc) - timedelta(hours=1)
+        phone_hash = hashlib.sha256(phone.encode()).hexdigest()
+        recent_count = self.db.query(PhoneVerification).filter(
+            PhoneVerification.phone_hash == phone_hash,
+            PhoneVerification.created_at >= one_hour_ago
+        ).count()
         return recent_count >= 3
+
+    def _count_pending(self) -> int:
+        """Count pending (unverified, unexpired) verifications in the DB."""
+        from models.phone_verification import PhoneVerification
+        if not self.db:
+            return 0
+        now = datetime.now(timezone.utc)
+        return self.db.query(PhoneVerification).filter(
+            PhoneVerification.verified == False,
+            PhoneVerification.expires_at > now
+        ).count()
 
     def _mark_member_verified(self, helios_id: str, phone: str):
         """Mark a member as phone-verified in the database."""

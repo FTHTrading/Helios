@@ -12,8 +12,6 @@ import time
 import logging
 from datetime import datetime, timezone
 from flask import Flask, render_template, request, g, jsonify, abort, Response
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
 from sqlalchemy import create_engine
@@ -21,6 +19,7 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 
 from config import HeliosConfig
 from core.build_manifest import get_build_manifest
+from extensions import limiter
 from models.member import Base
 
 # Validate config on startup — fails fast if protocol rules are broken
@@ -33,13 +32,10 @@ def create_app():
     """Application factory."""
     app = Flask(__name__)
     app.config.from_object(HeliosConfig)
+    app.config["RATELIMIT_DEFAULT"] = HeliosConfig.RATE_LIMIT_DEFAULT
+    app.config["RATELIMIT_STORAGE_URI"] = HeliosConfig.RATE_LIMIT_STORAGE_URI
 
-    limiter = Limiter(
-        key_func=get_remote_address,
-        app=app,
-        default_limits=[limit.strip() for limit in HeliosConfig.RATE_LIMIT_DEFAULT.split(';') if limit.strip()],
-        storage_uri=HeliosConfig.RATE_LIMIT_STORAGE_URI,
-    )
+    limiter.init_app(app)
 
     if HeliosConfig.SENTRY_DSN:
         sentry_sdk.init(
@@ -81,6 +77,20 @@ def create_app():
             response.headers['X-Build-Id'] = manifest['build_id']
         if manifest['watermark']:
             response.headers['X-Build-Watermark'] = manifest['watermark']
+        response.headers['Content-Security-Policy'] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://js.stripe.com; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+            "font-src 'self' https://fonts.gstatic.com; "
+            "img-src 'self' data: https:; "
+            "connect-src 'self' https://api.openai.com https://api.stripe.com https://*.heliosdigital.xyz; "
+            "frame-src https://js.stripe.com; "
+            "object-src 'none'; "
+            "base-uri 'self'"
+        )
+        response.headers['Permissions-Policy'] = (
+            'camera=(), microphone=(), geolocation=(), payment=(self)'
+        )
         if not HeliosConfig.DEBUG:
             response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
         return response
@@ -166,6 +176,7 @@ def create_app():
     from models.subscription import Subscription  # noqa: F401
     from models.payment_event import PaymentEvent  # noqa: F401
     from models.node_event import NodeEvent  # noqa: F401 — QR node telemetry
+    from models.phone_verification import PhoneVerification  # noqa: F401
     Base.metadata.create_all(engine)
 
     SessionFactory = sessionmaker(bind=engine)

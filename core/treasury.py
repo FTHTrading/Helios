@@ -211,12 +211,12 @@ class TreasuryEngine:
 
     def list_vault_receipts(self, metal: str = None,
                              custody_status: str = None,
-                             limit: int = 50) -> list:
+                             limit: int = 50, offset: int = 0) -> list:
         """List vault receipts with optional filters."""
         query = self.db.query(VaultReceipt)
         if metal:
             query = query.filter_by(metal=metal)
         if custody_status:
             query = query.filter_by(custody_status=custody_status)
-        query = query.order_by(VaultReceipt.created_at.desc()).limit(limit)
+        query = query.order_by(VaultReceipt.created_at.desc()).offset(offset).limit(limit)
         return [r.to_dict() for r in query.all()]

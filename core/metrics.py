@@ -90,11 +90,15 @@ class MetricsEngine:
         η = (Routed + Stored + Pooled) / In
         Target: ≥ 0.95 (95% of injected energy goes where it should)
         """
-        events = self.db.query(EnergyEvent).all()
+        from sqlalchemy import func
 
-        totals = {}
-        for e in events:
-            totals[e.event_type] = totals.get(e.event_type, 0.0) + e.amount_he
+        # Use SQL GROUP BY instead of loading every event into Python
+        rows = self.db.query(
+            EnergyEvent.event_type,
+            func.sum(EnergyEvent.amount_he).label("total")
+        ).group_by(EnergyEvent.event_type).all()
+
+        totals = {row.event_type: float(row.total or 0) for row in rows}
 
         total_in = totals.get(HeliosConfig.ENERGY_EVENT_IN, 0.0)
         total_routed = totals.get(HeliosConfig.ENERGY_EVENT_ROUTE, 0.0)
@@ -155,16 +159,21 @@ class MetricsEngine:
         V = Transfers_7d / StoredEnergy
         Target: ~0.3 (healthy circulation)
         """
+        from sqlalchemy import func
         seven_days_ago = datetime.now(timezone.utc) - timedelta(days=7)
 
-        recent_transfers = self.db.query(EnergyEvent).filter(
+        transfer_volume = self.db.query(
+            func.sum(EnergyEvent.amount_he)
+        ).filter(
             EnergyEvent.event_type == HeliosConfig.ENERGY_EVENT_ROUTE,
             EnergyEvent.created_at >= seven_days_ago
-        ).all()
-        transfer_volume = sum(e.amount_he for e in recent_transfers)
+        ).scalar() or 0.0
+        transfer_volume = float(transfer_volume)
 
-        active_certs = self.db.query(Certificate).filter_by(state="active").all()
-        stored_energy = sum(c.energy_amount_he for c in active_certs)
+        stored_energy = self.db.query(
+            func.sum(Certificate.energy_amount_he)
+        ).filter(Certificate.state == "active").scalar() or 0.0
+        stored_energy = float(stored_energy)
 
         velocity = transfer_volume / stored_energy if stored_energy > 0 else 0.0
 
@@ -195,10 +204,13 @@ class MetricsEngine:
         total_certs = self.db.query(Certificate).count()
 
         # Energy totals
-        energy_in = self.db.query(EnergyEvent).filter_by(
-            event_type=HeliosConfig.ENERGY_EVENT_IN
-        ).all()
-        total_energy_injected = sum(e.amount_he for e in energy_in)
+        from sqlalchemy import func as sa_func
+        total_energy_injected = self.db.query(
+            sa_func.sum(EnergyEvent.amount_he)
+        ).filter(
+            EnergyEvent.event_type == HeliosConfig.ENERGY_EVENT_IN
+        ).scalar() or 0.0
+        total_energy_injected = float(total_energy_injected)
 
         return {
             "total_nodes": total_members,

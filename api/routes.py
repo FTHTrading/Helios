@@ -9,6 +9,7 @@ from flask import Blueprint, request, jsonify, g
 from functools import wraps
 
 from core.validation import validate_payload
+from extensions import limiter
 
 # ─── Blueprints ───────────────────────────────────────────────────────
 
@@ -41,6 +42,14 @@ def api_response(data=None, error=None, status=200):
     return jsonify({"success": True, "data": data}), status
 
 
+def paginate_args(max_per_page: int = 100):
+    """Extract page/per_page from query-string, return (limit, offset, page, per_page)."""
+    page = max(int(request.args.get("page", 1)), 1)
+    per_page = min(int(request.args.get("per_page", 50)), max_per_page)
+    offset = (page - 1) * per_page
+    return per_page, offset, page, per_page
+
+
 def handle_errors(f):
     """Decorator to catch and format errors."""
     @wraps(f)
@@ -60,11 +69,31 @@ def handle_errors(f):
     return wrapper
 
 
+def require_auth(f):
+    """
+    Lightweight API-key gate for mutating endpoints.
+    Checks the ``Authorization: Bearer <key>`` header against
+    ``HELIOS_API_KEY`` from the environment.  If no key is configured
+    the guard is **disabled** so local development still works.
+    """
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        from config import HeliosConfig
+        expected = getattr(HeliosConfig, "API_KEY", None)
+        if expected:
+            auth = request.headers.get("Authorization", "")
+            if not auth.startswith("Bearer ") or auth[7:] != expected:
+                return api_response(error="Unauthorized", status=401)
+        return f(*args, **kwargs)
+    return wrapper
+
+
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # IDENTITY ROUTES
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 @identity_bp.route("/create", methods=["POST"])
+@limiter.limit("10 per hour")
 @handle_errors
 def create_helios_id():
     """Register a new Helios ID — instantiate a node in the field."""
@@ -137,6 +166,7 @@ def verify_helios_id(helios_id):
 
 
 @identity_bp.route("/recover", methods=["POST"])
+@limiter.limit("5 per hour")
 @handle_errors
 def recover_account():
     """Recover account with 12-word phrase."""
@@ -250,7 +280,7 @@ def propagate_energy():
     from core.rewards import PropagationEngine
     from decimal import Decimal
 
-    data = request.get_json()
+    data = validate_payload("energy_propagate", request.get_json())
     engine = PropagationEngine(get_db())
     result = engine.calculate_propagation(
         origin_id=data["origin_id"],
@@ -262,12 +292,13 @@ def propagate_energy():
 
 @energy_bp.route("/execute", methods=["POST"])
 @handle_errors
+@require_auth
 def execute_propagation():
     """Execute energy propagation — settle all acknowledgements."""
     from core.rewards import PropagationEngine
     from decimal import Decimal
 
-    data = request.get_json()
+    data = validate_payload("energy_execute", request.get_json())
     engine = PropagationEngine(get_db())
     result = engine.execute_propagation(
         origin_id=data["origin_id"],
@@ -327,6 +358,7 @@ def get_balance(helios_id):
 
 
 @wallet_bp.route("/send", methods=["POST"])
+@limiter.limit("30 per hour")
 @handle_errors
 def send_tokens():
     """Send HLS to another member."""
@@ -541,6 +573,7 @@ sms_bp = Blueprint("sms", __name__, url_prefix="/api/sms")
 
 
 @sms_bp.route("/verify/send", methods=["POST"])
+@limiter.limit("5 per hour")
 @handle_errors
 def send_verification():
     """Send phone verification code."""
@@ -559,6 +592,7 @@ def send_verification():
 
 
 @sms_bp.route("/verify/confirm", methods=["POST"])
+@limiter.limit("10 per hour")
 @handle_errors
 def confirm_verification():
     """Confirm phone verification code."""
@@ -646,6 +680,7 @@ def list_dns():
 
 @infra_bp.route("/dns", methods=["POST"])
 @handle_errors
+@require_auth
 def create_dns():
     """Create a DNS record."""
     from core.infrastructure import HeliosInfra
@@ -686,6 +721,7 @@ def analytics():
 
 @infra_bp.route("/cache/purge", methods=["POST"])
 @handle_errors
+@require_auth
 def purge_cache():
     """Purge CDN cache."""
     from core.infrastructure import HeliosInfra
@@ -746,6 +782,7 @@ def get_reserves():
 
 @treasury_bp.route("/receipt", methods=["POST"])
 @handle_errors
+@require_auth
 def create_receipt():
     """Create a new Metal Vault Receipt (admin/operator)."""
     from core.treasury import TreasuryEngine
@@ -788,18 +825,21 @@ def list_receipts():
 
     metal = request.args.get("metal")
     custody = request.args.get("custody")
+    limit, offset, page, per_page = paginate_args()
     engine = TreasuryEngine(get_db())
-    result = engine.list_vault_receipts(metal=metal, custody_status=custody)
-    return api_response(result)
+    result = engine.list_vault_receipts(metal=metal, custody_status=custody,
+                                        limit=limit, offset=offset)
+    return api_response({"items": result, "page": page, "per_page": per_page})
 
 
 @treasury_bp.route("/custody", methods=["POST"])
 @handle_errors
+@require_auth
 def update_custody():
     """Update custody status of a vault receipt."""
     from core.treasury import TreasuryEngine
 
-    data = request.get_json()
+    data = validate_payload("treasury_custody", request.get_json())
     engine = TreasuryEngine(get_db())
     result = engine.update_custody(data["mvr_id"], data["status"])
     return api_response(result)
@@ -807,6 +847,7 @@ def update_custody():
 
 @treasury_bp.route("/anchor", methods=["POST"])
 @handle_errors
+@require_auth
 def anchor_receipt():
     """Record XRPL anchoring for a vault receipt."""
     from core.treasury import TreasuryEngine
@@ -824,11 +865,12 @@ def anchor_receipt():
 
 @treasury_bp.route("/allocation", methods=["POST"])
 @handle_errors
+@require_auth
 def calculate_allocation():
     """Calculate metal allocation from net surplus."""
     from core.treasury import TreasuryEngine
 
-    data = request.get_json()
+    data = validate_payload("treasury_allocation", request.get_json())
     engine = TreasuryEngine(get_db())
     result = engine.calculate_metal_allocation(
         net_surplus_usd=float(data["net_surplus_usd"]),
@@ -843,11 +885,12 @@ def calculate_allocation():
 
 @certificates_bp.route("/mint", methods=["POST"])
 @handle_errors
+@require_auth
 def mint_certificate():
     """Mint a new Helios Certificate (HC-NFT)."""
     from core.certificates import CertificateEngine
 
-    data = request.get_json()
+    data = validate_payload("certificate_mint", request.get_json())
     engine = CertificateEngine(get_db())
     result = engine.mint(
         holder_id=data["holder_id"],
@@ -863,7 +906,7 @@ def redeem_gold():
     """Redeem certificate for gold."""
     from core.certificates import CertificateEngine
 
-    data = request.get_json()
+    data = validate_payload("certificate_redeem", request.get_json())
     engine = CertificateEngine(get_db())
     result = engine.redeem_gold(
         certificate_id=data["certificate_id"],
@@ -878,7 +921,7 @@ def redeem_stablecoin():
     """Redeem certificate for stablecoin."""
     from core.certificates import CertificateEngine
 
-    data = request.get_json()
+    data = validate_payload("certificate_cancel", request.get_json())  # re-use cancel schema (just certificate_id)
     engine = CertificateEngine(get_db())
     result = engine.redeem_stablecoin(data["certificate_id"])
     return api_response(result)
@@ -886,11 +929,12 @@ def redeem_stablecoin():
 
 @certificates_bp.route("/cancel", methods=["POST"])
 @handle_errors
+@require_auth
 def cancel_certificate():
     """Cancel certificate — 2% energy BURNED permanently. Irreversible."""
     from core.certificates import CertificateEngine
 
-    data = request.get_json()
+    data = validate_payload("certificate_cancel", request.get_json())
     engine = CertificateEngine(get_db())
     result = engine.cancel(data["certificate_id"])
     return api_response(result)
@@ -937,9 +981,11 @@ def list_certificates():
 
     holder = request.args.get("holder")
     state = request.args.get("state")
+    limit, offset, page, per_page = paginate_args()
     engine = CertificateEngine(get_db())
-    result = engine.list_certificates(holder_id=holder, state=state)
-    return api_response(result)
+    result = engine.list_certificates(holder_id=holder, state=state,
+                                       limit=limit, offset=offset)
+    return api_response({"items": result, "page": page, "per_page": per_page})
 
 
 @certificates_bp.route("/portfolio/<helios_id>", methods=["GET"])
@@ -968,6 +1014,7 @@ def funding_catalog():
 
 
 @funding_bp.route("/checkout", methods=["POST"])
+@limiter.limit("20 per hour")
 @handle_errors
 def funding_checkout():
     """Create a hosted checkout session for entry, memberships, or credentials."""
@@ -1067,11 +1114,12 @@ def get_energy_balance(helios_id):
 
 @spaces_bp.route("/create", methods=["POST"])
 @handle_errors
+@require_auth
 def create_space():
     """Create a new space. Requires operator/host credential."""
     from core.spaces import SpaceEngine
 
-    data = request.get_json()
+    data = validate_payload("space_create", request.get_json())
     engine = SpaceEngine(get_db())
     result = engine.create_space(
         owner_id=data["owner_id"],
@@ -1090,9 +1138,10 @@ def list_spaces():
     """List active spaces."""
     from core.spaces import SpaceEngine
 
+    limit, offset, page, per_page = paginate_args()
     engine = SpaceEngine(get_db())
-    result = engine.list_spaces()
-    return api_response(result)
+    result = engine.list_spaces(limit=limit, offset=offset)
+    return api_response({"items": result, "page": page, "per_page": per_page})
 
 
 @spaces_bp.route("/<space_id>", methods=["GET"])
@@ -1108,11 +1157,12 @@ def get_space(space_id):
 
 @spaces_bp.route("/event", methods=["POST"])
 @handle_errors
+@require_auth
 def create_event():
     """Create an event within a space."""
     from core.spaces import SpaceEngine
 
-    data = request.get_json()
+    data = validate_payload("space_event", request.get_json())
     engine = SpaceEngine(get_db())
     result = engine.create_event(
         space_id=data["space_id"],
@@ -1135,9 +1185,10 @@ def list_events():
     from core.spaces import SpaceEngine
 
     space_id = request.args.get("space_id")
+    limit, offset, page, per_page = paginate_args()
     engine = SpaceEngine(get_db())
-    result = engine.list_events(space_id=space_id)
-    return api_response(result)
+    result = engine.list_events(space_id=space_id, limit=limit, offset=offset)
+    return api_response({"items": result, "page": page, "per_page": per_page})
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

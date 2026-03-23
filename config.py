@@ -42,6 +42,10 @@ class HeliosConfig:
     BUILD_OWNER = os.getenv("HELIOS_BUILD_OWNER", "FTHTrading")
     WATERMARK_MODE = os.getenv("HELIOS_WATERMARK_MODE", "hidden")
 
+    # ——— API Auth —————————————————————————————————————————
+    # When set, mutating POST endpoints require  Authorization: Bearer <key>
+    API_KEY = os.getenv("HELIOS_API_KEY", "")
+
     # ——— Database —————————————————————————————————————————
     DATABASE_URL = os.getenv(
         "HELIOS_DATABASE_URL",
@@ -185,6 +189,10 @@ class HeliosConfig:
     # Metal types tracked
     METAL_TYPES = ["GOLD", "SILVER", "PLATINUM", "PALLADIUM"]
     METAL_DEFAULT = "GOLD"
+
+    # Gold spot price fallback (USD/oz). Overridden at runtime by a
+    # live feed when available.  Never hardcode in business logic.
+    GOLD_SPOT_PRICE_USD = float(os.getenv("HELIOS_GOLD_SPOT_PRICE_USD", "2350"))
 
     # MVR custody states
     CUSTODY_IN_TREASURY = "in_treasury"

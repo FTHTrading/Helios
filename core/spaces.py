@@ -87,12 +87,12 @@ class SpaceEngine:
 
         return event.to_dict()
 
-    def list_spaces(self, is_public: bool = None, limit: int = 50) -> list:
+    def list_spaces(self, is_public: bool = None, limit: int = 50, offset: int = 0) -> list:
         """List spaces with optional filters."""
         query = self.db.query(Space).filter_by(is_active=True)
         if is_public is not None:
             query = query.filter_by(is_public=is_public)
-        return [s.to_dict() for s in query.order_by(Space.created_at.desc()).limit(limit).all()]
+        return [s.to_dict() for s in query.order_by(Space.created_at.desc()).offset(offset).limit(limit).all()]
 
     def get_space(self, space_id: str) -> dict:
         """Get space details."""
@@ -101,9 +101,9 @@ class SpaceEngine:
             raise ValueError(f"Space {space_id} not found")
         return space.to_dict()
 
-    def list_events(self, space_id: str = None, limit: int = 50) -> list:
+    def list_events(self, space_id: str = None, limit: int = 50, offset: int = 0) -> list:
         """List events, optionally filtered by space."""
         query = self.db.query(SpaceEvent).filter_by(is_active=True)
         if space_id:
             query = query.filter_by(space_id=space_id)
-        return [e.to_dict() for e in query.order_by(SpaceEvent.created_at.desc()).limit(limit).all()]
+        return [e.to_dict() for e in query.order_by(SpaceEvent.created_at.desc()).offset(offset).limit(limit).all()]

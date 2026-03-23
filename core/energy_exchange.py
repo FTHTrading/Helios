@@ -242,12 +242,14 @@ class EnergyExchange:
         """
         from sqlalchemy import func
 
-        events = self.db.query(EnergyEvent).all()
+        # Use SQL aggregation instead of loading all rows into Python
+        rows = self.db.query(
+            EnergyEvent.event_type,
+            func.sum(EnergyEvent.amount_he).label("total")
+        ).group_by(EnergyEvent.event_type).all()
 
-        totals = {}
-        for e in events:
-            et = e.event_type
-            totals[et] = totals.get(et, 0.0) + e.amount_he
+        totals = {row.event_type: float(row.total or 0) for row in rows}
+        event_count = self.db.query(func.count(EnergyEvent.id)).scalar() or 0
 
         total_in = totals.get(HeliosConfig.ENERGY_EVENT_IN, 0.0)
         total_routed = totals.get(HeliosConfig.ENERGY_EVENT_ROUTE, 0.0)
@@ -273,7 +275,7 @@ class EnergyExchange:
             "total_out": round(total_out, 2),
             "balance": balance,
             "balanced": abs(balance) < 0.01,
-            "event_count": len(events),
+            "event_count": event_count,
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
 

@@ -237,7 +237,7 @@ def issue_new_member_package(member_id: str, xrpl_address: str,
 
     # 2. NFT certificate (gold weight based on 15% treasury allocation)
     gold_allocation_usd = contract_amount * 0.15
-    gold_oz = gold_allocation_usd / 2300  # approximate gold spot
+    gold_oz = gold_allocation_usd / HeliosConfig.GOLD_SPOT_PRICE_USD
     cert_result = NFTCertificate.mint_membership_nft(
         member_id, xrpl_address,
         contract_tier=f"${contract_amount:,.0f}",

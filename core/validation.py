@@ -70,16 +70,85 @@ class LinkDissolveSchema(Schema):
     peer_id = fields.Str(required=True, validate=validate.Length(min=3, max=64))
 
 
+# ─── Schemas for previously-unvalidated POST routes ───────────────────
+
+class EnergyPropagateSchema(Schema):
+    origin_id = fields.Str(required=True)
+    amount = fields.Float(required=True, validate=validate.Range(min=0.01))
+    event_type = fields.Str(load_default="join")
+
+
+class EnergyExecuteSchema(Schema):
+    origin_id = fields.Str(required=True)
+    amount = fields.Float(required=True, validate=validate.Range(min=0.01))
+    event_type = fields.Str(load_default="join")
+
+
+class CertificateMintSchema(Schema):
+    holder_id = fields.Str(required=True)
+    energy_amount_he = fields.Float(required=True, validate=validate.Range(min=0.0001))
+    energy_value_usd = fields.Float(required=True, validate=validate.Range(min=0.01))
+
+
+class CertificateRedeemSchema(Schema):
+    certificate_id = fields.Str(required=True)
+    mvr_id = fields.Str(load_default=None, allow_none=True)
+
+
+class CertificateCancelSchema(Schema):
+    certificate_id = fields.Str(required=True)
+
+
+class TreasuryCustodySchema(Schema):
+    mvr_id = fields.Str(required=True)
+    status = fields.Str(required=True)
+
+
+class TreasuryAllocationSchema(Schema):
+    net_surplus_usd = fields.Float(required=True, validate=validate.Range(min=0))
+    coefficient = fields.Float(load_default=None, allow_none=True)
+
+
+class SpaceCreateSchema(Schema):
+    owner_id = fields.Str(required=True)
+    name = fields.Str(required=True, validate=validate.Length(min=1, max=128))
+    description = fields.Str(load_default=None, allow_none=True, validate=validate.Length(max=500))
+    is_public = fields.Bool(load_default=True)
+    entry_fee_usd = fields.Float(load_default=0, validate=validate.Range(min=0))
+    max_members = fields.Int(load_default=500, validate=validate.Range(min=1, max=10000))
+
+
+class SpaceEventSchema(Schema):
+    space_id = fields.Str(required=True)
+    host_id = fields.Str(required=True)
+    title = fields.Str(required=True, validate=validate.Length(min=1, max=200))
+    description = fields.Str(load_default=None, allow_none=True, validate=validate.Length(max=1000))
+    event_type = fields.Str(load_default="general")
+    ticket_price_usd = fields.Float(load_default=0, validate=validate.Range(min=0))
+    max_attendees = fields.Int(load_default=100, validate=validate.Range(min=1, max=50000))
+    starts_at = fields.Str(load_default=None, allow_none=True)
+    ends_at = fields.Str(load_default=None, allow_none=True)
+
+
 _SCHEMAS = {
     "identity_create": IdentityCreateSchema(),
     "wallet_send": WalletSendSchema(),
     "funding_checkout": FundingCheckoutSchema(),
     "energy_inject": EnergyInjectSchema(),
+    "energy_propagate": EnergyPropagateSchema(),
+    "energy_execute": EnergyExecuteSchema(),
     "treasury_receipt": TreasuryReceiptSchema(),
     "treasury_anchor": TreasuryAnchorSchema(),
+    "treasury_custody": TreasuryCustodySchema(),
+    "treasury_allocation": TreasuryAllocationSchema(),
+    "certificate_mint": CertificateMintSchema(),
+    "certificate_redeem": CertificateRedeemSchema(),
+    "certificate_cancel": CertificateCancelSchema(),
     "xaman_payload": XamanPayloadSchema(),
     "link_create": LinkCreateSchema(),
     "link_dissolve": LinkDissolveSchema(),
+    "space_create": SpaceCreateSchema(),
+    "space_event": SpaceEventSchema(),
 }
 
 

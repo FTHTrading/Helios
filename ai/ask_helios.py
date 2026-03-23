@@ -815,9 +815,27 @@ class AskHelios:
     Never sells. Never hypes. Shows the math and lets you decide.
     """
 
+    # Class-level history keyed by member_id (or "anonymous").
+    # Bounded to the last MAX_HISTORY turns per user so it doesn't
+    # grow unbounded across requests within the same process.
+    _histories: dict = {}
+    MAX_HISTORY = 20
+
     def __init__(self, db_session=None):
         self.db = db_session
-        self.conversation_history = []
+
+    def _get_history(self, member_id: str | None) -> list:
+        key = member_id or "anonymous"
+        if key not in self._histories:
+            self._histories[key] = []
+        return self._histories[key]
+
+    def _append_history(self, member_id: str | None, entry: dict):
+        history = self._get_history(member_id)
+        history.append(entry)
+        # Keep bounded
+        if len(history) > self.MAX_HISTORY:
+            del history[:len(history) - self.MAX_HISTORY]
 
     # ═══ Main Interface ══════════════════════════════════════════
 
@@ -825,7 +843,7 @@ class AskHelios:
         """Answer any question about HELIOS. Knowledge base first, AI fallback."""
         question_lower = question.lower().strip()
 
-        self.conversation_history.append({
+        self._append_history(member_id, {
             "role": "user",
             "content": question,
             "timestamp": datetime.now(timezone.utc).isoformat()
@@ -865,7 +883,7 @@ class AskHelios:
         if member_id and self.db:
             response["personal_context"] = self._get_member_context(member_id)
 
-        self.conversation_history.append({
+        self._append_history(member_id, {
             "role": "assistant",
             "content": response["answer"],
             "timestamp": datetime.now(timezone.utc).isoformat()
@@ -942,7 +960,7 @@ class AskHelios:
             system_prompt = self._build_system_prompt(member_id, grounded_context)
             messages = [{"role": "system", "content": system_prompt}]
 
-            for msg in self.conversation_history[-HeliosConfig.AI_MAX_CONTEXT_TURNS:]:
+            for msg in self._get_history(member_id)[-HeliosConfig.AI_MAX_CONTEXT_TURNS:]:
                 messages.append({"role": msg["role"], "content": msg["content"]})
 
             response = client.chat.completions.create(

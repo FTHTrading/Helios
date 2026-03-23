@@ -15,11 +15,12 @@ from models.space import Space, SpaceEvent
 from models.subscription import Subscription
 from models.payment_event import PaymentEvent
 from models.node_event import NodeEvent
+from models.phone_verification import PhoneVerification
 
 __all__ = [
     "Member", "Link", "Bond", "Transaction",
     "Reward", "TokenPool", "WalletTransaction",
     "VaultReceipt", "Certificate", "EnergyEvent",
     "Credential", "Space", "SpaceEvent", "Subscription",
-    "PaymentEvent", "NodeEvent"
+    "PaymentEvent", "NodeEvent", "PhoneVerification"
 ]

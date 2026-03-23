@@ -249,7 +249,11 @@ class FundingEngine:
                 secret=HeliosConfig.STRIPE_WEBHOOK_SECRET,
             )
         else:
-            event = stripe.Event.construct_from(importlib.import_module("json").loads(payload_bytes.decode("utf-8")), stripe.api_key)
+            # Fail-closed: refuse unverified webhooks in production.
+            raise ValueError(
+                "STRIPE_WEBHOOK_SECRET is not configured. "
+                "Cannot process unverified webhook payloads."
+            )
 
         event_type = event.get("type")
         event_id = event.get("id") or f"evt_{uuid.uuid4().hex}"
